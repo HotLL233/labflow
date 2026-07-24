@@ -1,0 +1,34 @@
+services:
+  app:
+    image: ghcr.io/hotll233/tj/workload-tool:v1.1.0
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://workload_app:change_me@postgres:5432/workload_tool
+      ADMIN_PASSWORD: change_me
+      WORKLOAD_SERVER_PORT: "8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - workload_data:/app/data
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: workload_tool
+      POSTGRES_USER: workload_app
+      POSTGRES_PASSWORD: change_me
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workload_app -d workload_tool"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  workload_data:
+  postgres_data:

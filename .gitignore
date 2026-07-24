@@ -1,0 +1,10 @@
+/target/
+/frontend/node_modules/
+/backend/
+/installer/
+/test-artifacts/
+/data/
+*.log
+*.pdb
+.DS_Store
+Thumbs.db

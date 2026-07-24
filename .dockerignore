@@ -1,0 +1,9 @@
+target/
+frontend/node_modules/
+frontend/dist/
+backend/
+installer/
+test-artifacts/
+*.exe
+*.pdb
+data/

@@ -1,0 +1,12 @@
+server_port = 8000
+db_dir = "data"
+database_url = "postgresql://workload_app_beta:CHANGE_ME@127.0.0.1:5432/workload_tool_beta"
+log_level = "info"
+runtime_log_enabled = true
+runtime_log_max_size_mb = 50
+admin_user = "admin"
+admin_pass = "CHANGE_ME"
+backup_enabled = false
+backup_interval_hours = 24
+max_backup_count = 10
+backup_mode = "database"
