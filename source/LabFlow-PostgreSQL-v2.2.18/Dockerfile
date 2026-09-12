@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1
 
-FROM node:20-bookworm-slim AS frontend-builder
+FROM node:22-bookworm-slim AS frontend-builder
 WORKDIR /src
 
 COPY frontend/package.json frontend/package-lock.json ./frontend/
-RUN cd frontend && npm ci --ignore-scripts
+RUN cd frontend && npm ci --ignore-scripts --legacy-peer-deps
 COPY frontend ./frontend
 RUN cd frontend && npm run build
 
