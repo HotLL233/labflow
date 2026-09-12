@@ -51,7 +51,8 @@ jobs:
         with:
           context: ${{ env.SOURCE_DIR }}
           file: ${{ env.SOURCE_DIR }}/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          # Build on the native GitHub-hosted runner for a predictable completion time.
+          platforms: linux/amd64
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
