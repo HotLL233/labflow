@@ -1,0 +1,44 @@
+services:
+  app:
+    image: ghcr.io/hotll233/labflow:${LABFLOW_VERSION:-2.2.18}
+    container_name: labflow-app
+    ports:
+      - "${WORKLOAD_BIND_IP:-127.0.0.1}:${WORKLOAD_SERVER_PORT:-8000}:8000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-workload_app}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-workload_tool}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      WORKLOAD_SERVER_MODE: "true"
+      WORKLOAD_SERVER_PORT: "8000"
+      WORKLOAD_DATA_DIR: /app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - workload_data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 45s
+      retries: 5
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:18
+    container_name: labflow-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-workload_tool}
+      POSTGRES_USER: ${POSTGRES_USER:-workload_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    restart: unless-stopped
+
+volumes:
+  workload_data:
+  postgres_data:
