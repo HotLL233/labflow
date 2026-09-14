@@ -437,8 +437,7 @@ fn create_full_backup(
         let options =
             SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
         let mut files = Vec::new();
-        let db_bytes = read_bytes(&snapshot)?;
-        write_zip_file(&mut zip, "workload.dump", &db_bytes, options, &mut files)?;
+        write_zip_stream(&mut zip, "workload.dump", &snapshot, options, &mut files)?;
         let mut included_sources = vec!["database".to_string()];
         for (name, source) in backup_sources(cfg) {
             add_directory(&mut zip, &source, &source, name, options, &mut files)?;
