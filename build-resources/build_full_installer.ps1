@@ -7,14 +7,24 @@ param(
 $ErrorActionPreference = 'Stop'
 $source = (Resolve-Path $SourceDir).Path
 $packageRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$buildDir = Join-Path $packageRoot '_build_v2.2.18'
-$iscc = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+$version = (Get-Content (Join-Path $source 'VERSION') -Raw).Trim()
+if ($version -notmatch '^\d+\.\d+\.\d+(?:[-+].*)?$') { throw "Invalid VERSION: $version" }
+$buildDir = Join-Path $packageRoot "_build_v$version"
+$isccCandidates = @(
+    $env:INNO_SETUP_ISCC,
+    'D:\APP\Inno Setup 6\ISCC.exe',
+    'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+)
+$iscc = $isccCandidates | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+if (-not $iscc) {
+    $iscc = (Get-Command ISCC.exe -ErrorAction SilentlyContinue).Source
+}
 
 if (Test-Path $buildDir) {
-    throw "临时构建目录已存在：$buildDir。请确认其不是正在使用的目录后删除，再重新执行。"
+    throw "Build directory already exists: $buildDir"
 }
 if (-not (Test-Path $iscc)) {
-    throw '未找到 Inno Setup 6。请安装后再执行。'
+    throw 'Inno Setup 6 was not found.'
 }
 Get-Command cargo | Out-Null
 Get-Command npm | Out-Null
@@ -22,19 +32,19 @@ Get-Command npm | Out-Null
 New-Item -ItemType Directory -Path $buildDir | Out-Null
 
 robocopy $source $buildDir /E /XD target node_modules backend\static installer | Out-Null
-if ($LASTEXITCODE -gt 7) { throw "源码复制失败，robocopy 退出代码：$LASTEXITCODE" }
+if ($LASTEXITCODE -gt 7) { throw "Source copy failed, robocopy exit code: $LASTEXITCODE" }
 
 foreach ($name in 'postgres-runtime', 'pdf-runtime', 'installer-languages') {
     robocopy (Join-Path $PSScriptRoot $name) (Join-Path $buildDir $name) /E | Out-Null
-    if ($LASTEXITCODE -gt 7) { throw "构建资源复制失败：$name，robocopy 退出代码：$LASTEXITCODE" }
+    if ($LASTEXITCODE -gt 7) { throw "Build resource copy failed: $name, robocopy exit code: $LASTEXITCODE" }
 }
 
 Push-Location (Join-Path $buildDir 'frontend')
 try {
     npm ci
-    if ($LASTEXITCODE -ne 0) { throw "前端依赖安装失败，npm 退出代码：$LASTEXITCODE" }
+    if ($LASTEXITCODE -ne 0) { throw "Frontend dependency installation failed, npm exit code: $LASTEXITCODE" }
     npm run build
-    if ($LASTEXITCODE -ne 0) { throw "前端生产构建失败，npm 退出代码：$LASTEXITCODE" }
+    if ($LASTEXITCODE -ne 0) { throw "Frontend build failed, npm exit code: $LASTEXITCODE" }
 } finally {
     Pop-Location
 }
@@ -42,14 +52,17 @@ try {
 Push-Location $buildDir
 try {
     cargo build --release
-    if ($LASTEXITCODE -ne 0) { throw "Release 编译失败，cargo 退出代码：$LASTEXITCODE" }
+    if ($LASTEXITCODE -ne 0) { throw "Release build failed, cargo exit code: $LASTEXITCODE" }
     & $iscc '.\build_server_installer.iss'
-    if ($LASTEXITCODE -ne 0) { throw "Inno Setup 打包失败，退出代码：$LASTEXITCODE" }
+    if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed, exit code: $LASTEXITCODE" }
 } finally {
     Pop-Location
 }
 
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
-$installer = Join-Path $buildDir 'installer\样品管理系统_v2.2.18_PostgreSQL服务器版_Setup.exe'
-Copy-Item -LiteralPath $installer -Destination $OutputDir -Force
-Get-FileHash -LiteralPath (Join-Path $OutputDir (Split-Path $installer -Leaf)) -Algorithm SHA256
+$installer = Get-ChildItem (Join-Path $buildDir 'installer') -Filter '*.exe' -File |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+if (-not $installer) { throw "Inno Setup output installer was not found" }
+Copy-Item -LiteralPath $installer.FullName -Destination $OutputDir -Force
+Get-FileHash -LiteralPath (Join-Path $OutputDir $installer.Name) -Algorithm SHA256
