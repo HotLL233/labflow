@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Multipart, Path, Query, State},
+    extract::{DefaultBodyLimit, Multipart, Path, Query, State},
     http::HeaderMap,
     routing::{delete, get, post},
     Json, Router,
@@ -81,6 +81,8 @@ pub fn router(config: Arc<AppConfig>, pool: DbPool) -> Router {
         .route("/api/backup/config", get(get_config).put(update_config))
         .route("/api/backup/test-sync", post(test_sync))
         .route("/api/backup/file/:fname", delete(delete_backup))
+        // Full backups may contain large attachments; the framework default is 2 MiB.
+        .layer(DefaultBodyLimit::max(2 * 1024 * 1024 * 1024_usize))
         .with_state((config, pool))
 }
 
