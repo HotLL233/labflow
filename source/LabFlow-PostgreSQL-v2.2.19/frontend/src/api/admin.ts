@@ -140,6 +140,9 @@ export const importUsers = (file: File, updateExisting = false): Promise<ApiResp
 export const getGovernanceSummary = (): Promise<ApiResponse<GovernanceSummary>> =>
   client.get('/data-governance/summary').then((r) => r.data);
 
+export const clearFailedPreviewCache = (): Promise<ApiResponse<{ cleared: number }>> =>
+  client.post('/sample-info/attachments/preview-failures/clear').then((r) => r.data);
+
 export const downloadGovernanceTemplate = (module: GovernanceModule): Promise<void> =>
   downloadFile(`/api/data-governance/${module}/template`, {}, `${module}_数据治理导入模板_v0.4.105.xlsx`);
 

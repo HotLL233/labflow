@@ -37,6 +37,7 @@ import {
   getGovernanceSummary,
   precheckGovernanceImport,
   precheckGovernancePurge,
+  clearFailedPreviewCache,
 } from '../api/client';
 import type {
   GovernanceImportPreview,
@@ -87,6 +88,16 @@ const DataGovernancePage: React.FC = () => {
   const canImport = hasPermission('manage:data-governance:import');
   const canExport = hasPermission('manage:data-governance:export');
   const canPurge = hasPermission('manage:data-governance:purge');
+  const [clearingPreviewCache, setClearingPreviewCache] = useState(false);
+  const clearPreviewCache = async () => {
+    setClearingPreviewCache(true);
+    try {
+      const result = responseData(await clearFailedPreviewCache());
+      setMessage({ severity: 'success', text: `已清理 ${result.cleared} 个失败预览缓存，重新打开附件即可生成。` });
+    } catch (error) {
+      setMessage({ severity: 'error', text: error instanceof Error ? error.message : '清理失败预览缓存失败' });
+    } finally { setClearingPreviewCache(false); }
+  };
 
   const loadSummary = useCallback(async () => {
     setLoading(true);
@@ -247,6 +258,12 @@ const DataGovernancePage: React.FC = () => {
     <Box sx={{ display: { xs: 'block', md: 'flex' }, alignItems: 'flex-start', gap: 2 }}>
       <ManageNav activeKey="data-governance" />
       <Box sx={{ flex: 1, minWidth: 0 }}>
+        {hasPermission('manage:data-governance:view') && <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }} justifyContent="space-between">
+            <Box><Typography fontWeight={800}>附件预览维护</Typography><Typography variant="body2" color="text.secondary">清理生成失败的预览缓存，不会删除原始附件。</Typography></Box>
+            <Button variant="outlined" color="warning" startIcon={<DeleteSweepIcon />} onClick={() => void clearPreviewCache()} disabled={clearingPreviewCache}>{clearingPreviewCache ? '清理中...' : '清理失败预览缓存'}</Button>
+          </Stack>
+        </Paper>}
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }} gap={1.5} sx={{ mb: 2 }}>
           <Box>
             <Typography variant="h4" fontWeight={800}>业务数据管理</Typography>
