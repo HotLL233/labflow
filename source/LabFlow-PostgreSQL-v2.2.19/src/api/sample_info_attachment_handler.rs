@@ -188,6 +188,7 @@ fn ensure_modify_access(pool: &DbPool, ctx: &AuthContext, record_id: i64) -> Res
 pub fn router(pool: DbPool) -> Router {
     let config = Arc::new(AppConfig::load());
     Router::new()
+        .route("/api/sample-info/attachments/preview-failures/clear", axum::routing::post(clear_failed_preview_cache))
         .route(
             "/api/sample-info/:id/attachments",
             axum::routing::get(list_attachments).post(upload_attachment),
@@ -223,6 +224,26 @@ pub fn router(pool: DbPool) -> Router {
         // v0.4.62: 提升 body 限制到 100MB（默认 2MB，之前小文件测试蒙蔽了）
         .layer(DefaultBodyLimit::max(100 * 1024 * 1024))
         .with_state((pool, config))
+}
+
+async fn clear_failed_preview_cache(
+    State((pool, config)): State<(DbPool, Arc<AppConfig>)>,
+    headers: HeaderMap,
+) -> Result<Json<ApiResponse<serde_json::Value>>> {
+    let ctx = authz_service::authenticate(&pool, &headers)?;
+    if !ctx.is_system_admin() { return Err(AppError::Forbidden("仅系统管理员可清理失败预览缓存".into())); }
+    let root = config.attachment_preview_dir();
+    let mut cleared = 0u64;
+    if let Ok(entries) = std::fs::read_dir(&root) {
+        for entry in entries.flatten() {
+            let dir = entry.path();
+            if dir.is_dir() && read_preview_manifest(&dir).status == "failed" {
+                let _ = std::fs::remove_dir_all(&dir);
+                cleared += 1;
+            }
+        }
+    }
+    Ok(Json(ApiResponse::ok(serde_json::json!({"cleared": cleared}))))
 }
 
 fn inline_docx_images(html: String, image_dir: &std::path::Path) -> Result<String> {
