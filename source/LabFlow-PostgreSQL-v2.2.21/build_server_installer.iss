@@ -1,4 +1,4 @@
-#define MyAppVersion "2.2.19"
+#define MyAppVersion "2.2.21"
 #define MyAppNumericVersion "2.2.19.0"
 
 #if !FileExists("pdf-runtime\pdftoppm.exe") || !FileExists("pdf-runtime\pdfinfo.exe")
@@ -21,7 +21,7 @@ AppPublisher=WorkloadTool
 DefaultDirName={autopf}\样品管理系统服务器版
 UsePreviousAppDir=yes
 OutputDir=installer
-OutputBaseFilename=样品管理系统_v2.2.19_PostgreSQL服务器版_Setup
+OutputBaseFilename=样品管理系统_v2.2.21_PostgreSQL服务器版_Setup
 SetupIconFile=icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes

@@ -1,4 +1,4 @@
-#define MyAppVersion "2.2.19"
+#define MyAppVersion "2.2.21"
 #define MyAppNumericVersion "2.2.19.0"
 
 #if !FileExists("pdf-runtime\pdftoppm.exe") || !FileExists("pdf-runtime\pdfinfo.exe")
@@ -19,7 +19,7 @@ Uninstallable=no
 CreateUninstallRegKey=no
 UsePreviousAppDir=no
 OutputDir=installer
-OutputBaseFilename=样品管理系统_v2.2.19_热更新升级包_Setup
+OutputBaseFilename=样品管理系统_v2.2.21_热更新升级包_Setup
 SetupIconFile=icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
