@@ -23,7 +23,7 @@ jobs:
       - name: Build frontend
         working-directory: ${{ env.SOURCE_DIR }}/frontend
         run: |
-          npm ci
+          npm install --no-audit --no-fund
           npm run build
       - name: Build server
         working-directory: ${{ env.SOURCE_DIR }}
