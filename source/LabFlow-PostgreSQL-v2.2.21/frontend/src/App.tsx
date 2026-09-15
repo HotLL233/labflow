@@ -21,6 +21,7 @@ import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import DataGovernancePage from './pages/DataGovernancePage';
 import NotificationPage from './pages/NotificationPage';
+import AnnouncementAdminPage from './pages/AnnouncementAdminPage';
 import MyNotificationsPage from './pages/MyNotificationsPage';
 import PersonnelChangePage from './pages/PersonnelChangePage';
 
@@ -63,6 +64,7 @@ const App: React.FC = () => (<ErrorBoundary><UserProvider><Routes><Route element
   <Route path="/manage" element={<ProtectedRoute requireManage><ManagePage /></ProtectedRoute>} />
   <Route path="/manage/data-governance" element={<ProtectedRoute requirePermission="manage:data-governance:view"><DataGovernancePage /></ProtectedRoute>} />
   <Route path="/manage/notifications" element={<ProtectedRoute requirePermission="manage:notifications"><NotificationPage /></ProtectedRoute>} />
+  <Route path="/manage/announcements" element={<ProtectedRoute requirePermission="manage:settings"><AnnouncementAdminPage /></ProtectedRoute>} />
   <Route path="/manage/:section" element={<ProtectedRoute requireManage><ManagePage /></ProtectedRoute>} />
   <Route path="/manage/roles" element={<ProtectedRoute requirePermission="manage:roles"><AdminRolesPage /></ProtectedRoute>} />
   <Route path="/admin/roles" element={<ProtectedRoute requirePermission="manage:roles"><AdminRolesPage /></ProtectedRoute>} />

@@ -8,6 +8,7 @@ import ListAltIcon from '@mui/icons-material/ListAlt';
 import { getCurrentRoleDataScopes, getSampleInfoTypes } from '../api/client';
 import type { SampleInfoType } from '../types';
 import { useUser } from '../UserContext';
+import AnnouncementSlot from '../components/AnnouncementSlot';
 
 
 const R = '2px';
@@ -43,6 +44,7 @@ const SampleInfoHome: React.FC = () => {
 
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto', mt: { xs: 1, md: 3 }, px: { xs: 1, md: 2 } }}>
+      <AnnouncementSlot position="sample_registration" />
       {/* 顶部标题栏 */}
     
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 1 }}>

@@ -12,6 +12,7 @@ import DivisionChips from '../components/DivisionChips';
 import { getGroups, getDivisions } from '../api/client';
 import type { ProjectGroup, Division } from '../types';
 import { useUser } from '../UserContext';
+import AnnouncementSlot from '../components/AnnouncementSlot';
 
 const BORDER_RADIUS = '2px';
 
@@ -129,6 +130,7 @@ const SamplePortal: React.FC = () => {
 
   return (
     <Box>
+      <AnnouncementSlot position="sample_submission" />
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
         <IconButton onClick={() => navigate('/')} sx={{ bgcolor: `rgba(${parseInt(sampleColor.slice(1,3),16)},${parseInt(sampleColor.slice(3,5),16)},${parseInt(sampleColor.slice(5,7),16)},0.08)`, '&:hover': { bgcolor: `rgba(${parseInt(sampleColor.slice(1,3),16)},${parseInt(sampleColor.slice(3,5),16)},${parseInt(sampleColor.slice(5,7),16)},0.15)` } }}>
           <ArrowBackIcon sx={{ color: sampleColor }} />

@@ -6,6 +6,7 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import { useUser } from '../UserContext';
 import type { HomeCard } from '../types';
+import AnnouncementSlot from '../components/AnnouncementSlot';
 
 
 const BORDER_RADIUS = '2px';
@@ -88,6 +89,7 @@ const HomePage: React.FC = () => {
 
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto', mt: { xs: 2, md: 6 } }}>
+      <AnnouncementSlot position="home" mode="modal" />
       {/* 编辑模式切换 */}
 
       {/* Header */}

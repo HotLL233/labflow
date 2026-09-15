@@ -12,6 +12,7 @@ import DivisionChips from '../components/DivisionChips';
 import { getAnalysisPublicAccountScope, getGroups, getDivisions, type AnalysisPublicAccountCandidate } from '../api/client';
 import type { ProjectGroup, Division } from '../types';
 import { useUser } from '../UserContext';
+import AnnouncementSlot from '../components/AnnouncementSlot';
 
 const BORDER_RADIUS = '2px';
 
@@ -46,6 +47,7 @@ const AnalysisPublicAccountPortal: React.FC = () => {
 
   return (
     <Box>
+      <AnnouncementSlot position="analysis" />
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5 }}>
         <IconButton onClick={() => navigate('/')} sx={{ bgcolor: 'rgba(30,136,229,0.08)', '&:hover': { bgcolor: 'rgba(30,136,229,0.15)' } }}>
           <ArrowBackIcon color="primary" />
