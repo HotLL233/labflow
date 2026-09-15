@@ -1,0 +1,48 @@
+name: Build LabFlow Windows installers
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  SOURCE_DIR: source/LabFlow-PostgreSQL-v2.2.21
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build frontend
+        working-directory: ${{ env.SOURCE_DIR }}/frontend
+        run: |
+          npm ci
+          npm run build
+      - name: Build server
+        working-directory: ${{ env.SOURCE_DIR }}
+        run: cargo build --release --locked
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+      - name: Build installers
+        working-directory: ${{ env.SOURCE_DIR }}
+        shell: powershell
+        run: |
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' build_server_installer.iss
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' build_hot_update_installer.iss
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: labflow-${{ github.ref_name }}-windows
+          path: ${{ env.SOURCE_DIR }}/installer/*.exe
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.SOURCE_DIR }}/installer/*.exe
