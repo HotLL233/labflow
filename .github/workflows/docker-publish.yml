@@ -12,7 +12,7 @@ permissions:
   packages: write
 
 env:
-  SOURCE_DIR: source/LabFlow-PostgreSQL-v2.2.21
+  SOURCE_DIR: source/LabFlow-PostgreSQL-v2.3.0
   IMAGE_NAME: ghcr.io/hotll233/labflow
 
 jobs:
@@ -61,3 +61,4 @@ jobs:
             org.opencontainers.image.title=labflow
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.source=https://github.com/HotLL233/labflow
+
