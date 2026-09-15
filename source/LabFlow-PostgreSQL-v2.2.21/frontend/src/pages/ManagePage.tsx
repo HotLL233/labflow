@@ -293,6 +293,7 @@ const ManagePage: React.FC = () => {
     // for installations that saved an older manage-tabs setting.
     keys.add('log-maintenance');
     keys.add('notifications');
+    keys.add('announcements');
     return keys;
   }, [tabConfig]);
 
@@ -3683,3 +3684,4 @@ const ManagePage: React.FC = () => {
 };
 
 export default ManagePage;
+
