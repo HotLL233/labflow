@@ -23,6 +23,10 @@ services:
       timeout: 5s
       start_period: 45s
       retries: 5
+    labels:
+      # Deliberately opt out of blind image updaters. Use scripts/update-labflow.ps1
+      # so backups and rollback checks always run before a release is installed.
+      com.centurylinklabs.watchtower.enable: "false"
     restart: unless-stopped
 
   postgres:
