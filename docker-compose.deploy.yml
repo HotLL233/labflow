@@ -12,6 +12,8 @@ services:
       WORKLOAD_DATA_DIR: /app/data
       WORKLOAD_ATTACHMENT_PREVIEW_DIR: /app/data/attachment_previews
       PERSONNEL_CHANGE_DATA_DIR: /app/data/personnel-change-data
+      WORKLOAD_PDFTOPPM_PATH: /usr/bin/pdftoppm
+      WORKLOAD_PDFINFO_PATH: /usr/bin/pdfinfo
     depends_on:
       postgres:
         condition: service_healthy

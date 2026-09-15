@@ -29,7 +29,7 @@ ENV WORKLOAD_SERVER_MODE=true \
     PERSONNEL_CHANGE_DATA_DIR=/app/data/personnel-change-data
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl libssl3 gnupg \
+    && apt-get install -y --no-install-recommends ca-certificates curl libssl3 gnupg poppler-utils \
     && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
         | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg \
     && echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
