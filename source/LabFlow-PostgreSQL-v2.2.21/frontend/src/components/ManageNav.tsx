@@ -32,7 +32,7 @@ import { hasPermission } from '../constants/permissions';
 export type ManageNavKey =
   | 'projects' | 'groups' | 'divisions' | 'methods' | 'master-import'
   | 'trash' | 'audit' | 'backup' | 'help' | 'sampleinfo' | 'users' | 'roles'
-  | 'layouts' | 'forms' | 'exports' | 'stats' | 'sessions' | 'data-governance' | 'log-maintenance' | 'notifications' | 'personnel-feedback';
+  | 'layouts' | 'forms' | 'exports' | 'stats' | 'sessions' | 'data-governance' | 'log-maintenance' | 'notifications' | 'personnel-feedback' | 'announcements';
 
 export interface ManageNavItem {
   key: ManageNavKey;
@@ -86,6 +86,7 @@ export const MANAGE_NAV_GROUPS: ManageNavGroup[] = [
     label: '系统配置',
     items: [
       { key: 'layouts', label: '页面布局', description: '页面区块和功能文案', permission: 'manage:settings', icon: <DashboardIcon /> },
+      { key: 'announcements', label: '系统公告', description: '首页及业务入口公告', permission: 'manage:settings', icon: <NotificationsActiveIcon /> },
       { key: 'forms', label: '录入表单', description: '研发送样、样品登记和分析检测字段', permission: 'manage:settings', icon: <ViewWeekIcon /> },
       { key: 'personnel-feedback', label: '人员反馈字段', description: '人员变动类型和通知字段', permission: 'manage:settings', icon: <PeopleIcon /> },
       { key: 'exports', label: '导出模板', description: 'Excel 导出工作表和列配置', permission: 'manage:settings', icon: <ListAltIcon /> },
