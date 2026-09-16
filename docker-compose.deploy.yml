@@ -6,7 +6,7 @@ services:
       - "${WORKLOAD_BIND_IP:-0.0.0.0}:${WORKLOAD_SERVER_PORT:-8000}:8000"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-workload_app}:${POSTGRES_PASSWORD:-change_me_to_a_long_random_password}@postgres:5432/${POSTGRES_DB:-workload_tool}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change_me_to_a_long_admin_password}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
       WORKLOAD_SERVER_MODE: "true"
       WORKLOAD_SERVER_PORT: "8000"
       WORKLOAD_DATA_DIR: /app/data
