@@ -1,13 +1,5 @@
 # syntax=docker/dockerfile:1
 
-FROM node:22.13.0-bookworm-slim AS frontend-builder
-WORKDIR /src
-
-COPY frontend/package.json frontend/package-lock.json ./frontend/
-RUN cd frontend && npm install --ignore-scripts --legacy-peer-deps --no-audit --no-fund
-COPY frontend ./frontend
-RUN cd frontend && npm run build
-
 FROM rust:1.97-bookworm AS backend-builder
 WORKDIR /src
 
@@ -41,7 +33,7 @@ RUN apt-get update \
 
 WORKDIR /app
 COPY --from=backend-builder /src/target/release/workload-tool /app/workload-tool
-COPY --from=frontend-builder /src/backend/static /app/static
+COPY backend/static /app/static
 COPY config.example.toml /app/config.example.toml
 RUN mkdir -p /app/data && chown -R labflow:labflow /app
 

@@ -2,7 +2,6 @@
 .dev
 target
 frontend/node_modules
-backend/static
 qa_*
 _build_*
 releases
