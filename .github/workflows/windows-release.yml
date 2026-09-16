@@ -23,7 +23,7 @@ jobs:
       - name: Build frontend
         working-directory: ${{ env.SOURCE_DIR }}/frontend
         run: |
-          npm install --no-audit --no-fund
+          npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
           npm run build
       - name: Build server
         working-directory: ${{ env.SOURCE_DIR }}
@@ -46,5 +46,3 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.SOURCE_DIR }}/installer/*.exe
-
-
