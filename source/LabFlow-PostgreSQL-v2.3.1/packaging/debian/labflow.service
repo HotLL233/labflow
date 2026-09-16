@@ -1,0 +1,23 @@
+[Unit]
+Description=LabFlow v2.2.19 server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=labflow
+Group=labflow
+WorkingDirectory=/opt/labflow
+Environment=WORKLOAD_CONFIG_PATH=/etc/labflow/config.toml
+Environment=WORKLOAD_DATA_DIR=/var/lib/labflow
+EnvironmentFile=-/etc/labflow/labflow.env
+ExecStart=/opt/labflow/bin/workload-tool --server
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/labflow /etc/labflow
+
+[Install]
+WantedBy=multi-user.target
