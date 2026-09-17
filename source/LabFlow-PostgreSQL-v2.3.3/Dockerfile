@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 
-FROM node:20-bookworm AS frontend-builder
+FROM node:24-bookworm AS frontend-builder
 WORKDIR /src/frontend
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY frontend ./
 RUN npm run build
 

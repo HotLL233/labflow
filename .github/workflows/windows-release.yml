@@ -19,13 +19,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: ${{ env.SOURCE_DIR }}/frontend/package-lock.json
       - name: Build frontend
         working-directory: ${{ env.SOURCE_DIR }}/frontend
         run: |
-          npm ci
+          npm ci --ignore-scripts --no-audit --no-fund
           npm run build
       - name: Build server
         working-directory: ${{ env.SOURCE_DIR }}
