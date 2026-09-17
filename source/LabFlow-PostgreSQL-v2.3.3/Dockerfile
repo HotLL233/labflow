@@ -3,7 +3,7 @@
 FROM node:24-bookworm AS frontend-builder
 WORKDIR /src/frontend
 COPY frontend/package*.json ./
-RUN npm ci --ignore-scripts --no-audit --no-fund
+RUN npm install --ignore-scripts --no-audit --no-fund
 COPY frontend ./
 RUN npm run build
 
