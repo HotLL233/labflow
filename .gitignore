@@ -6,6 +6,8 @@
 /installer/
 /test-artifacts/
 /data/
+/workload_data/
+/postgres_data/
 *.log
 *.pdb
 .DS_Store

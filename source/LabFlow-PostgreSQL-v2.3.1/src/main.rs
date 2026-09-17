@@ -93,6 +93,12 @@ async fn main() {
     }
 
     std::fs::create_dir_all(app_config.data_dir()).ok();
+    tracing::warn!(
+        "配置的初始管理员凭据（仅首次初始化有效，已有数据库密码不受影响；请保护日志）: 账号={} 密码={} 数据目录={}",
+        app_config.admin_user,
+        app_config.admin_pass,
+        app_config.data_dir().display()
+    );
     if let Err(error) = backup_service::repair_backup_permissions(&app_config) {
         eprintln!("备份目录权限初始化警告: {}", error);
     }
