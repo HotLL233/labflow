@@ -1,4 +1,15 @@
 services:
+  init-permissions:
+    image: ${LABFLOW_IMAGE:-ghcr.io/hotll233/labflow}:${LABFLOW_VERSION:-latest}
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["mkdir -p /labflow-project/workload_data && chown -R labflow:labflow /labflow-project/workload_data"]
+    volumes:
+      - type: bind
+        source: .
+        target: /labflow-project
+    restart: "no"
+
   app:
     image: ${LABFLOW_IMAGE:-ghcr.io/hotll233/labflow}:${LABFLOW_VERSION:-latest}
     container_name: labflow-app
@@ -15,6 +26,8 @@ services:
       WORKLOAD_PDFTOPPM_PATH: /usr/bin/pdftoppm
       WORKLOAD_PDFINFO_PATH: /usr/bin/pdfinfo
     depends_on:
+      init-permissions:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
     volumes:
