@@ -32,7 +32,7 @@ jobs:
       - name: Build frontend assets
         working-directory: ${{ env.SOURCE_DIR }}/frontend
         run: |
-          npm install --ignore-scripts --no-audit --no-fund
+          npm ci --no-audit --no-fund
           npm run build
       - name: Upload frontend assets
         uses: actions/upload-artifact@v4
