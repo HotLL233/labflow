@@ -1,5 +1,6 @@
 /target/
 /source/**/target/
+/source/**/backend/static/
 /frontend/node_modules/
 /source/**/node_modules/
 /source/**/installer/

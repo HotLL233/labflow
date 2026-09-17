@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 env:
-  SOURCE_DIR: source/LabFlow-PostgreSQL-v2.3.2
+  SOURCE_DIR: source/LabFlow-PostgreSQL-v2.3.3
 
 jobs:
   build:
@@ -17,6 +17,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ env.SOURCE_DIR }}/frontend/package-lock.json
+      - name: Build frontend
+        working-directory: ${{ env.SOURCE_DIR }}/frontend
+        run: |
+          npm ci
+          npm run build
       - name: Build server
         working-directory: ${{ env.SOURCE_DIR }}
         run: cargo build --release --locked
@@ -34,14 +44,14 @@ jobs:
         with:
           name: labflow-${{ github.ref_name }}-windows
           path: |
-            ${{ env.SOURCE_DIR }}/installer/LabFlow-v2.3.2.exe
-            ${{ env.SOURCE_DIR }}/installer/LabFlow-v2.3.2-HotUpdate.exe
+            ${{ env.SOURCE_DIR }}/installer/LabFlow-v2.3.3.exe
+            ${{ env.SOURCE_DIR }}/installer/LabFlow-v2.3.3-HotUpdate.exe
       - name: Publish GitHub release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ env.SOURCE_DIR }}/installer/LabFlow-v2.3.2.exe
-            ${{ env.SOURCE_DIR }}/installer/LabFlow-v2.3.2-HotUpdate.exe
+            ${{ env.SOURCE_DIR }}/installer/LabFlow-v2.3.3.exe
+            ${{ env.SOURCE_DIR }}/installer/LabFlow-v2.3.3-HotUpdate.exe
           fail_on_unmatched_files: true
           overwrite_files: true
