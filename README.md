@@ -1,12 +1,12 @@
-# LabFlow v2.2.19 交付包
+# LabFlow v2.3.2 交付包
 
 本包可用于在另一台 Windows 电脑继续开发、重建完整安装包或直接测试安装包。
 
-1. 先阅读 `source/LabFlow-PostgreSQL-v2.2.19/开发交接_v2.2.18.md` 和 `历史记忆_v2.2.18.md`。
-2. 新 Codex 会话使用 `source/LabFlow-PostgreSQL-v2.2.19/续接提示词_v2.2.18.md` 中的首条提示词。
-3. 直接测试使用 `installers/样品管理系统_v2.2.19_PostgreSQL服务器版_Setup.exe`。
-4. 安装包完整性以 `checksums/安装包_SHA256.txt` 为准。
+1. 源码目录：`source/LabFlow-PostgreSQL-v2.3.2/`。
+2. Gitee 源码仓库：`https://gitee.com/HotLL233/labflow`。
+3. Docker 部署使用 `docker-compose.deploy.yml`，推荐执行 `scripts/pull-labflow-image.ps1`（Windows）或 `scripts/pull-labflow-image.sh`（Ubuntu）。
+4. 脚本按 `LABFLOW_IMAGE_PRIORITY` 依次尝试 Gitee 镜像和 GHCR 镜像，成功后再启动 Compose。
 
 本包不含任何生产数据库、附件、备份、实际服务器配置、登录凭据或用户本机数据。
 
-`source` 保持纯源码；`build-resources` 仅用于在另一台电脑离线重建完整服务器安装包。
+安装包保存在对应版本目录的 `installer/` 中，不提交到 Git；Docker 镜像由发布工作流推送到 GHCR，并在配置 Gitee registry 凭据后同步推送到 Gitee。

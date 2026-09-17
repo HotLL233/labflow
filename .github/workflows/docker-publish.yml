@@ -14,6 +14,10 @@ permissions:
 env:
   SOURCE_DIR: source/LabFlow-PostgreSQL-v2.3.2
   IMAGE_NAME: ghcr.io/hotll233/labflow
+  GITEE_REGISTRY: ${{ secrets.GITEE_REGISTRY }}
+  GITEE_IMAGE_NAME: ${{ secrets.GITEE_IMAGE_NAME }}
+  GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
+  GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
 
 jobs:
   build-and-push:
@@ -35,6 +39,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Login to Gitee container registry
+        if: ${{ env.GITEE_REGISTRY != '' && env.GITEE_IMAGE_NAME != '' && env.GITEE_USERNAME != '' && env.GITEE_TOKEN != '' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GITEE_REGISTRY }}
+          username: ${{ env.GITEE_USERNAME }}
+          password: ${{ env.GITEE_TOKEN }}
+
       - name: Resolve image version
         id: version
         shell: bash
@@ -46,7 +58,7 @@ jobs:
           fi
           echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
 
-      - name: Build and push image
+      - name: Build and push GHCR image
         uses: docker/build-push-action@v6
         with:
           context: ${{ env.SOURCE_DIR }}
@@ -61,5 +73,21 @@ jobs:
             org.opencontainers.image.title=labflow
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.source=https://github.com/HotLL233/labflow
+
+      - name: Build and push Gitee image
+        if: ${{ env.GITEE_REGISTRY != '' && env.GITEE_IMAGE_NAME != '' && env.GITEE_USERNAME != '' && env.GITEE_TOKEN != '' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.SOURCE_DIR }}
+          file: ${{ env.SOURCE_DIR }}/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.GITEE_REGISTRY }}/${{ env.GITEE_IMAGE_NAME }}:${{ steps.version.outputs.version }}
+            ${{ env.GITEE_REGISTRY }}/${{ env.GITEE_IMAGE_NAME }}:latest
+          labels: |
+            org.opencontainers.image.title=labflow
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.source=https://gitee.com/HotLL233/labflow
 
 

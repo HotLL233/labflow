@@ -1,6 +1,14 @@
+x-labflow-repositories:
+  gitee_source: https://gitee.com/HotLL233/labflow
+  ghcr_image: ${LABFLOW_GHCR_IMAGE:-ghcr.io/hotll233/labflow}
+  # Fill this with the container registry image path provided by Gitee Packages.
+  gitee_image: ${LABFLOW_GITEE_IMAGE:-}
+
 services:
   app:
-    image: ${LABFLOW_IMAGE:-ghcr.io/hotll233/labflow}:${LABFLOW_VERSION:-latest}
+    # Compose itself cannot test multiple registries. Use scripts/pull-labflow-image.ps1 or .sh
+    # to try LABFLOW_GITEE_IMAGE and LABFLOW_GHCR_IMAGE in the configured priority order.
+    image: ${LABFLOW_IMAGE:-${LABFLOW_GHCR_IMAGE:-ghcr.io/hotll233/labflow}}:${LABFLOW_VERSION:-latest}
     container_name: labflow-app
     user: "0:0"
     ports:

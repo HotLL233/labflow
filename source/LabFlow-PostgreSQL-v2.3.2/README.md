@@ -1,6 +1,6 @@
-# 样品管理系统
+# LabFlow v2.3.2
 
-`v2.2.19` 是基于 PostgreSQL 的样品送样、分析检测工作量与样品信息管理系统版本，包含统一 Excel 式导出模板编辑器、固定公式导出和人员变动通知流程。
+`v2.3.2` 是基于 PostgreSQL 的样品送样、分析检测工作量与样品信息管理系统版本，包含公告管理、统一记录字段显示和 Docker 多仓库拉取支持。
 
 ## 主要功能
 
@@ -12,7 +12,7 @@
 
 ## Windows 安装
 
-从发布目录下载 `样品管理系统_v2.2.19_PostgreSQL服务器版_Setup.exe`。
+从发布目录下载 `LabFlow-v2.3.2.exe`。
 
 - 新装时，安装向导会初始化内置 PostgreSQL 运行时和业务库。
 - 覆盖安装会保留既有 PostgreSQL 数据、连接配置及业务记录。
@@ -35,20 +35,40 @@ cargo run --features console
 
 ## Docker on Ubuntu
 
-Docker 版包含应用和 PostgreSQL 两个容器，数据分别保存在 Docker named volume 中。建议使用 `docker-compose-ghcr.yml` 直接拉取 GHCR 镜像（不本地构建）：
+Docker 版包含应用和 PostgreSQL 两个容器。`docker-compose-ghcr.yml` 同时保留 Gitee 镜像变量和 GHCR 镜像变量；使用拉取脚本时，会按照 `LABFLOW_IMAGE_PRIORITY` 的顺序先尝试网络更好的仓库，失败后自动切换到下一个仓库。
 
 ```bash
 cp .env.ghcr.example .env
 chmod 600 .env
-# 编辑 .env，至少修改 POSTGRES_PASSWORD 和 ADMIN_PASSWORD
+# 编辑 .env，至少修改 POSTGRES_PASSWORD 和 ADMIN_PASSWORD。
+# 如果已配置 Gitee Packages 镜像，将 LABFLOW_GITEE_IMAGE 填为完整镜像路径。
 
-docker compose -f docker-compose-ghcr.yml --env-file .env pull
+./scripts/pull-labflow-image.sh
 
-docker compose -f docker-compose-ghcr.yml --env-file .env up -d
+docker compose -f docker-compose-ghcr.yml --env-file .env ps
+```
+
+Windows PowerShell 使用：
+
+```powershell
+.\scripts\pull-labflow-image.ps1
 docker compose -f docker-compose-ghcr.yml --env-file .env ps
 ```
 
 浏览器打开 `http://127.0.0.1:8000/login`。停止服务使用 `docker compose -f docker-compose-ghcr.yml --env-file .env down`；不要加 `-v`，否则会删除 PostgreSQL 数据卷。
+
+### Gitee 镜像发布
+
+Gitee 源码仓库地址为 `https://gitee.com/HotLL233/labflow`。Gitee 镜像地址必须使用 Gitee Packages 实际提供的 Registry 地址，不能把源码仓库地址直接写成 Docker 镜像地址。
+
+在 GitHub 仓库配置以下 Actions Secrets 后，发布工作流会在 GHCR 发布成功后同步构建并推送 Gitee 镜像：
+
+- `GITEE_REGISTRY`：Registry 主机名，例如 Gitee Packages 页面实际显示的地址。
+- `GITEE_IMAGE_NAME`：镜像命名空间和名称。
+- `GITEE_USERNAME`：Registry 登录用户名。
+- `GITEE_TOKEN`：Registry 访问令牌。
+
+未配置这些 Secrets 时，工作流仍会正常发布 GHCR，部署脚本会自动跳过空的 Gitee 镜像配置。
 
 如果要从本地源码构建镜像，请改用 `docker-compose.yml`。
 
