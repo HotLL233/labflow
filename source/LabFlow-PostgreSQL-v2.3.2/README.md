@@ -59,7 +59,7 @@ docker compose -f docker-compose-ghcr.yml --env-file .env ps
 
 ### Gitee 镜像发布
 
-Gitee 源码仓库地址为 `https://gitee.com/HotLL233/labflow`。Gitee 镜像地址必须使用 Gitee Packages 实际提供的 Registry 地址，不能把源码仓库地址直接写成 Docker 镜像地址。
+Gitee 源码仓库地址为 `https://gitee.com/hotll233/labflow`。Gitee 镜像地址必须使用 Gitee Packages 实际提供的 Registry 地址，不能把源码仓库地址直接写成 Docker 镜像地址。
 
 在 GitHub 仓库配置以下 Actions Secrets 后，发布工作流会在 GHCR 发布成功后同步构建并推送 Gitee 镜像：
 
