@@ -1,5 +1,5 @@
 x-labflow-repositories:
-  gitee_source: https://gitee.com/hotll233/labflow
+  gitee_source: https://gitee.com/HotLL233/labflow
   ghcr_image: ${LABFLOW_GHCR_IMAGE:-ghcr.io/hotll233/labflow}
   # Fill this with the container registry image path provided by Gitee Packages.
   gitee_image: ${LABFLOW_GITEE_IMAGE:-}
