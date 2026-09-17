@@ -170,6 +170,7 @@ const StandardWorkloadPortal: React.FC<{ selectedDetector?: AnalysisPublicAccoun
 
   return (
     <Box>
+      <AnnouncementSlot position="analysis" mode="modal" />
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
         <IconButton onClick={() => navigate(selectedDetector ? '/workload' : '/')} sx={{ bgcolor: `rgba(${parseInt(workloadColor.slice(1,3),16)},${parseInt(workloadColor.slice(3,5),16)},${parseInt(workloadColor.slice(5,7),16)},0.08)`, '&:hover': { bgcolor: `rgba(${parseInt(workloadColor.slice(1,3),16)},${parseInt(workloadColor.slice(3,5),16)},${parseInt(workloadColor.slice(5,7),16)},0.15)` } }}>
           <ArrowBackIcon sx={{ color: workloadColor }} />
