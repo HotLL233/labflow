@@ -2,6 +2,7 @@
 /source/**/target/
 /frontend/node_modules/
 /source/**/node_modules/
+/source/**/installer/
 /backend/
 /installer/
 /test-artifacts/
