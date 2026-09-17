@@ -12,7 +12,7 @@ permissions:
   packages: write
 
 env:
-  SOURCE_DIR: source/LabFlow-PostgreSQL-v2.3.4
+  SOURCE_DIR: source/LabFlow-PostgreSQL-v2.3.5
   IMAGE_NAME: ghcr.io/hotll233/labflow
   GITEE_REGISTRY: ${{ secrets.GITEE_REGISTRY }}
   GITEE_IMAGE_NAME: ${{ secrets.GITEE_IMAGE_NAME }}
