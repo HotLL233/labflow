@@ -18,7 +18,11 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./workload_data:/app/data
+      - type: bind
+        source: ./workload_data
+        target: /app/data
+        bind:
+          create_host_path: true
     healthcheck:
       test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8000/api/health || exit 1"]
       interval: 30s
@@ -44,5 +48,9 @@ services:
       timeout: 5s
       retries: 10
     volumes:
-      - ./postgres_data:/var/lib/postgresql
+      - type: bind
+        source: ./postgres_data
+        target: /var/lib/postgresql
+        bind:
+          create_host_path: true
     restart: unless-stopped
