@@ -12,35 +12,10 @@ env:
   SOURCE_DIR: source/LabFlow-PostgreSQL-v2.3.3
 
 jobs:
-  frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: ${{ env.SOURCE_DIR }}/frontend/package-lock.json
-      - name: Build frontend assets
-        working-directory: ${{ env.SOURCE_DIR }}/frontend
-        run: |
-          npm ci --no-audit --no-fund
-          npm run build
-      - name: Upload frontend assets
-        uses: actions/upload-artifact@v4
-        with:
-          name: labflow-v2.3.3-frontend
-          path: ${{ env.SOURCE_DIR }}/backend/static
-
   build:
-    needs: frontend
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: labflow-v2.3.3-frontend
-          path: ${{ env.SOURCE_DIR }}/backend/static
       - uses: dtolnay/rust-toolchain@stable
       - name: Build server
         working-directory: ${{ env.SOURCE_DIR }}
