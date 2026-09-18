@@ -12,7 +12,6 @@ permissions:
   packages: write
 
 env:
-  SOURCE_DIR: source/LabFlow-PostgreSQL-v2.3.8
   IMAGE_NAME: ghcr.io/hotll233/labflow
   GITEE_REGISTRY: ${{ secrets.GITEE_REGISTRY }}
   GITEE_IMAGE_NAME: ${{ secrets.GITEE_IMAGE_NAME }}
@@ -25,6 +24,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Resolve version and source directory
+        id: version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            SOURCE_DIR="source/LabFlow-PostgreSQL-v${VERSION}"
+          else
+            SOURCE_DIR="$(find source -maxdepth 1 -mindepth 1 -type d -name 'LabFlow-PostgreSQL-v*' | sort -V | tail -n 1)"
+            VERSION="$(cat "${SOURCE_DIR}/VERSION")"
+          fi
+          test -f "${SOURCE_DIR}/VERSION"
+          echo "source_dir=${SOURCE_DIR}" >> "${GITHUB_OUTPUT}"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -47,22 +61,11 @@ jobs:
           username: ${{ env.GITEE_USERNAME }}
           password: ${{ env.GITEE_TOKEN }}
 
-      - name: Resolve image version
-        id: version
-        shell: bash
-        run: |
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            VERSION="${GITHUB_REF_NAME#v}"
-          else
-            VERSION="$(cat "${SOURCE_DIR}/VERSION")"
-          fi
-          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
-
       - name: Build and push GHCR image
         uses: docker/build-push-action@v6
         with:
-          context: ${{ env.SOURCE_DIR }}
-          file: ${{ env.SOURCE_DIR }}/Dockerfile
+          context: ${{ steps.version.outputs.source_dir }}
+          file: ${{ steps.version.outputs.source_dir }}/Dockerfile
           # Build on the native GitHub-hosted runner for a predictable completion time.
           platforms: linux/amd64
           push: true
@@ -78,8 +81,8 @@ jobs:
         if: ${{ env.GITEE_REGISTRY != '' && env.GITEE_IMAGE_NAME != '' && env.GITEE_USERNAME != '' && env.GITEE_TOKEN != '' }}
         uses: docker/build-push-action@v6
         with:
-          context: ${{ env.SOURCE_DIR }}
-          file: ${{ env.SOURCE_DIR }}/Dockerfile
+          context: ${{ steps.version.outputs.source_dir }}
+          file: ${{ steps.version.outputs.source_dir }}/Dockerfile
           platforms: linux/amd64
           push: true
           tags: |

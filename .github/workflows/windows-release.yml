@@ -8,29 +8,41 @@ on:
 permissions:
   contents: write
 
-env:
-  SOURCE_DIR: source/LabFlow-PostgreSQL-v2.3.8
-
 jobs:
   build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - name: Resolve version and source directory
+        id: version
+        shell: powershell
+        run: |
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            $version = $env:GITHUB_REF_NAME -replace '^v', ''
+            $sourceDir = "source/LabFlow-PostgreSQL-v$version"
+          } else {
+            $sourceDir = (Get-ChildItem source -Directory -Filter 'LabFlow-PostgreSQL-v*' | Sort-Object Name | Select-Object -Last 1).FullName
+            $sourceDir = $sourceDir.Substring($PWD.Path.Length + 1).Replace('\', '/')
+            $version = (Get-Content "$sourceDir/VERSION" -Raw).Trim()
+          }
+          if (-not (Test-Path "$sourceDir/VERSION")) { throw "Version directory not found: $sourceDir" }
+          "source_dir=$sourceDir" >> $env:GITHUB_OUTPUT
+          "version=$version" >> $env:GITHUB_OUTPUT
       - name: Prepare VC++ runtime
-        working-directory: ${{ env.SOURCE_DIR }}
+        working-directory: ${{ steps.version.outputs.source_dir }}
         shell: powershell
         run: |
           $runtimeDir = Join-Path $PWD 'postgres-runtime\installer'
           New-Item -ItemType Directory -Path $runtimeDir -Force | Out-Null
           Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vc_redist.x64.exe' -OutFile (Join-Path $runtimeDir 'vcredist_x64.exe')
       - name: Build server
-        working-directory: ${{ env.SOURCE_DIR }}
+        working-directory: ${{ steps.version.outputs.source_dir }}
         run: cargo build --release --locked
       - name: Install Inno Setup
         run: choco install innosetup --no-progress -y
       - name: Build installers
-        working-directory: ${{ env.SOURCE_DIR }}
+        working-directory: ${{ steps.version.outputs.source_dir }}
         shell: powershell
         run: |
           & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' build_server_installer.iss
@@ -41,13 +53,13 @@ jobs:
         with:
           name: labflow-${{ github.ref_name }}-windows
           path: |
-            ${{ env.SOURCE_DIR }}/installer/LabFlow-v2.3.8.exe
-            ${{ env.SOURCE_DIR }}/installer/LabFlow-v2.3.8-HotUpdate.exe
+            ${{ steps.version.outputs.source_dir }}/installer/LabFlow-v${{ steps.version.outputs.version }}.exe
+            ${{ steps.version.outputs.source_dir }}/installer/LabFlow-v${{ steps.version.outputs.version }}-HotUpdate.exe
       - name: Create GitHub release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            ${{ env.SOURCE_DIR }}/installer/LabFlow-v2.3.8.exe
-            ${{ env.SOURCE_DIR }}/installer/LabFlow-v2.3.8-HotUpdate.exe
+            ${{ steps.version.outputs.source_dir }}/installer/LabFlow-v${{ steps.version.outputs.version }}.exe
+            ${{ steps.version.outputs.source_dir }}/installer/LabFlow-v${{ steps.version.outputs.version }}-HotUpdate.exe
