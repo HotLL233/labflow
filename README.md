@@ -9,4 +9,9 @@
 
 本包不含任何生产数据库、附件、备份、实际服务器配置、登录凭据或用户本机数据。
 
-安装包保存在对应版本目录的 `installer/` 中，不提交到 Git；Docker 镜像由发布工作流推送到 GHCR，并在配置 Gitee registry 凭据后同步推送到 Gitee。
+打包口径（v2.3.13 起固化为发布规范）：
+
+- 安装包文件名沿用 `LabFlow-v<版本>.exe`（完整服务器版）与 `LabFlow-v<版本>-HotUpdate.exe`（热更新升级包）。
+- 发布流程根据 tag `v<版本>` 自动构建，并**自动提交到仓库根 `installers/` 目录**，同时上传 GitHub Release。
+- 本地留档副本放在对应版本目录的 `installer/` 中；该目录被 `.gitignore` 忽略，不进入版本库。
+- Docker 镜像由发布工作流推送到 GHCR，并在配置 Gitee registry 凭据后同步推送到 Gitee。

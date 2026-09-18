@@ -13,6 +13,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # 完整历史用于把安装包提交回仓库（Publish installers into repository 步骤）。
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - name: Resolve version and source directory
         id: version
@@ -55,6 +58,21 @@ jobs:
           path: |
             ${{ steps.version.outputs.source_dir }}/installer/LabFlow-v${{ steps.version.outputs.version }}.exe
             ${{ steps.version.outputs.source_dir }}/installer/LabFlow-v${{ steps.version.outputs.version }}-HotUpdate.exe
+      - name: Publish installers into repository
+        if: startsWith(github.ref, 'refs/tags/')
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          New-Item -ItemType Directory -Path 'installers' -Force | Out-Null
+          Copy-Item "${{ steps.version.outputs.source_dir }}/installer/LabFlow-v$version.exe" 'installers/' -Force
+          Copy-Item "${{ steps.version.outputs.source_dir }}/installer/LabFlow-v$version-HotUpdate.exe" 'installers/' -Force
+          git add installers
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) { Write-Host 'installers already up to date'; exit 0 }
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "build: add LabFlow v$version Windows installers [skip ci]"
+          git push origin 'HEAD:main'
+
       - name: Create GitHub release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
