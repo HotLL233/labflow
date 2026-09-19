@@ -755,7 +755,9 @@ fn workload_instruments(
 /// v2.3.14: 方法库整体为空时才提示检查配置，并说明可以自定义录入。
 fn workload_unavailable_reason(record: &SampleInfoResponse) -> Option<String> {
     if record.project_name.trim().is_empty() {
-        return Some("该样品记录没有填写项目名称，无法从方法库检索方法，请直接自定义方法名称。".into());
+        return Some(
+            "该样品记录没有填写项目名称，无法从方法库检索方法，请直接自定义方法名称。".into(),
+        );
     }
     Some(format!(
         "项目「{}」在方法库中没有可用的检测方法（项目未关联方法、方法未启用或未在样品信息登记中显示）。可直接自定义方法与仪器后录入。",
@@ -902,14 +904,12 @@ async fn sample_workload_confirm(
         multiplier: Some(body.multiplier),
         high_item: None,
         division_id: record.division_id,
-        extra_fields: Some(
-            serde_json::json!({
-                "source_business_no": record.business_no,
-                "source_notes": body.notes.unwrap_or_default(),
-                "source_instrument_id": source_instrument_id,
-                "source_custom_method": custom_method_name.is_some(),
-            }),
-        ),
+        extra_fields: Some(serde_json::json!({
+            "source_business_no": record.business_no,
+            "source_notes": body.notes.unwrap_or_default(),
+            "source_instrument_id": source_instrument_id,
+            "source_custom_method": custom_method_name.is_some(),
+        })),
         source_type: Some("sample_info_sample".into()),
         source_record_id: Some(id),
     };
