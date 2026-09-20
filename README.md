@@ -2,6 +2,13 @@
 
 本包可用于在另一台 Windows 电脑继续开发、重建完整安装包或直接测试安装包。
 
+## 开发续接与记忆惯例
+
+- 开始开发或更换设备后，必须先阅读仓库根目录的 `PROJECT_MEMORY.md`。
+- `PROJECT_MEMORY.md` 是项目唯一、跨版本、跨设备的长期记忆与开发惯例来源；后续确认的业务规则、技术决策、问题根因、环境约定和发布经验只更新该文件，并随 Git 提交。
+- 不再新增或维护按日期记忆、`历史记忆_*.md`、`开发交接_*.md`、`续接提示词_*.md` 或 `HANDOFF.md`；旧版本目录中的同类文件只作历史归档，不得作为当前规则来源或复制到新版本。
+- 版本 `更新说明.md` 和专项文档仍按用途维护，但不得复制一套长期记忆。规则冲突时以当前用户要求、当前源码与工作流、`PROJECT_MEMORY.md` 的顺序为准。
+
 1. 源码目录：`source/LabFlow-PostgreSQL-v2.3.16/`。
 2. Gitee 源码仓库：`https://gitee.com/HotLL233/labflow`。
 3. Docker 部署使用 `docker-compose.deploy.yml`，推荐执行 `scripts/pull-labflow-image.ps1`（Windows）或 `scripts/pull-labflow-image.sh`（Ubuntu）。

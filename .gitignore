@@ -13,3 +13,4 @@
 *.pdb
 .DS_Store
 Thumbs.db
+/.codebuddy/
