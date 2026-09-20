@@ -307,6 +307,10 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 验证：`cargo fmt --check`、`cargo check --locked`、新增单元测试 `workload_entry_is_allowed_after_detection_completed`（4 个测试通过）、`npm run build`、`git diff --check` 全部通过；仅剩既有未使用函数警告与 Vite 大 chunk 警告。
 - 本地安装包：`LabFlow-v2.3.17.exe`（78,748,893 字节）、`LabFlow-v2.3.17-HotUpdate.exe`（28,249,638 字节），版本均为 `2.3.17.0`；校验和留档于版本目录 `installer/checksums.sha256`。
 - 发布口径调整：本版不再把本地构建的 exe 提交到仓库根 `installers/`（避免与 CI 回写形成同路径双 blob），由 tag 触发的 Windows 工作流按既有 `Publish installers into repository` 步骤入库。
+- 提交 `76d98b52`，注释标签 `v2.3.17`；Windows 安装包工作流（run #44）与 Docker 工作流（run #129）均成功。
+- GitHub Release `v2.3.17` 已发布：`LabFlow-v2.3.17.exe` 78,663,375 字节、`LabFlow-v2.3.17-HotUpdate.exe` 28,159,934 字节（CI 构建版）。
+- CI 回写提交 `31edb510`（`build: add LabFlow v2.3.17 Windows installers [skip ci]`），本地 `main` 需 `git pull --ff-only` 快进到该提交。
+- Gitee 的 `main` 与 `v2.3.17` 标签推送均被 `pre-receive` 以超配额拒绝，Gitee 仍停留在 `16fb4e99`。
 
 ## 11. 当前已知风险与后续注意
 
