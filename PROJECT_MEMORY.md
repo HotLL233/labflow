@@ -152,7 +152,9 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 所有命令统一使用 PowerShell 7：`pwsh -NoProfile -Command '...'`。
 - Windows PowerShell 5.1 的可执行文件名是 `powershell`，与 `pwsh` 不同，不能依赖 PATH 顺序把前者替换为后者。
 - PowerShell 7 当前通过 Windows 应用执行别名调用；脚本不要硬编码 MSI 默认路径。
-- GitHub 网络不通时可对单次 Git 命令使用系统代理参数，不修改全局 Git 配置。
+- GitHub 网络不通时可对单次 Git 命令使用系统代理参数（`-c http.proxy=... -c https.proxy=...`），不修改全局 Git 配置。
+- 2026-09-20 实测：代理 `127.0.0.1:7897` 先报 `TLS connect error: ... unexpected eof`，随后即使端口仍可连通（`Test-NetConnection` 为 True）也返回 `http_code=000`，而此时直连 GitHub 已可用。排查顺序应为：先用 `git ls-remote origin` 直连试一次，失败再考虑代理，避免把可用的直连误判为断网。
+- 网络受限时可用 GitHub REST API 核对发布结果：`/repos/<owner>/<repo>/actions/runs`、`/commits?sha=main`、`/releases/latest`。
 - 本机 Inno Setup 6 参考路径：`D:\APP\Inno Setup 6\ISCC.exe`。
 - 本机安装的 LabFlow 配置通常位于 `C:\ProgramData\WorkloadTool`，业务数据目录和连接凭据不得写入仓库。
 - 使用 `psql` 非交互查询时带 `-w`，设置控制台输出和 `PGCLIENTENCODING=UTF8`；PowerShell 命令参数中直接传中文 SQL 可能发生编码破坏，可改用 ASCII 条件、`type_key` 或 `chr(...)`。
