@@ -2,9 +2,9 @@
 
 > 最后更新：2026-09-20
 >
-> 当前正式基线：`v2.3.16`
+> 当前正式基线：`v2.3.17`
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.16/`
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.17/`
 
 ## 1. 文件定位与强制维护规则
 
@@ -243,6 +243,16 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 已录入记录显示禁用的“已录入”；提交成功后先乐观更新当前行，再刷新列表。
 - `SampleWorkloadPreview.recorded` 只用于弹窗预览，不能代替列表记录状态。
 
+### 8.4 样品信息工作量准入条件（v2.3.17 起）
+
+- 准入条件只与“是否已取样”有关：记录 `sampled_at` 非空，且状态为“待检测”或“已检测”。
+- 样品信息记录的“完成检测”会把状态改为“已检测”；此时仍必须允许录入工作量（补录），不能再以 `status == "待检测"` 作为唯一门槛。
+- 撤回取样会把记录恢复为“待取样”并清空 `sampled_at`，退回/退回待修改状态不得录入工作量，这些既有约束不变。
+- 前端 `SampleInfoRecordList` 的 `action_record_workload` 与后端 `sample_workload_preview`、`sample_workload_confirm` 必须使用同一准入判断；后端统一走 `ensure_workload_editable(status, sampled)`。
+- 已录入的记录继续显示禁用的“已录入”；后端保留重复提交保护。
+- 提示语要区分原因：未取样提示“请先完成取样后再录入工作量”，状态不允许时提示当前状态不可录入，不得把“已完成检测”误报为“请先完成取样”。
+- 研发送样（`rd_sample`）链路状态为“待取样/已取样”，没有“已检测”状态，准入条件仍为“已取样”，不要照搬本条改动。
+
 ## 9. 历史兼容与数据安全
 
 - 历史归属确认不得在升级后重新进入待确认队列。
@@ -277,7 +287,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 本地完整包和热更新包构建完成；源码提交 `1daf7ecc`，安装包提交 `4092ff6b`，CI 回写 `16fb4e99`。
 - GitHub Windows Release 与 Docker 工作流成功；GHCR 发布成功。
 
-### v2.3.16（当前正式基线）
+### v2.3.16
 
 - 修复研发送样工作量录入后列表仍显示“录入工作量”的问题。
 - 9 处版本号、根 README 和版本更新说明同步完成。
@@ -289,9 +299,38 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
   - `LabFlow-v2.3.16.exe`：78,671,620 字节，版本 `2.3.16.0`。
   - `LabFlow-v2.3.16-HotUpdate.exe`：28,156,944 字节，版本 `2.3.16.0`。
 
+### v2.3.17（当前正式基线）
+
+- 根因：样品信息记录点“完成检测”后状态变为“已检测”，前端 `action_record_workload` 与后端预览/提交接口都以 `status == "待检测"` 为准，导致按钮消失且接口拒绝，工作量无法补录。
+- 修复：前端改为“`sampled_at` 非空且状态为待检测/已检测”即显示；“录入工作量”；后端新增 `ensure_workload_editable`，预览与提交共用，并按真实原因返回提示语。
+- 影响面：仅样品信息链路；研发送样链路状态为“待取样/已取样”，不受影响。
+- 验证：`cargo fmt --check`、`cargo check --locked`、新增单元测试 `workload_entry_is_allowed_after_detection_completed`（4 个测试通过）、`npm run build`、`git diff --check` 全部通过；仅剩既有未使用函数警告与 Vite 大 chunk 警告。
+- 本地安装包：`LabFlow-v2.3.17.exe`（78,748,893 字节）、`LabFlow-v2.3.17-HotUpdate.exe`（28,249,638 字节），版本均为 `2.3.17.0`；校验和留档于版本目录 `installer/checksums.sha256`。
+- 发布口径调整：本版不再把本地构建的 exe 提交到仓库根 `installers/`（避免与 CI 回写形成同路径双 blob），由 tag 触发的 Windows 工作流按既有 `Publish installers into repository` 步骤入库。
+
 ## 11. 当前已知风险与后续注意
 
-- Gitee 仓库历史体积超配额，后续推送可能再次被拒绝。
+### 11.1 仓库体积与历史构建产物审计（2026-09-20）
+
+现象：推送 Gitee 被拒，`Repo size: 1095.398MB, exceeds quota 1024MB`，而本次推送内容只有文档。
+
+客观结论（本地与远端 `main` + 24 个 tag 可达对象的实测数据）：
+
+- 远端可达的独立 blob 合计约 **1307 MB**，其中 `installers/` 占 **1010 MB（约 77%）**，是唯一超配额主因。
+- `installers/` 在工作树里有 11 个 exe（632.6 MB），但历史上只有 **18 个独立 blob**：v2.2.19 被提交两次（`1a5123ff` 新增 + `b573dc6f` 覆盖），v2.3.14/15/16 各被提交两次（本地包 `7126b8e8`/`4092ff6b`/`5615f421` 新增后，被 CI 回写 `e1837802`/`16fb4e99`/`86f9147d` 覆盖）。被覆盖遗弃的 7 个 blob 约 **377 MB** 永久留在历史中，只能靠重写历史回收。
+- `installers/样品管理系统_v2.2.18|19|20_PostgreSQL服务器版_Setup.exe` 三个旧中文命名包（约 **225 MB**）是 `f6389262` 初始导入与后续发布留下的，命名口径自 v2.3.13 起已废止，仍随仓库分发。
+- 私有运行时被逐版本整份复制提交：`postgres-runtime` 在 `main` 上有 35387 个文件、`pdf-runtime` 有 2440 个文件，按条目计 3080.9 MB + 1708.8 MB；去重后仅 1510 + 115 个独立 blob（169.8 MB + 76.6 MB），即**同一套二进制在约 20 个版本目录里重复约 20 份**。`build-resources/postgres-runtime`、`build-resources/pdf-runtime` 又是第三份副本。
+- 直接后果：`main` 的工作树检出体积约 **5.5 GB**，换设备全新克隆的代价极高；每个 tag 又各自钉住当版的安装包，使历史 blob 无法被 GC。
+- 本地另有 `local-snapshot` 分支含 **48573 个 `frontend/node_modules` 文件**（源自 `f6389262`）。该分支未推送到任何远端（远端只有 `main`），但已使本地对象库膨胀；**禁止推送该分支**。
+
+清理方向（按收益排序，均需重写历史才能真正缩小 Gitee 体积）：
+
+1. 停止把 `installers/*.exe` 提交进仓库，改为只走 GitHub Release + 版本目录 `installer/` 本地留档；同时删除 `windows-release.yml` 的 `Publish installers into repository` 步骤，从根上止住增长（每版约 +102 MB）。
+2. 用 `git filter-repo --path installers --invert-paths` 等重写历史移除 `installers/`，可回收约 1010 MB，Gitee 体积将降到约 300 MB 以内；重写后必须强推并重新对齐两个远端的 tag。
+3. 版本目录内的 `postgres-runtime`/`pdf-runtime` 改为由 CI 下载或放到 Release/LFS，避免工作树 5.5 GB。
+4. 只需临时救急时，可在 Gitee 仓库设置执行 `Repository GC`，但只要 tag 仍钉住旧 blob，效果有限。
+
+- Gitee 仓库历史体积超配额，后续推送可能再次被拒绝（根因见 11.1，仅改当前树无效）。
 - 前端存在 Vite 大 chunk 警告，但不是当前构建失败；没有明确需求时不要顺手做拆包重构。
 - Rust 代码存在既有未使用函数等警告；局部功能开发不要扩大为无关清理。
 - 样品信息工作量链路尚未完整应用 `common_method_division_scopes`，若调整必须先明确产品口径。
@@ -302,8 +341,8 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 - 仓库交付与当前版本：`README.md`
 - 唯一长期记忆与开发惯例：`PROJECT_MEMORY.md`
-- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.16/更新说明.md`
-- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.16/README.md`
+- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.17/更新说明.md`
+- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.17/README.md`
 - 通用编码原则：`skills/ponytail/SKILL.md`
 - 自动发布事实来源：当前 `.github/workflows/` 下的工作流文件
 
