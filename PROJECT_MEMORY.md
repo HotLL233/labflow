@@ -95,13 +95,14 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 ### 5.1 Git 与自动发布
 
-1. 提交新版本源码并推送 `main`。
-2. 创建注释标签 `v<版本>` 并推送。
+1. 提交新版本源码并推送 `main`。**只推 GitHub `origin`**；Gitee 推送自 2026-09-21 起暂停（见 5.4），不要再执行 `git push gitee ...`。
+2. 创建注释标签 `v<版本>` 并推送到 `origin`。
 3. 标签触发：
    - Windows 工作流：Release 构建、Inno Setup 完整包与热更新包、GitHub Release、安装包回写仓库根 `installers/`。
-   - Docker 工作流：发布 `ghcr.io/hotll233/labflow:<版本>` 和 `latest`；配置 Gitee registry 凭据时同步镜像。
+   - Docker 工作流：发布 `ghcr.io/hotll233/labflow:<版本>` 和 `latest`。
 4. Windows CI 回写安装包后，本地 `main` 应快进到 `[skip ci]` 提交，并核对远端引用。
 5. 未打标签时，工作流可能按 `main` 上名称最大的版本目录构建；因此不能遗留编号更大但未完成的版本目录。
+6. 注意推送 `main` 同样会触发 Docker 工作流并按 `main` 上最大版本目录重建 `<版本>` 与 `latest`；文档提交也会带来一次镜像重建，属预期行为。
 
 ### 5.2 安装包命名与留存
 
@@ -143,8 +144,9 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 ### 5.4 远端与仓库体积
 
-- GitHub 为主要发布端。
-- Gitee 曾因仓库超过 `1024 MB` 配额拒绝推送；不得强推或改写历史。发布后必须用 `git ls-remote` 核对最终引用，因为 CI 或镜像同步流程可能随后完成同步。
+- GitHub 为主要且唯一的发布端。
+- **Gitee 推送自 2026-09-21 起暂停（用户决定）**：本地不再尝试推送 Gitee，`docker-publish.yml` 的 Gitee registry 同步也未配置凭据（一直跳过）。远端 `gitee` 配置保留但状态陈旧（仍停留在 `16fb4e99`，即 v2.3.16 时的 `main`），其超配额问题未解决；恢复推送前不要强推或改写历史。
+- Gitee 曾因仓库超过 `1024 MB` 配额拒绝推送（`pre-receive` 直接拒绝，连纯文档提交和标签推送都被拒）。发布后必须用 `git ls-remote` 核对远端最终引用。
 - 根 `installers/` 中的大文件会持续增大 Git 历史；后续若再次触发配额问题，应制定独立瘦身方案，不能在正常发版中临时重写历史。
 
 ## 6. 本机与命令环境经验
@@ -314,7 +316,13 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 本地安装包（2026-09-21 构建）：`LabFlow-v2.3.18.exe` 78,755,313 字节、`LabFlow-v2.3.18-HotUpdate.exe` 28,247,718 字节，`ProductVersion`/`FileVersion` 均为 `2.3.18.0`；SHA-256 留档于版本目录 `installer/checksums.sha256`（184 字节，格式与 v2.3.17 一致）。
 - 发布口径沿用 v2.3.17：本地出包不把 exe 复制或提交到仓库根 `installers/`，由 tag 触发的 Windows 工作流 `Publish installers into repository` 入库。
 - 打包记录：release 构建复用上一版 `target/release` 缓存后仅 57 秒；完整包 Inno Setup 编译 69 秒、热更新包 27 秒；`postgres-runtime/installer/vcredist_x64.exe` 从 v2.3.17 目录复制补齐。
-- 状态：源码与文档改动尚未提交、未打标签、未推送，CI、GitHub Release 与 Docker 镜像尚未执行。
+- 发布结果（2026-09-21，仅 GitHub）：
+  - 源码发布提交 `340495b6`（`feat: release LabFlow v2.3.18`）；注释标签 `v2.3.18`（tag 对象 `d62c907b`）指向该提交。
+  - Windows 安装包工作流 run `35563478920`（14m25s）成功；Docker 工作流 tag 运行 `35563478963`（6m0s）与 main 推送运行 `35563477019`（5m36s）均成功。
+  - GitHub Release `v2.3.18` 已发布（非草稿、非预发布）：`LabFlow-v2.3.18.exe` 78,684,280 字节 sha256 `a7118070c588d30d50e6508eef69400d6c168da186a29236e92076eac1b5855c`；`LabFlow-v2.3.18-HotUpdate.exe` 28,172,598 字节 sha256 `ee7752d5cbf7e1cc37c4ea28d96dcc719d8561d142cf3355bb6003a173dda0ff`（均为 CI 构建版）。
+  - GHCR `2.3.18` 与 `latest` 指向同一摘要 `sha256:2096860e68b57b0a4a0418a6f1febcbfba604c0a9a705530b437a92ccb89e5a2`，本地镜像需 `docker pull ghcr.io/hotll233/labflow:2.3.18`。
+  - CI 回写提交 `5dec8e27`（`build: add LabFlow v2.3.18 Windows installers [skip ci]`），本地 `main` 已快进到该提交。
+  - Gitee：本次 `main` 与 `v2.3.18` 推送仍被 `pre-receive` 以超配额拒绝，随后按用户要求暂停 Gitee 推送（见 5.4）。
 
 ### v2.3.17
 
