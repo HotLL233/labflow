@@ -1,10 +1,10 @@
 # LabFlow 项目统一记忆
 
-> 最后更新：2026-09-20
+> 最后更新：2026-09-21
 >
-> 当前正式基线：`v2.3.17`
+> 当前正式基线：`v2.3.18`
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.17/`
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.18/`
 
 ## 1. 文件定位与强制维护规则
 
@@ -133,8 +133,8 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 步骤：
 
-1. 确保 `postgres-runtime/installer/vcredist_x64.exe` 存在；可从 `https://aka.ms/vs/17/release/vc_redist.x64.exe` 获取。
-2. 执行 `cargo build --release --locked`。
+1. 确保 `postgres-runtime/installer/vcredist_x64.exe` 存在；可从 `https://aka.ms/vs/17/release/vc_redist.x64.exe` 获取。新版本目录默认没有该文件，最省事的做法是从上一版目录复制（它同样是 CI 下载的同名文件）。
+2. 执行 `cargo build --release --locked`。把上一版 `target/release` 复制到新版本目录的 `target/release` 可复用依赖缓存，实测 v2.3.18 只需 57 秒（不复制则需重新编译全部依赖）。
 3. 调用 Inno Setup 编译 `build_server_installer.iss` 和 `build_hot_update_installer.iss`。
 4. 检查两个 EXE 的 `ProductVersion`、`FileVersion`、大小和 SHA-256。
 5. 注意 `Copy-Item` 在目标目录已存在时可能生成 `postgres-runtime/postgres-runtime` 嵌套副本；构建前检查并避免把重复运行时打包或提交。
@@ -301,7 +301,22 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
   - `LabFlow-v2.3.16.exe`：78,671,620 字节，版本 `2.3.16.0`。
   - `LabFlow-v2.3.16-HotUpdate.exe`：28,156,944 字节，版本 `2.3.16.0`。
 
-### v2.3.17（当前正式基线）
+### v2.3.18（当前正式基线）
+
+内容（在 v2.3.17 目录基础上继续迭代，未升版本号）：
+
+- 录入取样工作量口径修复：工作量统一按「本次录入数量 × 方法系数」计算，`multiplier` 只用于导出金额，不再影响工作量；弹窗补充检测类型、原始数量、已录入数量、剩余数量；支持部分录入并累计补录（原数量 5 录 3 后还能补 2），累计超过原数量由后端拒绝；移除 `work_records` 来源一对一唯一约束，新增迁移 `2.3.18-sample-workload-quantity`。
+- 业务编号显示 / 隐藏全局开关：系统设置键 `ui-display.show_business_no`，入口在管理后台「页面布局」顶部；前端新增 `frontend/src/UiDisplayContext.tsx`（`useUiDisplay()`）并在 `App.tsx` 挂载，本机缓存 `labflow.ui.show-business-no`；作用范围是业务列表（分析检测今日记录、研发送样记录、样品信息登记列表/卡片、回收站），审计日志编号列与撤回/退回弹窗编号必须保持显示。
+- `GET /api/settings/<未配置key>` 实测返回 **HTTP 200 + `code:2001`**（不是 404），前端读取系统设置必须先判 `code === 0` 再解析 `value`。
+- 研发送样记录页（分析检测门户 → 记录卡 → 研发送样记录）「撤回取样」从操作列移入取样人列、显示在取样人姓名下方第二行；该列宽上下限固定 96/128；后台隐藏取样人列时按钮回退到操作列。
+- 后台三处配置统一为「列表行只读 + 开关集中在编辑弹窗」：样品信息登记管理 → 自定义列（`ManagePage` + `SortableSampleInfoColumnRow`，启用开关入弹窗）、录入表单配置 → 研发送样列配置（`AdminRdRecordColumns`，行内只读摘要）、录入表单配置 → 其他录入表单配置（`ManageFormConfig`，新增字段编辑弹窗）。列配置表格不再使用大 `minWidth`（历史 1220/1320/930 导致必须左右滑动），改为 `tableLayout: 'fixed'` + 宽 100%。
+- 验证：`cargo check --locked`、`cargo build --release --locked`、前端 `npm run build`（tsc + vite）、导出层「系数与倍率独立」单元测试 1 项、指定文件 lint（0 诊断）全部通过；仅有既有未使用函数与 Vite 大 chunk 警告。
+- 本地安装包（2026-09-21 构建）：`LabFlow-v2.3.18.exe` 78,755,313 字节、`LabFlow-v2.3.18-HotUpdate.exe` 28,247,718 字节，`ProductVersion`/`FileVersion` 均为 `2.3.18.0`；SHA-256 留档于版本目录 `installer/checksums.sha256`（184 字节，格式与 v2.3.17 一致）。
+- 发布口径沿用 v2.3.17：本地出包不把 exe 复制或提交到仓库根 `installers/`，由 tag 触发的 Windows 工作流 `Publish installers into repository` 入库。
+- 打包记录：release 构建复用上一版 `target/release` 缓存后仅 57 秒；完整包 Inno Setup 编译 69 秒、热更新包 27 秒；`postgres-runtime/installer/vcredist_x64.exe` 从 v2.3.17 目录复制补齐。
+- 状态：源码与文档改动尚未提交、未打标签、未推送，CI、GitHub Release 与 Docker 镜像尚未执行。
+
+### v2.3.17
 
 - 根因：样品信息记录点“完成检测”后状态变为“已检测”，前端 `action_record_workload` 与后端预览/提交接口都以 `status == "待检测"` 为准，导致按钮消失且接口拒绝，工作量无法补录。
 - 修复：前端改为“`sampled_at` 非空且状态为待检测/已检测”即显示；“录入工作量”；后端新增 `ensure_workload_editable`，预览与提交共用，并按真实原因返回提示语。
@@ -347,8 +362,8 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 - 仓库交付与当前版本：`README.md`
 - 唯一长期记忆与开发惯例：`PROJECT_MEMORY.md`
-- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.17/更新说明.md`
-- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.17/README.md`
+- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.18/更新说明.md`
+- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.18/README.md`
 - 通用编码原则：`skills/ponytail/SKILL.md`
 - 自动发布事实来源：当前 `.github/workflows/` 下的工作流文件
 
