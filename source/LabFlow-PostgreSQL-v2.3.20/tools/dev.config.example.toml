@@ -1,0 +1,12 @@
+server_port = 8000
+db_dir = ".dev/app-data"
+database_url = "postgresql://labflow:labflow_dev@127.0.0.1:55432/labflow_dev"
+log_level = "debug"
+runtime_log_enabled = true
+runtime_log_max_size_mb = 50
+admin_user = "admin"
+admin_pass = "admin123"
+backup_enabled = false
+backup_interval_hours = 24
+max_backup_count = 10
+backup_mode = "database"

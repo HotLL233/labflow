@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>LabFlow 记录表改版 · 全部变动界面清单</title>
+<style>
+  :root { --r: 2px; --bd: #e0e0e0; --bdc: #d9dfe7; --head: #f5f7f5; --t1: #1f1f1f; --t2: #6b6b6b; --t3: #9aa3ad; --green: #2e7d32; --blue: #1976d2; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 22px 24px 80px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Microsoft YaHei", sans-serif; color: var(--t1); background: #eef1f5; font-size: 13px; line-height: 1.6; }
+  h1 { font-size: 19px; margin: 0 0 3px; }
+  h2 { font-size: 15px; margin: 30px 0 6px; }
+  h3 { font-size: 13px; margin: 14px 0 6px; color: #333; }
+  .sub { color: var(--t2); font-size: 12.5px; margin: 0 0 6px; }
+  .card { background: #fff; border: 1px solid var(--bd); border-radius: var(--r); padding: 14px 16px; margin-bottom: 14px; }
+  .badge { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: var(--r); margin: 0 6px 8px 0; }
+  .badge.bad { color: #b71c1c; background: #fdecea; border: 1px solid #f5c6c2; }
+  .badge.good { color: #1b5e20; background: #e8f5e9; border: 1px solid #c3e0c5; }
+  .badge.info { color: #0d47a1; background: #e8f1fb; border: 1px solid #c4d9f0; }
+  .badge.new { color: #e65100; background: #fff4e5; border: 1px solid #ffd9b3; }
+  table.spec { border-collapse: collapse; width: 100%; font-size: 12px; background: #fff; }
+  table.spec th, table.spec td { border: 1px solid var(--bd); padding: 5px 8px; text-align: left; vertical-align: top; }
+  table.spec th { background: #f7f9fb; font-weight: 700; }
+  table.spec td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  code { background: #f2f4f7; padding: 0 4px; border-radius: 2px; font-size: 11.5px; font-family: Consolas, monospace; }
+  .note { background: #fffbe6; border: 1px solid #f0e2b6; border-radius: var(--r); padding: 9px 11px; font-size: 12px; color: #5c4a00; margin-top: 10px; }
+  .note.ok { background: #eefaf0; border-color: #c8e6c9; color: #1b5e20; }
+  ul.tight { margin: 6px 0 0; padding-left: 18px; }
+  ul.tight li { margin-bottom: 3px; }
+  .two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 14px; }
+
+  /* 后台列表模拟 */
+  table.adm { border-collapse: collapse; width: 100%; font-size: 12px; background: #fff; table-layout: fixed; }
+  table.adm th, table.adm td { border-bottom: 1px solid #e8e8e8; padding: 7px 8px; text-align: left; vertical-align: middle; }
+  table.adm th { background: #f5f5f5; font-weight: 700; }
+  .drag { color: #c0c0c0; cursor: grab; font-size: 14px; }
+  .idx { display: inline-block; width: 18px; color: var(--t3); }
+  .fname { font-weight: 600; }
+  .fkey { font-family: Consolas, monospace; font-size: 11px; color: var(--t2); }
+  .pill { display: inline-block; padding: 1px 7px; border-radius: 2px; font-size: 11px; font-weight: 700; }
+  .pill.auto { background: #e8f1fb; color: #0d47a1; border: 1px solid #c4d9f0; }
+  .pill.custom { background: #f0f2f5; color: #4a5560; border: 1px solid #d8dee5; }
+  .pill.hidden { background: #fdecea; color: #b71c1c; border: 1px solid #f5c6c2; }
+  .adm-tool { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .btn { display: inline-block; padding: 3px 10px; border-radius: 2px; font-size: 12px; border: 1px solid var(--bdc); background: #fff; white-space: nowrap; }
+  .btn.pri { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn.out { border-color: var(--green); color: var(--green); }
+  .btn.sm { padding: 2px 7px; font-size: 11.5px; }
+  .btn.dis { border-color: #cfd8dc; color: #90a4ae; background: #f5f7f8; }
+  .ico { display: inline-block; width: 26px; text-align: center; color: #5b6570; }
+
+  /* 弹窗模拟 */
+  .dlg { background: #fff; border: 1px solid #c8ccd2; border-radius: 3px; box-shadow: 0 6px 22px rgba(0,0,0,.16); overflow: hidden; max-width: 620px; }
+  .dlg-h { padding: 12px 18px; font-weight: 700; font-size: 14px; border-bottom: 1px solid #e6e6e6; }
+  .dlg-b { padding: 14px 18px; display: grid; gap: 12px; }
+  .dlg-f { padding: 10px 18px; border-top: 1px solid #e6e6e6; display: flex; justify-content: flex-end; gap: 8px; background: #fafafa; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .fld { display: block; }
+  .fld .lb { font-size: 11.5px; color: var(--t2); margin-bottom: 3px; display: block; }
+  .fld .ip { border: 1px solid #c4c9cf; border-radius: 2px; padding: 7px 9px; font-size: 12.5px; background: #fff; min-height: 34px; }
+  .fld .ip.sel::after { content: "▾"; float: right; color: var(--t3); }
+  .fld .hp { font-size: 11px; color: var(--t3); margin-top: 3px; }
+  .switches { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; }
+  .sw { display: inline-flex; align-items: center; gap: 6px; }
+  .sw i { width: 30px; height: 16px; border-radius: 9px; background: var(--green); position: relative; display: inline-block; }
+  .sw i::after { content: ""; position: absolute; top: 2px; right: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; }
+  .sw i.off { background: #bfc6cd; }
+  .sw i.off::after { left: 2px; right: auto; }
+
+  /* 宽度模式区块 */
+  .wbox { border: 1px solid #dfe4ea; border-radius: 2px; padding: 11px 12px; background: #fbfcfe; display: grid; gap: 8px; }
+  .wbox .ttl { font-size: 12.5px; font-weight: 700; }
+  .radio { display: flex; align-items: center; gap: 7px; font-size: 12.5px; }
+  .radio .dot { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid #9aa4ae; display: inline-block; flex: 0 0 auto; }
+  .radio .dot.on { border-color: var(--blue); }
+  .radio .dot.on::after { content: ""; display: block; width: 7px; height: 7px; margin: 2px; border-radius: 50%; background: var(--blue); }
+  .meas { font-size: 11.5px; color: #0d47a1; background: #e8f1fb; border: 1px solid #c4d9f0; border-radius: 2px; padding: 4px 8px; }
+  .row-inline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  /* 菜单模拟 */
+  .menu { background: #fff; border: 1px solid #c8ccd2; border-radius: 3px; box-shadow: 0 6px 20px rgba(0,0,0,.14); padding: 4px 0; min-width: 210px; font-size: 12.5px; }
+  .menu .mi { padding: 7px 14px; display: flex; align-items: center; gap: 8px; }
+  .menu .mi.hd { color: var(--t2); font-size: 11.5px; padding: 6px 14px 3px; }
+  .menu .sp { height: 1px; background: #eceff2; margin: 4px 0; }
+  .menu .mi .rt { margin-left: auto; font-size: 11px; color: var(--t3); }
+  .chk { width: 15px; height: 15px; border: 1.5px solid #9aa4ae; border-radius: 2px; display: inline-block; flex: 0 0 auto; }
+  .chk.on { background: var(--blue); border-color: var(--blue); position: relative; }
+  .chk.on::after { content: ""; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+
+  /* 记录表模拟 */
+  table.grid { border-collapse: collapse; table-layout: fixed; font-size: 12.5px; background: #fff; }
+  table.grid th, table.grid td { border: 1px solid var(--bdc); padding: 0; vertical-align: top; overflow: hidden; }
+  table.grid th { background: var(--head); font-weight: 700; font-size: 11.5px; color: #333; }
+  .th { display: flex; align-items: center; gap: 1px; padding: 5px; min-height: 30px; }
+  .th .n { flex: 1 1 auto; min-width: 0; line-height: 1.25; word-break: break-all; }
+  .th .s, .th .f { flex: 0 0 auto; color: var(--t3); font-size: 10px; }
+  .c { padding: 5px; min-width: 0; }
+  .one { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .two { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.32; word-break: break-all; }
+  .tiny { font-size: 10.5px; color: var(--t2); line-height: 1.2; }
+  .chip { display: inline-block; padding: 1px 7px; border-radius: 2px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .st-wait { background: #d32f2f; color: #fff; }
+  .st-test { background: #f9a825; color: #1f1f1f; }
+  .st-done { background: #2e7d32; color: #fff; }
+  .st-sampled { background: #c8e6c9; color: #2e7d32; }
+  .acts { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .wrapx { overflow-x: auto; padding-bottom: 4px; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .mono { font-family: Consolas, monospace; font-size: 11.5px; }
+  .ctr { text-align: center; }
+
+  /* 提示条 */
+  .bar { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border: 1px solid #c7d8f0; background: #f2f7ff; border-radius: 2px; font-size: 12.5px; color: #0d47a1; }
+  .bar.warn { border-color: #ffd9b3; background: #fff8f0; color: #8a4a00; }
+  .legend { font-size: 11.5px; color: var(--t2); margin-top: 6px; }
+  .flow { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+</style>
+</head>
+<body>
+
+<h1>LabFlow 记录表改版 · 全部变动界面清单</h1>
+<p class="sub">按「列宽默认值 + 可覆盖 + 可恢复」方案，逐界面给出改后参考。本文件覆盖后台与交互界面；两张记录表主视图见 <code>docs/记录表改版预览.html</code>。</p>
+
+<div class="card" style="border-color:#c3e0c5;background:#f6fdf7">
+  <span class="badge good">已确认的四项决策（2026-09-23）</span>
+  <table class="spec" style="margin-top:8px">
+    <tr><th style="width:26%">决策</th><th>落地方式</th></tr>
+    <tr>
+      <td>① 用户自己拖列宽 + 恢复默认宽度</td>
+      <td><b>要</b>。启用列宽四级模型的第 ④ 级（本机 localStorage 覆盖）；列设置菜单提供「恢复默认宽度」，双击列分隔线恢复单列。详见第 8 节。</td>
+    </tr>
+    <tr>
+      <td>② 操作列收纳为「主操作 + 更多 ▾」</td>
+      <td><b>可接受，但必须带开关</b>。新增系统设置 <code>record_table_action_mode</code>：<code>auto</code>（按容器宽度三档自动收敛，默认）／ <code>full</code>（始终显示全部按钮，等同升级前）。详见第 9 节。</td>
+    </tr>
+    <tr>
+      <td>③ 老库升级后的默认宽度模式</td>
+      <td><b>默认「自动」</b>（<code>width_mode DEFAULT 'auto'</code>）。升级即按内容测量生效；原 <code>width</code> 值保留不删，切回「自定义」即可复用；另设「全部列改为自定义」作为整体回退。</td>
+    </tr>
+    <tr>
+      <td>④ 表格配置三项接通记录表</td>
+      <td><b>一并接通</b>。<code>row_height</code> → 两张记录表行高；<code>seq_column_width</code> → 序号列宽；<code>checkbox_column_width</code> → 选择列宽（仅研发送样记录有选择列）。详见第 7 节。</td>
+    </tr>
+  </table>
+</div>
+
+<div class="card">
+  <b>改动界面总览（10 处）</b>
+  <table class="spec" style="margin-top:8px">
+    <tr><th style="width:6%">#</th><th style="width:26%">界面</th><th style="width:24%">所在文件</th><th>改动性质</th></tr>
+    <tr><td>1</td><td>研发送样记录（列表）</td><td><code>RdRecordsPage.tsx</code></td><td>列宽引擎、操作列、单元格两行 → 见《记录表改版预览》</td></tr>
+    <tr><td>2</td><td>样品信息登记 登记记录（列表）</td><td><code>SampleInfoRecordList.tsx</code></td><td>同上 → 见《记录表改版预览》</td></tr>
+    <tr><td class="n">3</td><td><b>研发送样信息登记配置</b>（列表）</td><td><code>AdminRdRecordColumns.tsx</code></td><td>宽度列显示「自动（实测）／自定义」+ 顶部批量恢复</td></tr>
+    <tr><td class="n">4</td><td><b>研发送样字段编辑弹窗</b></td><td><code>AdminRdRecordColumns.tsx</code></td><td class="new">新增宽度模式：自动 / 自定义 + 恢复自动</td></tr>
+    <tr><td class="n">5</td><td><b>样品信息登记 · 自定义列</b>（列表）</td><td><code>SortableSampleInfoColumnRow.tsx</code></td><td>宽度列显示同上</td></tr>
+    <tr><td class="n">6</td><td><b>样品信息登记 · 编辑列弹窗</b></td><td><code>ManagePage.tsx</code></td><td class="new">新增宽度模式 + 修正误导文案</td></tr>
+    <tr><td class="n">7</td><td><b>表格配置</b>（行高 / 序号列宽 / 选择列宽）</td><td><code>ManageFormConfig.tsx</code></td><td>接通到两张记录表 + 密度档联动</td></tr>
+    <tr><td class="n">8</td><td><b>记录表「列设置」菜单</b> + 列宽拖拽</td><td><code>RecordTableTools.tsx</code></td><td class="new">列宽来源显示 + 恢复默认宽度 + 拖拽调宽</td></tr>
+    <tr><td class="n">9</td><td><b>记录表操作列「更多 ▾」菜单</b></td><td>新增组件</td><td class="new">操作收纳 + 三档形态 + 收纳开关</td></tr>
+    <tr><td class="n">10</td><td><b>窄屏降级与隐藏列提示</b></td><td><code>RecordTableTools.tsx</code></td><td class="new">L1~L6 阶梯 + 未显示列提示条</td></tr>
+  </table>
+</div>
+
+<!-- ==================== 3 后台：研发送样字段管理列表 ==================== -->
+<h2>③ 研发送样信息登记配置（后台字段列表）</h2>
+
+<span class="badge bad">改 前</span><span class="tag sub" style="display:inline">宽度列只显示一个数字，看不出这列是"自动"还是"被固定"，也没有批量恢复入口</span>
+<div class="card">
+  <div class="adm-tool">
+    <div><b>研发送样信息登记配置</b><div class="tiny">启用字段 16 个，按住排序图标可拖拽调整顺序；启用、必填与显示范围在"编辑字段"弹窗内设置</div></div>
+    <span class="btn pri">＋ 新增字段</span>
+  </div>
+  <table class="adm">
+    <colgroup><col style="width:80px"><col><col style="width:100px"><col style="width:230px"><col style="width:80px"><col style="width:90px"></colgroup>
+    <thead><tr><th>排序</th><th>字段名称</th><th>输入方式</th><th>显示 / 启用（编辑弹窗内设置）</th><th style="text-align:center">宽度</th><th style="text-align:center">操作</th></tr></thead>
+    <tbody>
+      <tr><td><span class="drag">⠿</span><span class="idx">1</span></td><td><div class="fname">序号</div><div class="fkey">seq_no</div></td><td>数字</td><td class="tiny">列表</td><td class="ctr">60</td><td class="ctr"><span class="ico">✎</span></td></tr>
+      <tr><td><span class="drag">⠿</span><span class="idx">2</span></td><td><div class="fname">送样人</div><div class="fkey">user_name</div></td><td>文本</td><td class="tiny">列表 · 导出 · 表单</td><td class="ctr">120</td><td class="ctr"><span class="ico">✎</span></td></tr>
+      <tr><td><span class="drag">⠿</span><span class="idx">3</span></td><td><div class="fname">方法</div><div class="fkey">method_name</div></td><td>文本</td><td class="tiny">列表 · 导出 · 表单</td><td class="ctr">200</td><td class="ctr"><span class="ico">✎</span></td></tr>
+      <tr><td><span class="drag">⠿</span><span class="idx">4</span></td><td><div class="fname">批号</div><div class="fkey">batch_no</div></td><td>文本</td><td class="tiny">列表 · 导出 · 表单</td><td class="ctr">100</td><td class="ctr"><span class="ico">✎</span></td></tr>
+      <tr><td><span class="drag">⠿</span><span class="idx">5</span></td><td><div class="fname">状态</div><div class="fkey">status</div></td><td>文本</td><td class="tiny">列表 · 导出</td><td class="ctr">80</td><td class="ctr"><span class="ico">✎</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<span class="badge good" style="margin-top:12px">改 后</span><span class="tag sub" style="display:inline">宽度列显示模式与实测值；顶部新增批量恢复入口</span>
+<div class="card">
+  <div class="adm-tool">
+    <div><b>研发送样信息登记配置</b><div class="tiny">启用字段 16 个，按住排序图标可拖拽调整顺序；宽度默认按内容自动计算</div></div>
+    <div class="row-inline">
+      <span class="btn out">全部列恢复自动宽度</span>
+      <span class="btn pri">＋ 新增字段</span>
+    </div>
+  </div>
+  <table class="adm">
+    <colgroup><col style="width:80px"><col><col style="width:100px"><col style="width:200px"><col style="width:150px"><col style="width:90px"></colgroup>
+    <thead><tr><th>排序</th><th>字段名称</th><th>输入方式</th><th>显示 / 启用</th><th style="text-align:center">宽度</th><th style="text-align:center">操作</th></tr></thead>
+    <tbody>
+      <tr><td><span class="drag">⠿</span><span class="idx">1</span></td><td><div class="fname">序号</div><div class="fkey">seq_no</div></td><td>数字</td><td class="tiny">列表</td><td class="ctr"><span class="pill auto">自动 58px</span></td><td class="ctr"><span class="ico">✎</span></td></tr>
+      <tr><td><span class="drag">⠿</span><span class="idx">2</span></td><td><div class="fname">送样人</div><div class="fkey">user_name</div></td><td>文本</td><td class="tiny">列表 · 导出 · 表单</td><td class="ctr"><span class="pill auto">自动 68px</span></td><td class="ctr"><span class="ico">✎</span></td></tr>
+      <tr><td><span class="drag">⠿</span><span class="idx">3</span></td><td><div class="fname">方法</div><div class="fkey">method_name</div></td><td>文本</td><td class="tiny">列表 · 导出 · 表单</td><td class="ctr"><span class="pill auto">自动 112px</span></td><td class="ctr"><span class="ico">✎</span></td></tr>
+      <tr><td><span class="drag">⠿</span><span class="idx">4</span></td><td><div class="fname">批号</div><div class="fkey">batch_no</div></td><td>文本</td><td class="tiny">列表 · 导出 · 表单</td><td class="ctr"><span class="pill auto">自动 124px</span></td><td class="ctr"><span class="ico">✎</span></td></tr>
+      <tr><td><span class="drag">⠿</span><span class="idx">5</span></td><td><div class="fname">状态</div><div class="fkey">status</div></td><td>文本</td><td class="tiny">列表 · 导出</td><td class="ctr"><span class="pill custom">自定义 80px</span></td><td class="ctr"><span class="ico">✎</span></td></tr>
+    </tbody>
+  </table>
+  <div class="legend">「自动」= 未覆盖，由内容测量决定，括号内是当前实测值；「自定义」= 管理员固定，不随内容变化。</div>
+</div>
+
+<!-- ==================== 4 后台：研发送样字段编辑弹窗 ==================== -->
+<h2>④ 研发送样字段编辑弹窗 <span class="badge new">新增区块</span></h2>
+
+<div class="two-col">
+  <div>
+    <span class="badge bad">改 前</span>
+    <div class="dlg">
+      <div class="dlg-h">编辑字段：批号</div>
+      <div class="dlg-b">
+        <div class="grid2">
+          <label class="fld"><span class="lb">显示名称</span><span class="ip">批号</span></label>
+          <label class="fld"><span class="lb">字段标识</span><span class="ip" style="background:#f5f5f5;color:#8a8a8a">batch_no</span><span class="hp">系统标识不可修改</span></label>
+          <label class="fld"><span class="lb">输入方式</span><span class="ip sel">文本</span></label>
+          <label class="fld"><span class="lb">列表宽度</span><span class="ip">100</span><span class="hp">48 ~ 500</span></label>
+          <label class="fld"><span class="lb">占位提示</span><span class="ip"></span></label>
+          <label class="fld"><span class="lb">默认值</span><span class="ip"></span></label>
+        </div>
+        <label class="fld"><span class="lb">适用检测类型</span><span class="ip" style="color:#b9b9b9">留空表示全部；多个类型用逗号分隔</span></label>
+        <div class="switches">
+          <span class="sw"><i></i>启用字段</span><span class="sw"><i class="off"></i>必填</span>
+          <span class="sw"><i></i>表单显示</span><span class="sw"><i></i>列表显示</span>
+          <span class="sw"><i></i>导出显示</span><span class="sw"><i class="off"></i>第二行显示</span>
+        </div>
+      </div>
+      <div class="dlg-f"><span class="btn">取消</span><span class="btn pri">保存</span></div>
+    </div>
+    <div class="note">「列表宽度」是一个裸数字，看不出它压住了内容测量；改坏后也没有回退入口。</div>
+  </div>
+
+  <div>
+    <span class="badge good">改 后</span>
+    <div class="dlg">
+      <div class="dlg-h">编辑字段：批号</div>
+      <div class="dlg-b">
+        <div class="grid2">
+          <label class="fld"><span class="lb">显示名称</span><span class="ip">批号</span></label>
+          <label class="fld"><span class="lb">字段标识</span><span class="ip" style="background:#f5f5f5;color:#8a8a8a">batch_no</span><span class="hp">系统标识不可修改</span></label>
+          <label class="fld"><span class="lb">输入方式</span><span class="ip sel">文本</span></label>
+          <label class="fld"><span class="lb">占位提示</span><span class="ip"></span></label>
+        </div>
+
+        <div class="wbox">
+          <div class="ttl">列表宽度</div>
+          <div class="row-inline">
+            <span class="radio"><span class="dot on"></span>自动（按内容计算）</span>
+            <span class="radio"><span class="dot"></span>自定义宽度</span>
+          </div>
+          <div class="meas">当前实测 124px（含表头与内边距，按本页内容 P90 计算）</div>
+          <div class="row-inline">
+            <label class="fld" style="width:150px"><span class="lb">自定义宽度（px）</span><span class="ip" style="background:#f5f5f5;color:#a8a8a8">—</span></label>
+            <span class="tiny">允许区间 48 ~ 500<br>切换为自定义后才可编辑</span>
+          </div>
+          <div class="row-inline"><span class="btn sm out">恢复自动宽度</span><span class="tiny">保留已填的自定义值，仅切回自动模式</span></div>
+        </div>
+
+        <label class="fld"><span class="lb">适用检测类型</span><span class="ip" style="color:#b9b9b9">留空表示全部；多个类型用逗号分隔</span></label>
+        <div class="switches">
+          <span class="sw"><i></i>启用字段</span><span class="sw"><i class="off"></i>必填</span>
+          <span class="sw"><i></i>表单显示</span><span class="sw"><i></i>列表显示</span>
+          <span class="sw"><i></i>导出显示</span><span class="sw"><i class="off"></i>第二行显示</span>
+        </div>
+      </div>
+      <div class="dlg-f"><span class="btn">取消</span><span class="btn pri">保存</span></div>
+    </div>
+    <div class="note ok">「列表宽度」从一个数字变成一个区块：模式单选 + 实测值 + 自定义输入 + 恢复自动。保持自动时无需做任何操作。</div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>同弹窗的另一种状态：管理员固定了宽度</h3>
+  <div class="flow">
+    <div class="dlg" style="max-width:420px">
+      <div class="dlg-h">编辑字段：状态</div>
+      <div class="dlg-b">
+        <div class="wbox">
+          <div class="ttl">列表宽度</div>
+          <div class="row-inline">
+            <span class="radio"><span class="dot"></span>自动（按内容计算）</span>
+            <span class="radio"><span class="dot on"></span>自定义宽度</span>
+          </div>
+          <div class="row-inline">
+            <label class="fld" style="width:150px"><span class="lb">自定义宽度（px）</span><span class="ip">80</span></label>
+            <span class="tiny">允许区间 48 ~ 500<br>自动模式实测参考：68px</span>
+          </div>
+          <div class="row-inline"><span class="btn sm out">恢复自动宽度</span></div>
+        </div>
+      </div>
+      <div class="dlg-f"><span class="btn">取消</span><span class="btn pri">保存</span></div>
+    </div>
+    <div style="flex:1;min-width:260px">
+      <ul class="tight">
+        <li>选「自定义」后输入框可编辑，并给出自动模式的实测值作为参考，便于决策。</li>
+        <li>「恢复自动宽度」一键切回自动，<b>自定义值仍保留在 <code>width</code> 字段里</b>，再切回自定义时原值还在。</li>
+        <li>保存后列表页宽度列立刻显示为「自定义 80px」。</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 5 后台：样品信息登记列列表 ==================== -->
+<h2>⑤ 样品信息登记 · 自定义列（后台列表）</h2>
+
+<div class="two-col">
+  <div>
+    <span class="badge bad">改 前</span>
+    <div class="card" style="margin:0">
+      <div class="adm-tool">
+        <b style="color:#2e7d32">④ 自定义列配置</b>
+        <div class="row-inline"><span class="btn sm">检测类型配置 ▾</span><span class="btn out sm">＋ 新增列</span></div>
+      </div>
+      <table class="adm">
+        <colgroup><col style="width:60px"><col><col style="width:110px"><col style="width:70px"></colgroup>
+        <thead><tr><th>排序</th><th>字段</th><th>输入方式</th><th style="text-align:center">宽度</th></tr></thead>
+        <tbody>
+          <tr><td><span class="drag">⠿</span><span class="idx">1</span></td><td><div class="fname">样品批号</div><div class="fkey">batch_no</div></td><td>文本</td><td class="ctr">120 px</td></tr>
+          <tr><td><span class="drag">⠿</span><span class="idx">2</span></td><td><div class="fname">样品主要成分</div><div class="fkey">main_components</div></td><td>文本</td><td class="ctr">180 px</td></tr>
+          <tr><td><span class="drag">⠿</span><span class="idx">3</span></td><td><div class="fname">注意事项</div><div class="fkey">notes</div></td><td>文本</td><td class="ctr">180 px</td></tr>
+          <tr><td><span class="drag">⠿</span><span class="idx">4</span></td><td><div class="fname">取样</div><div class="fkey">action_collect</div></td><td>操作按钮</td><td class="ctr">84 px<div class="tiny">按钮宽度</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div>
+    <span class="badge good">改 后</span>
+    <div class="card" style="margin:0">
+      <div class="adm-tool">
+        <b style="color:#2e7d32">④ 自定义列配置</b>
+        <div class="row-inline"><span class="btn sm">检测类型配置 ▾</span><span class="btn out sm">全部列恢复自动宽度</span><span class="btn out sm">＋ 新增列</span></div>
+      </div>
+      <table class="adm">
+        <colgroup><col style="width:60px"><col><col style="width:100px"><col style="width:140px"></colgroup>
+        <thead><tr><th>排序</th><th>字段</th><th>输入方式</th><th style="text-align:center">宽度</th></tr></thead>
+        <tbody>
+          <tr><td><span class="drag">⠿</span><span class="idx">1</span></td><td><div class="fname">样品批号</div><div class="fkey">batch_no</div></td><td>文本</td><td class="ctr"><span class="pill auto">自动 124px</span></td></tr>
+          <tr><td><span class="drag">⠿</span><span class="idx">2</span></td><td><div class="fname">样品主要成分</div><div class="fkey">main_components</div></td><td>文本</td><td class="ctr"><span class="pill auto">自动 180px</span><div class="tiny">可扩展列</div></td></tr>
+          <tr><td><span class="drag">⠿</span><span class="idx">3</span></td><td><div class="fname">注意事项</div><div class="fkey">notes</div></td><td>文本</td><td class="ctr"><span class="pill auto">自动 170px</span><div class="tiny">可扩展列</div></td></tr>
+          <tr><td><span class="drag">⠿</span><span class="idx">4</span></td><td><div class="fname">取样</div><div class="fkey">action_collect</div></td><td>操作按钮</td><td class="ctr"><span class="pill custom">自定义 84px</span><div class="tiny">按钮宽度</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="note">操作按钮类字段仍显示为「自定义 + 按钮宽度」，因为它们本身就是按钮尺寸，不由内容测量决定；操作列<b>总宽</b>由第 7 节的三档规则封顶。</div>
+
+<!-- ==================== 6 后台：样品信息登记编辑列弹窗 ==================== -->
+<h2>⑥ 样品信息登记 · 编辑列弹窗 <span class="badge new">新增区块 + 修正文案</span></h2>
+
+<div class="two-col">
+  <div>
+    <span class="badge bad">改 前</span>
+    <div class="dlg">
+      <div class="dlg-h">编辑列</div>
+      <div class="dlg-b">
+        <label class="fld"><span class="lb">显示名称 (label)</span><span class="ip">样品批号</span></label>
+        <div class="grid2">
+          <label class="fld"><span class="lb">宽度(px)</span><span class="ip">120</span><span class="hp">记录列表按宽度比例铺满页面，长内容在单元格内滚动</span></label>
+          <label class="fld"><span class="lb">排序</span><span class="ip">6</span></label>
+        </div>
+      </div>
+      <div class="dlg-f"><span class="btn">取消</span><span class="btn pri">保存</span></div>
+    </div>
+    <div class="note">提示文案「长内容在单元格内滚动」把缺陷写成了说明，等于告知用户"内容看不全是设计如此"。</div>
+  </div>
+  <div>
+    <span class="badge good">改 后</span>
+    <div class="dlg">
+      <div class="dlg-h">编辑列</div>
+      <div class="dlg-b">
+        <label class="fld"><span class="lb">显示名称 (label)</span><span class="ip">样品批号</span></label>
+        <div class="wbox">
+          <div class="ttl">列表宽度</div>
+          <div class="row-inline">
+            <span class="radio"><span class="dot on"></span>自动（按内容计算）</span>
+            <span class="radio"><span class="dot"></span>自定义宽度</span>
+          </div>
+          <div class="meas">当前实测 124px（含表头与内边距）</div>
+          <div class="row-inline"><span class="btn sm out">恢复自动宽度</span></div>
+        </div>
+        <div class="grid2">
+          <label class="fld"><span class="lb">排序</span><span class="ip">6</span></label>
+          <label class="fld"><span class="lb">可扩展列</span><span class="ip sel" style="padding-top:5px"><span class="sw" style="font-size:12px"><i></i></span> 优先吸收剩余空间</span></label>
+        </div>
+      </div>
+      <div class="dlg-f"><span class="btn">取消</span><span class="btn pri">保存</span></div>
+    </div>
+    <div class="note ok">文案改为：「自动模式按内容计算宽度，长内容两行展开；自定义模式按设定宽度固定，可在列设置中恢复自动」。</div>
+  </div>
+</div>
+
+<!-- ==================== 7 后台：表格配置 ==================== -->
+<h2>⑦ 表格配置（行高 / 序号列宽 / 选择列宽）</h2>
+<p class="sub">该界面已存在于 <code>ManageFormConfig.tsx:239-245</code>，但两张记录表<strong>从未读取</strong>这三个值。本次接通，并加上密度档联动。</p>
+
+<div class="two-col">
+  <div>
+    <span class="badge bad">改 前</span>
+    <div class="card" style="margin:0">
+      <div style="font-weight:700;margin-bottom:8px">表格配置</div>
+      <div class="row-inline">
+        <label class="fld" style="width:100px"><span class="lb">行高</span><span class="ip">48</span></label>
+        <label class="fld" style="width:110px"><span class="lb">序号列宽</span><span class="ip">50</span></label>
+        <label class="fld" style="width:110px"><span class="lb">选择列宽</span><span class="ip">36</span></label>
+      </div>
+      <div class="note">只有录入表格读取了这三个值（<code>SampleEntryPage.tsx:1091</code>），研发送样记录与样品信息登记记录完全忽略。</div>
+    </div>
+  </div>
+  <div>
+    <span class="badge good">改 后</span>
+    <div class="card" style="margin:0">
+      <div class="adm-tool" style="margin-bottom:8px">
+        <div style="font-weight:700">表格配置</div>
+        <div class="row-inline"><span class="tiny">密度档</span><span class="btn sm">标准 ▾</span></div>
+      </div>
+      <div class="row-inline">
+        <label class="fld" style="width:100px"><span class="lb">行高</span><span class="ip">36</span></label>
+        <label class="fld" style="width:110px"><span class="lb">序号列宽</span><span class="ip">58</span></label>
+        <label class="fld" style="width:110px"><span class="lb">选择列宽</span><span class="ip">44</span></label>
+      </div>
+      <div class="bar" style="margin-top:10px">ℹ 生效范围：研发送样记录、样品信息登记 登记记录、研发送样录入三处表格</div>
+      <div class="legend">
+        密度档联动：紧凑（行高 32 / 字号 12px）· 标准（36 / 12.5px）· 舒适（44 / 13.5px）。
+        手动改行高后密度档自动切为「自定义」。
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <span class="badge good">已确认：一并接通</span>
+  <h3 style="margin-top:0">三项配置的接通范围</h3>
+  <table class="spec">
+    <tr><th style="width:22%">配置项</th><th style="width:22%">研发送样记录</th><th style="width:24%">样品信息登记 登记记录</th><th>说明</th></tr>
+    <tr>
+      <td><code>row_height</code> 行高</td><td>行高</td><td>行高</td>
+      <td>替换两张表各自硬编码的行高。长文本两行时取 <code>max(配置行高, 两行文本实际高)</code>，不会被强行压扁</td>
+    </tr>
+    <tr>
+      <td><code>seq_column_width</code> 序号列宽</td><td>序号列</td><td>序号列</td>
+      <td>作为<b>下限</b>参与：实际宽度 = max(配置值, 内容需求)。样品信息登记现有代码是 <code>max(配置, 74)</code>，改为统一读取配置值并交给内容测量</td>
+    </tr>
+    <tr>
+      <td><code>checkbox_column_width</code> 选择列宽</td><td>选择列</td><td style="color:#6b6b6b">— 无此列</td>
+      <td>样品信息登记 登记记录<b>没有勾选列</b>，该配置对它不生效（不报错、不占位）。本次<b>不新增</b>勾选能力，只让已有行为对同一份配置保持一致</td>
+    </tr>
+  </table>
+  <div class="note">这三项在 <code>ManageFormConfig.tsx</code> 界面里已经存在，本次只做两件事：① 让两张记录表真正读取；② 补上密度档与生效范围说明。改动量小、无 UI 结构变化，可以最先上线验证。</div>
+</div>
+
+<!-- ==================== 8 前台：列设置菜单 ==================== -->
+<h2>⑧ 记录表「列设置」菜单 <span class="badge new">新增列宽区块</span></h2>
+
+<div class="flow">
+  <div>
+    <span class="badge bad">改 前</span>
+    <div class="card" style="margin:0">
+      <span class="btn sm">▦ 列设置（13/14）</span>
+      <div class="menu" style="margin-top:8px">
+        <div class="mi hd"><span>勾选要显示的列</span><span style="margin-left:auto" class="btn sm" >全部显示</span></div>
+        <div class="mi"><span class="chk on"></span>序号</div>
+        <div class="mi"><span class="chk on"></span>送样人</div>
+        <div class="mi"><span class="chk on"></span>样品批号</div>
+        <div class="mi"><span class="chk"></span>附件</div>
+      </div>
+      <div class="legend">只能控制显隐，列宽只能去后台改。</div>
+    </div>
+  </div>
+
+  <div>
+    <span class="badge good">改 后</span>
+    <div class="card" style="margin:0">
+      <span class="btn sm">▦ 列设置（13/14）</span>
+      <div class="menu" style="margin-top:8px;min-width:270px">
+        <div class="mi hd"><span>勾选要显示的列</span><span style="margin-left:auto" class="btn sm">全部显示</span></div>
+        <div class="mi" style="padding:4px 14px 8px;gap:6px">
+          <span class="tiny">宽度</span><span class="btn sm">跟随后台（自动）▾</span><span class="btn sm">恢复默认宽度</span>
+        </div>
+        <div class="sp"></div>
+        <div class="mi"><span class="chk on"></span>序号<span class="rt">自动 58px</span></div>
+        <div class="mi"><span class="chk on"></span>送样人<span class="rt">自动 72px</span></div>
+        <div class="mi"><span class="chk on"></span>样品批号<span class="rt">自动 124px</span></div>
+        <div class="mi"><span class="chk on"></span>样品主要成分<span class="rt">自动 180px</span></div>
+        <div class="mi"><span class="chk"></span>附件<span class="rt">已隐藏</span></div>
+      </div>
+      <div class="legend">顶部多出「宽度」一行：显示当前来源（跟随后台 / 本机自定义），并提供「恢复默认宽度」清空本机覆盖。</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>「宽度」下拉展开（可选功能：本机自定义列宽）</h3>
+  <div class="flow">
+    <div class="menu" style="min-width:230px">
+      <div class="mi hd">宽度来源</div>
+      <div class="mi"><span class="chk on"></span>跟随后台（自动 / 自定义）</div>
+      <div class="mi"><span class="chk"></span>本机自定义（仅自己可见）</div>
+      <div class="sp"></div>
+      <div class="mi"><span class="btn sm">恢复默认宽度</span></div>
+    </div>
+    <div style="flex:1;min-width:280px">
+      <ul class="tight">
+        <li><b>跟随后台</b>（默认）：完全按管理员设置或自动测量。</li>
+        <li><b>本机自定义</b>：用户拖动列宽后自动切到此模式，只存在自己浏览器的 localStorage，不影响他人。</li>
+        <li><b>恢复默认宽度</b>：清空本机覆盖，立刻回到上一级（管理员设置或自动测量）。</li>
+      </ul>
+      <span class="badge good" style="margin-top:8px">已确认要做的能力</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">8.1 列宽拖拽交互（已确认实现）</h3>
+  <div class="flow">
+    <div style="flex:1;min-width:330px">
+      <div class="wrapx">
+        <table class="grid" style="width:560px">
+          <colgroup><col style="width:70px"><col style="width:190px"><col style="width:160px"><col style="width:140px"></colgroup>
+          <thead><tr>
+            <th><div class="th" style="padding:5px"><span class="n">序号</span></div></th>
+            <th style="position:relative"><div class="th" style="padding:5px"><span class="n">样品主要成分</span></div><span style="position:absolute;right:-3px;top:0;bottom:0;width:6px;background:#1976d2;display:block"></span></th>
+            <th><div class="th" style="padding:5px"><span class="n">注意事项</span></div></th>
+            <th><div class="th" style="padding:5px"><span class="n">操作</span></div></th>
+          </tr></thead>
+          <tbody><tr>
+            <td><div class="c one ctr">#1625</div></td>
+            <td><div class="c two">乙腈/水 70:30，含微量稳定剂</div></td>
+            <td><div class="c two">客户要求 3 日内出具报告</div></td>
+            <td><div class="c"><div class="acts"><span class="btn sm" style="background:#d32f2f;border-color:#d32f2f;color:#fff">取样</span><span class="btn sm">更多 ▾</span></div></div></td>
+          </tr></tbody>
+        </table>
+      </div>
+      <div style="margin-top:7px;font-size:11.5px;color:#0d47a1;background:#e8f1fb;border:1px solid #c4d9f0;border-radius:2px;padding:3px 9px;display:inline-block">样品主要成分　180px → 210px</div>
+      <div class="legend">拖动列分隔线（上图蓝线位置）实时调整宽度，松手即保存到本机；宽度提示跟随光标显示。</div>
+    </div>
+    <div style="flex:1.15;min-width:320px">
+      <table class="spec">
+        <tr><th style="width:30%">交互</th><th>行为</th></tr>
+        <tr><td>触发</td><td>列头右边缘 4~6px 热区，光标变为 <code>col-resize</code></td></tr>
+        <tr><td>拖动</td><td>实时跟随并显示当前 px；该表自动切到「本机自定义」模式</td></tr>
+        <tr><td>下限</td><td>32px（不再继续收缩，避免列被拖没）</td></tr>
+        <tr><td>上限</td><td>不限。总宽超出容器时出现横向滚动，并显示提示条「列宽已超出显示区域 · <b>恢复默认宽度</b>」</td></tr>
+        <tr><td>双击分隔线</td><td>恢复<b>该列</b>默认宽度</td></tr>
+        <tr><td>恢复全部</td><td>列设置菜单 →「恢复默认宽度」，清空本机覆盖</td></tr>
+        <tr><td>存储键</td><td><code>labflow.record-col-widths:{userId}:{table}</code>，只存本机，换设备或清缓存即失效</td></tr>
+        <tr><td>与后台的关系</td><td>本机覆盖优先于后台；恢复后后台设置（自动或自定义）立即重新生效</td></tr>
+        <tr><td>编辑态</td><td>拖宽后进入行内编辑，输入框按拖后列宽自适应，不固定 100%</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="note">拖拽是<b>用户主动行为</b>，允许溢出容器（出现横向滚动），而不是自动压缩其它列——后者会造成"拖 A 列却让 B 列变窄"的困惑。溢出时始终给出提示条与一键恢复。</div>
+</div>
+
+<!-- ==================== 9 前台：操作列更多菜单 ==================== -->
+<h2>⑨ 记录表操作列「更多 ▾」菜单 <span class="badge new">新增</span></h2>
+<p class="sub">按钮的权限与状态判断逻辑<strong>完全复用现有实现</strong>（<code>renderConfiguredAction</code> 与 <code>RdRecordsPage.tsx:775-781</code> 的 canXxx 判定），只改展示位置。</p>
+
+<div class="flow">
+  <div class="card" style="margin:0;min-width:300px">
+    <h3 style="margin-top:0">样品信息登记记录 · 待取样</h3>
+    <div class="acts" style="margin-bottom:8px">
+      <span class="btn" style="background:#d32f2f;border-color:#d32f2f;color:#fff">取样</span>
+      <span class="btn">更多 ▾</span>
+    </div>
+    <div class="menu">
+      <div class="mi"><span class="ico">✎</span>编辑<span class="rt">待取样可改</span></div>
+      <div class="mi" style="color:#b9b9b9"><span class="ico">▤</span>录入工作量<span class="rt">未取样</span></div>
+      <div class="mi"><span class="ico">↩</span>退回<span class="rt">需退回权限</span></div>
+      <div class="sp"></div>
+      <div class="mi" style="color:#b9b9b9"><span class="ico">↺</span>撤回取样<span class="rt">未取样</span></div>
+      <div class="mi" style="color:#b9b9b9"><span class="ico">✓</span>完成检测<span class="rt">未取样</span></div>
+    </div>
+    <div class="legend">不满足条件的项置灰并说明原因，而不是直接消失，避免"按钮去哪了"的疑问。</div>
+  </div>
+
+  <div class="card" style="margin:0;min-width:300px">
+    <h3 style="margin-top:0">研发送样记录 · 已取样</h3>
+    <div class="acts" style="margin-bottom:8px">
+      <span class="btn sm" style="border-color:#2e7d32;color:#2e7d32">撤回取样</span>
+      <span class="btn sm">更多 ▾</span>
+    </div>
+    <div class="menu">
+      <div class="mi" style="color:#b9b9b9"><span class="ico">↩</span>退回送样<span class="rt">已取样</span></div>
+      <div class="mi"><span class="ico">▤</span>录入工作量</div>
+      <div class="mi" style="color:#b9b9b9"><span class="ico">✎</span>编辑<span class="rt">已取样</span></div>
+      <div class="sp"></div>
+      <div class="mi"><span class="ico">↺</span>撤回取样</div>
+    </div>
+    <div class="legend">研发送样表的「撤回取样」原在取样人列，改版后仍保留在取样人列（下方），操作列只放其余动作。</div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>操作列三档形态（按容器宽度自动切换）</h3>
+  <table class="spec">
+    <tr><th style="width:16%">档位</th><th style="width:16%">容器宽度</th><th style="width:14%">列宽</th><th>形态</th></tr>
+    <tr>
+      <td>文字档</td><td>≥ 1400px</td><td class="n">150~160px</td>
+      <td><span class="acts"><span class="btn" style="background:#d32f2f;border-color:#d32f2f;color:#fff">取样</span><span class="btn">编辑</span><span class="btn">更多 ▾</span></span></td>
+    </tr>
+    <tr>
+      <td>图标档</td><td>1024 ~ 1400px</td><td class="n">112~120px</td>
+      <td><span class="acts"><span class="btn" style="background:#d32f2f;border-color:#d32f2f;color:#fff">取样</span><span class="btn sm">✎</span><span class="btn sm">▤</span><span class="btn sm">更多 ▾</span></span></td>
+    </tr>
+    <tr>
+      <td>收纳档</td><td>&lt; 1024px</td><td class="n">96px</td>
+      <td><span class="acts"><span class="btn" style="background:#d32f2f;border-color:#d32f2f;color:#fff">取样</span><span class="btn sm">⋯ 操作</span></span></td>
+    </tr>
+  </table>
+  <div class="note">本次预览的两张表都采用<b>收纳档</b>（1360px 内容区接近 1400px 阈值但列数多）。若实际屏幕常年在 1440px 以上，可调到文字档，操作列约需 160px。</div>
+</div>
+
+<div class="card">
+  <span class="badge good">已确认：增加开关</span>
+  <h3 style="margin-top:0">操作列收纳开关</h3>
+  <p class="sub" style="margin:0 0 10px">收纳会改变按钮的可见形态，做成可关闭的系统开关，避免"按钮怎么不见了"的困扰。</p>
+  <div class="flow">
+    <div class="card" style="margin:0;flex:1;min-width:320px">
+      <div style="font-weight:700;margin-bottom:8px">系统设置 → 记录表显示</div>
+      <div class="row-inline" style="justify-content:space-between;border:1px solid #e6e6e6;border-radius:2px;padding:9px 11px">
+        <div>
+          <div style="font-weight:600">操作列自动收纳</div>
+          <div class="tiny">按钮较多时收纳为「主操作 + 更多 ▾」，列宽不再按按钮总宽累加</div>
+        </div>
+        <span class="sw"><i></i>开启</span>
+      </div>
+      <div class="row-inline" style="justify-content:space-between;border:1px solid #e6e6e6;border-radius:2px;padding:9px 11px;margin-top:8px;background:#fafafa">
+        <div>
+          <div style="font-weight:600;color:#8a8a8a">关闭后的行为</div>
+          <div class="tiny">始终显示全部按钮，操作列宽度＝Σ按钮配置宽度 + 24（回到升级前逻辑）</div>
+        </div>
+        <span class="btn sm dis">—</span>
+      </div>
+      <div class="row-inline" style="margin-top:10px">
+        <span class="tiny">三档阈值（可配）</span>
+        <label class="fld" style="width:118px"><span class="lb">文字档 ≥</span><span class="ip">1400 px</span></label>
+        <label class="fld" style="width:118px"><span class="lb">图标档 ≥</span><span class="ip">1024 px</span></label>
+      </div>
+    </div>
+    <div style="flex:1.1;min-width:300px">
+      <table class="spec">
+        <tr><th style="width:32%">开关值</th><th>行为</th></tr>
+        <tr><td><code>auto</code>（默认）</td><td>按容器宽度在文字档 / 图标档 / 收纳档之间自动切换</td></tr>
+        <tr><td><code>full</code></td><td>始终显示全部按钮，操作列按 Σ按钮宽 + 24 计（等同升级前）</td></tr>
+      </table>
+      <ul class="tight">
+        <li>存储：<code>system_settings.record_table_action_mode</code>。</li>
+        <li>切换后两张记录表<b>立即生效</b>，无需重新登录。</li>
+        <li>关闭收纳时，若操作列过宽会挤压数据列，与改版目标冲突，界面会提示「操作列较宽，可能导致内容显示不全」。</li>
+        <li>「更多 ▾」菜单内的按钮顺序、权限与状态判定完全复用现有实现，不受开关影响。</li>
+        <li>三档阈值存在 <code>record_table_action_text_min_width</code> / <code>record_table_action_icon_min_width</code>，便于按现场屏幕微调。</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 10 窄屏降级 ==================== -->
+<h2>⑩ 窄屏降级与隐藏列提示 <span class="badge new">新增</span></h2>
+
+<h3>1440px：全部 14 列，操作列收纳档</h3>
+<div class="card">
+  <div class="wrapx">
+    <table class="grid" style="width:1360px">
+      <colgroup>
+        <col style="width:56px"><col style="width:72px"><col style="width:88px"><col style="width:60px"><col style="width:60px">
+        <col style="width:48px"><col style="width:124px"><col style="width:180px"><col style="width:170px"><col style="width:104px">
+        <col style="width:64px"><col style="width:88px"><col style="width:86px"><col style="width:160px">
+      </colgroup>
+      <thead><tr>
+        <th><div class="th"><span class="n">序号</span></div></th>
+        <th><div class="th"><span class="n">送样人</span></div></th>
+        <th><div class="th"><span class="n">所属部门</span><span class="f">▽</span></div></th>
+        <th><div class="th"><span class="n">实验室/车间</span></div></th>
+        <th><div class="th"><span class="n">所属项目</span></div></th>
+        <th><div class="th"><span class="n">送样数量</span></div></th>
+        <th><div class="th"><span class="n">样品批号</span><span class="f">▽</span></div></th>
+        <th><div class="th"><span class="n">样品主要成分</span></div></th>
+        <th><div class="th"><span class="n">注意事项</span></div></th>
+        <th><div class="th"><span class="n">送样时间</span><span class="s">↓</span></div></th>
+        <th><div class="th"><span class="n">检测类型</span></div></th>
+        <th><div class="th"><span class="n">状态</span><span class="f">▽</span></div></th>
+        <th><div class="th"><span class="n">附件</span></div></th>
+        <th><div class="th"><span class="n">操作</span></div></th>
+      </tr></thead>
+      <tbody><tr>
+        <td><div class="c one ctr">#1625</div></td><td><div class="c one">杨晓庆</div></td>
+        <td><div class="c one">生物合成1</div></td><td><div class="c one">D006</div></td><td><div class="c one">DYX</div></td>
+        <td><div class="c one num">5</div></td><td><div class="c two mono">D00260914-11-15</div></td>
+        <td><div class="c two">乙腈/水 70:30，含微量稳定剂</div></td>
+        <td><div class="c two">客户要求 3 日内出具报告，避光冷藏</div></td>
+        <td><div class="c"><span class="one">2026-09-23</span><span class="one tiny">08:15:22</span></div></td>
+        <td><div class="c one">液相</div></td><td><div class="c"><span class="chip st-wait">待取样</span></div></td>
+        <td><div class="c"><span class="btn sm">📎 1 个</span></div></td>
+        <td><div class="c"><div class="acts"><span class="btn sm" style="background:#d32f2f;border-color:#d32f2f;color:#fff">取样</span><span class="btn sm">更多 ▾</span></div></div></td>
+      </tr></tbody>
+    </table>
+  </div>
+</div>
+
+<h3>1280px：启用 L2（内边距 12→8px、字号 12.5px、行高 36→32px），14 列仍全部显示</h3>
+<div class="card">
+  <div class="wrapx">
+    <table class="grid" style="width:1220px;font-size:12px">
+      <colgroup>
+        <col style="width:52px"><col style="width:66px"><col style="width:80px"><col style="width:56px"><col style="width:56px">
+        <col style="width:44px"><col style="width:116px"><col style="width:164px"><col style="width:152px"><col style="width:98px">
+        <col style="width:60px"><col style="width:80px"><col style="width:80px"><col style="width:116px">
+      </colgroup>
+      <thead><tr>
+        <th><div class="th" style="padding:4px"><span class="n">序号</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">送样人</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">所属部门</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">实验室/车间</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">所属项目</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">送样数量</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">样品批号</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">样品主要成分</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">注意事项</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">送样时间</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">检测类型</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">状态</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">附件</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">操作</span></div></th>
+      </tr></thead>
+      <tbody><tr>
+        <td><div class="c one ctr" style="padding:4px">#1625</div></td><td><div class="c one" style="padding:4px">杨晓庆</div></td>
+        <td><div class="c one" style="padding:4px">生物合成1</div></td><td><div class="c one" style="padding:4px">D006</div></td>
+        <td><div class="c one" style="padding:4px">DYX</div></td><td><div class="c one num" style="padding:4px">5</div></td>
+        <td><div class="c two mono" style="padding:4px">D00260914-11-15</div></td>
+        <td><div class="c two" style="padding:4px">乙腈/水 70:30，含微量稳定剂</div></td>
+        <td><div class="c two" style="padding:4px">客户要求 3 日内出具报告，避光冷藏</div></td>
+        <td><div class="c" style="padding:4px"><span class="one">2026-09-23</span><span class="one tiny">08:15:22</span></div></td>
+        <td><div class="c one" style="padding:4px">液相</div></td><td><div class="c" style="padding:4px"><span class="chip st-wait">待取样</span></div></td>
+        <td><div class="c" style="padding:4px"><span class="btn sm">📎 1 个</span></div></td>
+        <td><div class="c" style="padding:4px"><div class="acts"><span class="btn sm" style="background:#d32f2f;border-color:#d32f2f;color:#fff">取样</span><span class="btn sm">⋯</span></div></div></td>
+      </tr></tbody>
+    </table>
+  </div>
+  <div class="legend">列宽整体按 L2 收紧约 10%，长文本仍保持两行；操作列切到收纳档 116px。</div>
+</div>
+
+<h3>&lt; 1024px：启用 L4 合并「所属部门 / 实验室·车间 / 所属项目」为一列，并隐藏 2 列</h3>
+<div class="card">
+  <div class="bar warn" style="margin-bottom:8px">
+    <span>⚠</span><span><b>2 列未显示</b>（样品主要成分、附件）</span><span class="btn sm" style="margin-left:auto">点此展开</span>
+  </div>
+  <div class="wrapx">
+    <table class="grid" style="width:980px;font-size:12px">
+      <colgroup>
+        <col style="width:50px"><col style="width:62px"><col style="width:150px"><col style="width:44px">
+        <col style="width:112px"><col style="width:140px"><col style="width:92px">
+        <col style="width:58px"><col style="width:76px"><col style="width:96px">
+      </colgroup>
+      <thead><tr>
+        <th><div class="th" style="padding:4px"><span class="n">序号</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">送样人</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">所属部门 / 实验室·车间 / 所属项目</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">数量</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">样品批号</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">注意事项</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">送样时间</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">类型</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">状态</span></div></th>
+        <th><div class="th" style="padding:4px"><span class="n">操作</span></div></th>
+      </tr></thead>
+      <tbody><tr>
+        <td><div class="c one ctr" style="padding:4px">#1625</div></td>
+        <td><div class="c one" style="padding:4px">杨晓庆</div></td>
+        <td><div class="c" style="padding:4px;line-height:1.35"><div>生物合成1</div><div class="tiny">实验室/车间：D006</div><div class="tiny">所属项目：DYX</div></div></td>
+        <td><div class="c one num" style="padding:4px">5</div></td>
+        <td><div class="c two mono" style="padding:4px">D00260914-11-15</div></td>
+        <td><div class="c two" style="padding:4px">客户要求 3 日内出具报告，避光冷藏</div></td>
+        <td><div class="c" style="padding:4px"><span class="one">2026-09-23</span><span class="one tiny">08:15</span></div></td>
+        <td><div class="c one" style="padding:4px">液相</div></td>
+        <td><div class="c" style="padding:4px"><span class="chip st-wait">待取样</span></div></td>
+        <td><div class="c" style="padding:4px"><div class="acts"><span class="btn sm" style="background:#d32f2f;border-color:#d32f2f;color:#fff">取样</span><span class="btn sm">⋯</span></div></div></td>
+      </tr></tbody>
+    </table>
+  </div>
+  <div class="legend">L4 只把「所属部门 / 实验室·车间 / 所属项目」竖排合并，排序与筛选取主字段（所属部门）；被隐藏的列以提示条明确告知，可一键展开（展开后接受横向滚动）。</div>
+</div>
+
+<!-- ==================== 汇总 ==================== -->
+<h2>改动清单汇总</h2>
+<div class="card">
+  <table class="spec">
+    <tr><th style="width:22%">文件</th><th style="width:24%">界面</th><th>改动点</th></tr>
+    <tr><td rowspan="2"><code>frontend/src/utils/adaptiveColumns.ts</code></td><td>两张记录表（共用）</td><td>归一化改为「内容需求优先」：总量够时按自然宽铺满，不足时按内容占比压缩；新增 <code>width_mode</code> 判定与 <code>min/max</code> 读取</td></tr>
+    <tr><td>—</td><td>新增 <code>DEFAULT_WIDTH_BOUNDS</code> 常量（按输入方式给区间）</td></tr>
+    <tr><td><code>RdRecordsPage.tsx</code></td><td>研发送样记录</td><td><code>getRecordColumnBounds</code> 不再把配置 width 当 <code>fixed</code>；操作列三档；单元格两行换行</td></tr>
+    <tr><td><code>SampleInfoEntry.tsx</code></td><td>样品信息登记 登记记录</td><td><code>recordDisplayWidths</code> 改为调用内容测量；操作列 <code>628→160</code>；依赖数组补 <code>records</code></td></tr>
+    <tr><td><code>SampleInfoRecordList.tsx</code></td><td>同上</td><td><code>Wrap</code> / <code>valueBoxSx</code> 去掉 <code>maxHeight+overflow</code>，改 <code>line-clamp:2</code> + <code>title</code></td></tr>
+    <tr><td><code>recordTable/RecordTableTools.tsx</code></td><td>列设置菜单</td><td>新增宽度来源显示、恢复默认宽度、隐藏列提示条</td></tr>
+    <tr><td>新增 <code>recordTable/RowActionsMenu.tsx</code></td><td>操作列更多菜单</td><td>操作收纳，复用现有权限判定</td></tr>
+    <tr><td><code>AdminRdRecordColumns.tsx</code></td><td>研发送样字段列表 / 弹窗</td><td>宽度列显示模式 + 实测值；弹窗新增宽度模式区块；顶部批量恢复</td></tr>
+    <tr><td><code>SortableSampleInfoColumnRow.tsx</code> + <code>ManagePage.tsx</code></td><td>样品信息登记列列表 / 弹窗</td><td>同上；修正「长内容在单元格内滚动」文案</td></tr>
+    <tr><td><code>ManageFormConfig.tsx</code></td><td>表格配置</td><td>密度档联动 + 生效范围说明（值本身已存在，接通读取）</td></tr>
+    <tr><td>迁移 <code>2.3.20-column-width-mode</code></td><td>—</td><td><code>width_mode</code> / <code>min_width</code> / <code>max_width</code> 三个字段 + <code>record_table_width_mode</code> 系统开关</td></tr>
+  </table>
+</div>
+
+<div class="card" style="border-color:#c3e0c5;background:#f6fdf7">
+  <span class="badge good">四项决策已全部确认</span>
+  <b>方案细节已按你的决定更新，可以进入实施。</b>
+  <table class="spec" style="margin-top:8px">
+    <tr><th style="width:26%">决策</th><th>结论</th><th style="width:22%">对应章节</th></tr>
+    <tr><td>用户拖列宽 + 恢复默认宽度</td><td><b>做</b></td><td>第 8 节 / 8.1 节</td></tr>
+    <tr><td>操作列收纳</td><td>接受，<b>带开关</b>（<code>record_table_action_mode</code>，默认 auto；阈值可配）</td><td>第 9 节</td></tr>
+    <tr><td>老库升级默认宽度模式</td><td><b>默认「自动」</b>，原 width 保留可回退</td><td>《改版预览》第五节</td></tr>
+    <tr><td>表格配置三项</td><td><b>一并接通</b>记录表</td><td>第 7 节</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <b>实施顺序（按风险从低到高）</b>
+  <table class="spec" style="margin-top:8px">
+    <tr><th style="width:7%">步</th><th style="width:33%">内容</th><th>说明</th></tr>
+    <tr><td class="n">1</td><td>迁移 <code>2.3.20-column-width-mode</code></td><td>3 个列级字段 + 3 个系统开关，全部带默认值，向后兼容，可独立上线</td></tr>
+    <tr><td class="n">2</td><td>表格配置三项接通记录表</td><td>改动最小、无 UI 结构变化、可单独验证（第 7 节）</td></tr>
+    <tr><td class="n">3</td><td>列宽引擎 + 操作列封顶 + 单元格两行</td><td>两张记录表主视图的核心变化，需回归排序 / 筛选 / 行内编辑</td></tr>
+    <tr><td class="n">4</td><td>操作列「更多 ▾」菜单 + 收纳开关</td><td>依赖第 3 步的列宽结果</td></tr>
+    <tr><td class="n">5</td><td>列宽拖拽 + 恢复默认宽度</td><td>纯前端交互，可独立灰度与回退</td></tr>
+    <tr><td class="n">6</td><td>后台列管理界面（模式显示、弹窗区块、批量恢复）</td><td>与第 3 步配套</td></tr>
+    <tr><td class="n">7</td><td>窄屏降级 L1~L6 与隐藏列提示</td><td>最后做，依赖前面所有列宽逻辑</td></tr>
+  </table>
+  <div class="note ok">建议第 1、2 步先行合入并出包验证（对现有界面零影响），确认无误后再做第 3 步起的主视图改造。</div>
+</div>
+
+</body>
+</html>

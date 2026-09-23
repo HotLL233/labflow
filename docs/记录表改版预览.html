@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>LabFlow 记录表改版预览 · 研发送样记录 / 样品信息登记记录</title>
+<style>
+  :root {
+    --r: 2px;
+    --bd: #e0e0e0;
+    --bdc: #d9dfe7;
+    --head: #f5f7f5;
+    --t1: #1f1f1f;
+    --t2: #6b6b6b;
+    --t3: #9a9a9a;
+    --green: #2e7d32;
+    --red: #c62828;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 22px 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    color: var(--t1); background: #eef1f5; font-size: 13px; line-height: 1.6;
+  }
+  h1 { font-size: 19px; margin: 0 0 3px; }
+  h2 { font-size: 15px; margin: 30px 0 6px; }
+  h2 span.ver { font-size: 12px; font-weight: 400; color: var(--t2); }
+  h3 { font-size: 13px; margin: 16px 0 6px; color: #333; }
+  .sub { color: var(--t2); font-size: 12.5px; margin: 0 0 6px; }
+
+  .card { background: #fff; border: 1px solid var(--bd); border-radius: var(--r); padding: 14px 16px; margin-bottom: 14px; }
+  .badge { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: var(--r); margin: 0 6px 8px 0; }
+  .badge.bad  { color: #b71c1c; background: #fdecea; border: 1px solid #f5c6c2; }
+  .badge.good { color: #1b5e20; background: #e8f5e9; border: 1px solid #c3e0c5; }
+  .badge.info { color: #0d47a1; background: #e8f1fb; border: 1px solid #c4d9f0; }
+
+  .wrap { overflow-x: auto; padding-bottom: 4px; }
+  table.grid { border-collapse: collapse; table-layout: fixed; font-size: 12.5px; background: #fff; }
+  table.grid th, table.grid td { border: 1px solid var(--bdc); padding: 0; vertical-align: top; overflow: hidden; }
+  table.grid th { background: var(--head); font-weight: 700; font-size: 11.5px; color: #333; }
+  .th { display: flex; align-items: center; gap: 1px; padding: 5px 5px; min-height: 30px; }
+  .th .n { flex: 1 1 auto; min-width: 0; line-height: 1.25; word-break: break-all; }
+  .th .s { flex: 0 0 auto; color: var(--t3); font-size: 10px; }
+  .th .f { flex: 0 0 auto; color: #b0b8c1; font-size: 10px; }
+  .th .f.on { color: #1976d2; }
+
+  .c { padding: 5px 5px; min-width: 0; }
+  .one { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .two { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.32; word-break: break-all; }
+  .scrollbox { max-height: 42px; overflow: auto; line-height: 1.32; border: 1px solid #e6ebf1; border-radius: 2px; padding: 2px 4px; background: #fff; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .ctr { text-align: center; }
+  .mono { font-family: Consolas, "Courier New", monospace; font-size: 11.5px; }
+  .tiny { font-size: 10.5px; color: var(--t2); line-height: 1.2; }
+  .chip { display: inline-block; padding: 1px 7px; border-radius: 2px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .st-wait  { background: #d32f2f; color: #fff; }
+  .st-test  { background: #f9a825; color: #1f1f1f; }
+  .st-done  { background: #2e7d32; color: #fff; }
+  .st-ret   { background: #7b1fa2; color: #fff; }
+  .st-rdraft{ background: #0288d1; color: #fff; }
+  .st-sampled { background: #c8e6c9; color: #2e7d32; }
+  .st-returned{ background: #ffcdd2; color: #c62828; }
+  .st-void  { background: #eceff1; color: #546e7a; }
+
+  .btn { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 11.5px; border: 1px solid var(--bdc); background: #fff; white-space: nowrap; }
+  .btn.pri { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn.err { background: #d32f2f; border-color: #d32f2f; color: #fff; }
+  .btn.warn{ background: #fff; border-color: #ed6c02; color: #ed6c02; }
+  .btn.ok  { background: #fff; border-color: #2e7d32; color: #2e7d32; }
+  .btn.dis { border-color: #cfd8dc; color: #90a4ae; background: #f5f7f8; }
+  .btn.more { color: var(--t2); }
+  .acts { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+
+  table.spec { border-collapse: collapse; width: 100%; font-size: 12px; background: #fff; margin-top: 10px; }
+  table.spec th, table.spec td { border: 1px solid var(--bd); padding: 5px 8px; text-align: left; }
+  table.spec th { background: #f7f9fb; font-weight: 700; }
+  table.spec td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .up { color: #1b5e20; font-weight: 700; }
+  .down { color: #b71c1c; font-weight: 700; }
+  .steady { color: var(--t2); }
+  code { background: #f2f4f7; padding: 0 4px; border-radius: 2px; font-size: 11.5px; font-family: Consolas, monospace; }
+  .note { background: #fffbe6; border: 1px solid #f0e2b6; border-radius: var(--r); padding: 9px 11px; font-size: 12px; color: #5c4a00; margin-top: 10px; }
+  .note.ok { background: #eefaf0; border-color: #c8e6c9; color: #1b5e20; }
+  .tag { font-size: 11px; color: var(--t2); }
+  .pager { display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 6px 8px; border: 1px solid var(--bd); border-top: 0; font-size: 12px; color: var(--t2); }
+  ul.tight { margin: 6px 0 0; padding-left: 18px; }
+  ul.tight li { margin-bottom: 3px; }
+</style>
+</head>
+<body>
+
+<h1>LabFlow 记录表改版预览</h1>
+<p class="sub">研发送样记录 / 样品信息登记记录 · 列标题与字段取自 v2.3.19 数据库最新配置（<code>postgres_seed.sql</code>、<code>v1.1.5-beta.2</code>、<code>v2.3.5</code>、<code>v2.3.12</code>），示例内容为真实业务数据样式。</p>
+
+<div class="card">
+  <span class="badge info">目标</span>
+  <b>一页显示全部列，且列内容尽量完整显示。</b>两张表都不新增横向滚动条。
+  <h3>改后列宽是怎么算出来的</h3>
+  <ul class="tight">
+    <li><b>列宽 = 内容测量</b>：<code>max(表头宽度, 当前页内容 P90 宽度) + 内边距</code>，后台配置的 px 从「固定宽度」降级为「权重参考 + 上下限」。</li>
+    <li><b>可扩展列吸收富余</b>：样品批号 / 样品主要成分 / 注意事项 优先吃剩余空间，最多放到自然宽的 2.2 倍。</li>
+    <li><b>长文本两行换行</b>：超出一行时纵向展开到两行，<b>去掉单元格内滚动条</b>，悬停显示全文。</li>
+    <li><b>操作列封顶</b>：按容器宽度取文字档 / 图标档 / 收纳档三档之一，不再按按钮宽度累加。</li>
+    <li><b>表头允许两行</b>：直接使用库里的 label 原文，不另造简称；表格宽度固定为 1360px 以便对照。</li>
+  </ul>
+</div>
+
+<!-- ============================ 研发送样记录 ============================ -->
+<h2>一、研发送样记录 <span class="ver">16 个数据列 + 操作列 = 17 列</span></h2>
+<p class="sub">库字段顺序：序号、送样人、部门、实验室、项目、检测类型、方法、数量、送样时间、取样人、取样时间、状态、注意事项、高项、批号、仪器。</p>
+
+<span class="badge bad">改 前</span><span class="tag">列宽＝配置权重 ÷ 2034 归一化 → 16 个数据列平均 85px，批号 67px、状态 53px、取样人 67px 装不下内容</span>
+<div class="wrap">
+  <table class="grid" style="width:1360px">
+    <colgroup>
+      <col style="width:40px"><col style="width:80px"><col style="width:94px"><col style="width:100px"><col style="width:107px">
+      <col style="width:80px"><col style="width:134px"><col style="width:37px"><col style="width:107px"><col style="width:67px">
+      <col style="width:94px"><col style="width:53px"><col style="width:100px"><col style="width:67px"><col style="width:67px">
+      <col style="width:60px"><col style="width:72px">
+    </colgroup>
+    <thead><tr>
+      <th><div class="th"><span class="n">序号</span><span class="s">↓</span></div></th>
+      <th><div class="th"><span class="n">送样人</span><span class="s">↕</span></div></th>
+      <th><div class="th"><span class="n">部门</span><span class="s">↕</span></div></th>
+      <th><div class="th"><span class="n">实验室</span><span class="s">↕</span></div></th>
+      <th><div class="th"><span class="n">项目</span><span class="s">↕</span></div></th>
+      <th><div class="th"><span class="n">检测类型</span><span class="s">↕</span></div></th>
+      <th><div class="th"><span class="n">方法</span><span class="s">↕</span></div></th>
+      <th><div class="th"><span class="n">数量</span></div></th>
+      <th><div class="th"><span class="n">送样时间</span><span class="s">↕</span></div></th>
+      <th><div class="th"><span class="n">取样人</span></div></th>
+      <th><div class="th"><span class="n">取样时间</span></div></th>
+      <th><div class="th"><span class="n">状态</span><span class="s">↕</span></div></th>
+      <th><div class="th"><span class="n">注意事项</span></div></th>
+      <th><div class="th"><span class="n">高项</span></div></th>
+      <th><div class="th"><span class="n">批号</span></div></th>
+      <th><div class="th"><span class="n">仪器</span></div></th>
+      <th><div class="th"><span class="n">操作</span></div></th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><div class="c one ctr">1625</div></td>
+        <td><div class="c one">杨晓庆</div></td>
+        <td><div class="c one">生物合成1</div></td>
+        <td><div class="c one">D006</div></td>
+        <td><div class="c one">DYX</div></td>
+        <td><div class="c one">液相</div></td>
+        <td><div class="c one">液相色谱法</div></td>
+        <td><div class="c one num">5</div></td>
+        <td><div class="c"><span class="one">2026-09-23</span><span class="one tiny">08:15:22</span></div></td>
+        <td><div class="c"><span class="one" style="color:#2e7d32;font-weight:600">李红</span><span class="btn warn" style="font-size:10px;padding:0 4px;margin-top:2px">撤回取样</span></div></td>
+        <td><div class="c"><span class="one">2026-09-23</span><span class="one tiny">10:20:07</span></div></td>
+        <td><div class="c"><span class="chip st-sampled">已取样</span></div></td>
+        <td><div class="c one">避光冷藏</div></td>
+        <td><div class="c one">高</div></td>
+        <td><div class="c one mono">D00260914-11-15</div></td>
+        <td><div class="c one">ICP-01</div></td>
+        <td><div class="c"><div class="acts"><span class="btn">✎</span></div></div></td>
+      </tr>
+      <tr>
+        <td><div class="c one ctr">1626</div></td>
+        <td><div class="c one">王强</div></td>
+        <td><div class="c one">生物合成2</div></td>
+        <td><div class="c one">D007</div></td>
+        <td><div class="c one">DAB</div></td>
+        <td><div class="c one">气相</div></td>
+        <td><div class="c one">气相色谱法</div></td>
+        <td><div class="c one num">3</div></td>
+        <td><div class="c"><span class="one">2026-09-23</span><span class="one tiny">09:02:41</span></div></td>
+        <td><div class="c"><span class="btn pri" style="font-size:10px;padding:0 5px">取样</span></div></td>
+        <td><div class="c one">-</div></td>
+        <td><div class="c"><span class="chip st-wait">待取样</span></div></td>
+        <td><div class="c one">常规送样</div></td>
+        <td><div class="c one">-</div></td>
+        <td><div class="c one mono">D00260914-11-16</div></td>
+        <td><div class="c one">GC-02</div></td>
+        <td><div class="c"><div class="acts"><span class="btn" style="color:#c62828">↩</span><span class="btn">✎</span></div></div></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="pager">2-2 / 2　每页 20 ▾　‹ 1 2 ›</div>
+</div>
+
+<span class="badge good" style="margin-top:12px">改 后</span><span class="tag">列宽＝内容测量 → 17 列合计 1360px 一页放下，批号 124px、方法 112px、取样人 112px（含按钮）</span>
+<div class="wrap">
+  <table class="grid" style="width:1360px">
+    <colgroup>
+      <col style="width:58px"><col style="width:68px"><col style="width:88px"><col style="width:56px"><col style="width:52px">
+      <col style="width:62px"><col style="width:112px"><col style="width:48px"><col style="width:104px"><col style="width:112px">
+      <col style="width:104px"><col style="width:68px"><col style="width:92px"><col style="width:52px"><col style="width:124px">
+      <col style="width:68px"><col style="width:92px">
+    </colgroup>
+    <thead><tr>
+      <th><div class="th"><span class="n">序号</span><span class="s">↓</span></div></th>
+      <th><div class="th"><span class="n">送样人</span><span class="s">↕</span></div></th>
+      <th><div class="th"><span class="n">部门</span><span class="f">▽</span></div></th>
+      <th><div class="th"><span class="n">实验室</span><span class="f">▽</span></div></th>
+      <th><div class="th"><span class="n">项目</span><span class="f">▽</span></div></th>
+      <th><div class="th"><span class="n">检测类型</span><span class="f">▽</span></div></th>
+      <th><div class="th"><span class="n">方法</span><span class="s">↕</span></div></th>
+      <th><div class="th"><span class="n">数量</span></div></th>
+      <th><div class="th"><span class="n">送样时间</span><span class="s">↓</span></div></th>
+      <th><div class="th"><span class="n">取样人</span></div></th>
+      <th><div class="th"><span class="n">取样时间</span></div></th>
+      <th><div class="th"><span class="n">状态</span><span class="f">▽</span></div></th>
+      <th><div class="th"><span class="n">注意事项</span></div></th>
+      <th><div class="th"><span class="n">高项</span></div></th>
+      <th><div class="th"><span class="n">批号</span><span class="f on">▽</span></div></th>
+      <th><div class="th"><span class="n">仪器</span></div></th>
+      <th><div class="th"><span class="n">操作</span></div></th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><div class="c one ctr">1625<div class="tiny mono">RD260923001</div></div></td>
+        <td><div class="c one">杨晓庆</div></td>
+        <td><div class="c one">生物合成1</div></td>
+        <td><div class="c one">D006</div></td>
+        <td><div class="c one">DYX</div></td>
+        <td><div class="c one">液相</div></td>
+        <td><div class="c two">液相色谱法</div></td>
+        <td><div class="c one num">5</div></td>
+        <td><div class="c"><span class="one">2026-09-23</span><span class="one tiny">08:15:22</span></div></td>
+        <td><div class="c"><span class="one" style="color:#2e7d32;font-weight:600">李红</span><span class="btn warn" style="font-size:10px;padding:0 4px;margin-top:2px;display:inline-block">撤回取样</span></div></td>
+        <td><div class="c"><span class="one">2026-09-23</span><span class="one tiny">10:20:07</span></div></td>
+        <td><div class="c"><span class="chip st-sampled">已取样</span></div></td>
+        <td><div class="c two" title="避光冷藏，4℃ 保存，24 小时内完成检测">避光冷藏，4℃ 保存</div></td>
+        <td><div class="c one">高</div></td>
+        <td><div class="c two mono">D00260914-11-15</div></td>
+        <td><div class="c one">ICP-01</div></td>
+        <td><div class="c"><div class="acts"><span class="btn">✎</span></div></div></td>
+      </tr>
+      <tr>
+        <td><div class="c one ctr">1626<div class="tiny mono">RD260923002</div></div></td>
+        <td><div class="c one">王强</div></td>
+        <td><div class="c one">生物合成2</div></td>
+        <td><div class="c one">D007</div></td>
+        <td><div class="c one">DAB</div></td>
+        <td><div class="c one">气相</div></td>
+        <td><div class="c two">气相色谱法</div></td>
+        <td><div class="c one num">3</div></td>
+        <td><div class="c"><span class="one">2026-09-23</span><span class="one tiny">09:02:41</span></div></td>
+        <td><div class="c"><span class="btn pri" style="font-size:10.5px;padding:0 6px">取样</span></div></td>
+        <td><div class="c one">-</div></td>
+        <td><div class="c"><span class="chip st-wait">待取样</span></div></td>
+        <td><div class="c two">常规送样，按标准流程处理</div></td>
+        <td><div class="c one">-</div></td>
+        <td><div class="c two mono">D00260914-11-16</div></td>
+        <td><div class="c one">GC-02</div></td>
+        <td><div class="c"><div class="acts"><span class="btn" style="color:#c62828">↩</span><span class="btn">✎</span></div></div></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="pager">1-2 / 2　每页 20 ▾　‹ 1 2 ›</div>
+</div>
+
+<table class="spec">
+  <tr><th style="width:16%">列（库 label）</th><th style="width:12%">配置权重</th><th style="width:12%">改前实际</th><th style="width:12%">改后实际</th><th>变化说明</th></tr>
+  <tr><td>序号</td><td class="n">60</td><td class="n">40</td><td class="n">58</td><td class="up">+18</td><td>容纳第二行业务编号</td></tr>
+  <tr><td>送样人 / 部门 / 实验室 / 项目</td><td class="n">120/140/150/160</td><td class="n">80/94/100/107</td><td class="n">68/88/56/52</td><td class="down">按实际内容收紧</td><td>内容都是 3~6 字，原宽度富余转化为别列空间</td></tr>
+  <tr><td>检测类型</td><td class="n">120</td><td class="n">80</td><td class="n">62</td><td class="down">-18</td><td>「液相 / 气相」2 字</td></tr>
+  <tr><td>方法</td><td class="n">200</td><td class="n">134</td><td class="n">112</td><td class="down">-22</td><td>长名称两行换行，不再单行截断</td></tr>
+  <tr><td>数量</td><td class="n">56</td><td class="n">37</td><td class="n">48</td><td class="up">+11</td><td>数字列保底 48px</td></tr>
+  <tr><td>送样时间 / 取样时间</td><td class="n">160/140</td><td class="n">107/94</td><td class="n">104/104</td><td class="up">+10</td><td>两行「日期 + 时间」需要 104px 才不折第三次</td></tr>
+  <tr><td>取样人</td><td class="n">100</td><td class="n">67</td><td class="n">112</td><td class="up">+45</td><td class="up">关键修复：67px 装不下「撤回取样」按钮，按钮被压到换行</td></tr>
+  <tr><td>状态</td><td class="n">80</td><td class="n">53</td><td class="n">68</td><td class="up">+15</td><td class="up">关键修复：状态标签需 60px，「已驳回 + 退回原因」需要更多</td></tr>
+  <tr><td>注意事项</td><td class="n">150</td><td class="n">100</td><td class="n">92</td><td class="steady">-8</td><td>改为两行换行，实际可读字数反而增加</td></tr>
+  <tr><td>高项</td><td class="n">100</td><td class="n">67</td><td class="n">52</td><td class="down">-15</td><td>单字内容</td></tr>
+  <tr><td>批号</td><td class="n">100</td><td class="n">67</td><td class="n">124</td><td class="up">+57</td><td class="up">关键修复：<code>D00260914-11-15</code> 需约 167px，两行可完整显示</td></tr>
+  <tr><td>仪器</td><td class="n">90</td><td class="n">60</td><td class="n">68</td><td class="up">+8</td><td>编码型，留出余量</td></tr>
+  <tr><td>操作</td><td class="n">108（固定）</td><td class="n">72</td><td class="n">92</td><td class="up">+20</td><td>已足够放图标按钮，无需再占宽</td></tr>
+  <tr><td><b>合计</b></td><td class="n"><b>2034</b></td><td class="n"><b>1360</b></td><td class="n"><b>1360</b></td><td></td><td>改后 17 列全部一页显示，无横向滚动</td></tr>
+</table>
+<div class="note ok">研发送样表的瓶颈不在操作列（它只占 5.3%），而在 16 个数据列平摊 1360px、平均只有 85px。改后把「部门 / 实验室 / 项目 / 高项」这些内容很短却配置很宽的列收紧，把宽度让给「取样人 / 状态 / 批号 / 时间」这四列。</div>
+
+<!-- ======================== 样品信息登记记录 ======================== -->
+<h2>二、样品信息登记记录 <span class="ver">13 个数据列 + 操作列 = 14 列</span></h2>
+<p class="sub">库字段顺序：序号、送样人、所属部门、实验室/车间、所属项目、送样数量、样品批号、样品主要成分、注意事项、送样时间、检测类型、状态、附件。（取样人 / 取样时间 / 检测完成人 三列默认 <code>show_in_list=0</code>，后台开启后为 17 列。）</p>
+
+<span class="badge bad">改 前</span><span class="tag">列宽＝配置权重 ÷ 2102 归一化 → 操作列独占 29.9%（406px），13 个数据列平均仅 73px</span>
+<div class="wrap">
+  <table class="grid" style="width:1360px">
+    <colgroup>
+      <col style="width:48px"><col style="width:65px"><col style="width:65px"><col style="width:65px"><col style="width:78px">
+      <col style="width:52px"><col style="width:78px"><col style="width:116px"><col style="width:116px"><col style="width:91px">
+      <col style="width:65px"><col style="width:52px"><col style="width:65px"><col style="width:406px">
+    </colgroup>
+    <thead><tr>
+      <th><div class="th"><span class="n">序号</span></div></th>
+      <th><div class="th"><span class="n">送样人</span></div></th>
+      <th><div class="th"><span class="n">所属部门</span></div></th>
+      <th><div class="th"><span class="n">实验室/车间</span></div></th>
+      <th><div class="th"><span class="n">所属项目</span></div></th>
+      <th><div class="th"><span class="n">送样数量</span></div></th>
+      <th><div class="th"><span class="n">样品批号</span></div></th>
+      <th><div class="th"><span class="n">样品主要成分</span></div></th>
+      <th><div class="th"><span class="n">注意事项</span></div></th>
+      <th><div class="th"><span class="n">送样时间</span></div></th>
+      <th><div class="th"><span class="n">检测类型</span></div></th>
+      <th><div class="th"><span class="n">状态</span></div></th>
+      <th><div class="th"><span class="n">附件</span></div></th>
+      <th><div class="th"><span class="n">操作</span></div></th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><div class="c one ctr">#1625</div></td>
+        <td><div class="c one">杨晓庆</div></td>
+        <td><div class="c one">生物合成1</div></td>
+        <td><div class="c one">D006</div></td>
+        <td><div class="c one">DYX</div></td>
+        <td><div class="c one num">5</div></td>
+        <td><div class="c one mono">D00260914-11-15</div></td>
+        <td><div class="c scrollbox">乙腈/水 70:30，含微量稳定剂</div></td>
+        <td><div class="c scrollbox">客户要求 3 日内出具报告，样品需避光冷藏保存</div></td>
+        <td><div class="c one">2026-09-23 08:15</div></td>
+        <td><div class="c one">液相</div></td>
+        <td><div class="c"><span class="chip st-wait">待取样</span></div></td>
+        <td><div class="c one"><span class="tiny">📎 1 个</span></div></td>
+        <td><div class="c"><div class="acts">
+          <span class="btn err">取样</span><span class="btn">✎ 编辑</span><span class="btn">录入工作量</span>
+          <span class="btn">退回</span><span class="btn">撤回取样</span><span class="btn ok">完成检测</span>
+        </div></div></td>
+      </tr>
+      <tr>
+        <td><div class="c one ctr">#1626</div></td>
+        <td><div class="c one">王强</div></td>
+        <td><div class="c one">生物合成2</div></td>
+        <td><div class="c one">D007</div></td>
+        <td><div class="c one">DAB</div></td>
+        <td><div class="c one num">3</div></td>
+        <td><div class="c one mono">D00260914-11-16</div></td>
+        <td><div class="c scrollbox">甲醇/水 80:20</div></td>
+        <td><div class="c scrollbox">复检一次</div></td>
+        <td><div class="c one">2026-09-23 09:02</div></td>
+        <td><div class="c one">气相</div></td>
+        <td><div class="c"><span class="chip st-test">待检测</span></div></td>
+        <td><div class="c one"><span class="tiny">📎 0 个</span></div></td>
+        <td><div class="c"><div class="acts"><span class="btn ok">完成检测</span><span class="btn">撤回取样</span><span class="btn">录入工作量</span></div></div></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div class="note">「样品主要成分 / 注意事项」在改前是 116px 宽、最高 180px 的内部滚动框 —— 内容看不全还得在格子里再滚一次；操作列 406px 比这两列加在一起还宽。</div>
+
+<span class="badge good" style="margin-top:12px">改 后</span><span class="tag">操作列收纳为「主操作 + 更多」160px，回收 246px 全部让给数据列；长文本列两行展开，去掉内滚动</span>
+<div class="wrap">
+  <table class="grid" style="width:1360px">
+    <colgroup>
+      <col style="width:56px"><col style="width:72px"><col style="width:88px"><col style="width:60px"><col style="width:60px">
+      <col style="width:48px"><col style="width:124px"><col style="width:180px"><col style="width:170px"><col style="width:104px">
+      <col style="width:64px"><col style="width:88px"><col style="width:86px"><col style="width:160px">
+    </colgroup>
+    <thead><tr>
+      <th><div class="th"><span class="n">序号</span></div></th>
+      <th><div class="th"><span class="n">送样人</span></div></th>
+      <th><div class="th"><span class="n">所属部门</span><span class="f">▽</span></div></th>
+      <th><div class="th"><span class="n">实验室/车间</span><span class="f">▽</span></div></th>
+      <th><div class="th"><span class="n">所属项目</span><span class="f">▽</span></div></th>
+      <th><div class="th"><span class="n">送样数量</span></div></th>
+      <th><div class="th"><span class="n">样品批号</span><span class="f on">▽</span></div></th>
+      <th><div class="th"><span class="n">样品主要成分</span></div></th>
+      <th><div class="th"><span class="n">注意事项</span></div></th>
+      <th><div class="th"><span class="n">送样时间</span><span class="s">↓</span></div></th>
+      <th><div class="th"><span class="n">检测类型</span><span class="f">▽</span></div></th>
+      <th><div class="th"><span class="n">状态</span><span class="f">▽</span></div></th>
+      <th><div class="th"><span class="n">附件</span></div></th>
+      <th><div class="th"><span class="n">操作</span></div></th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><div class="c one ctr">#1625<div class="tiny mono">YP260923001</div></div></td>
+        <td><div class="c one">杨晓庆</div></td>
+        <td><div class="c one">生物合成1</div></td>
+        <td><div class="c one">D006</div></td>
+        <td><div class="c one">DYX</div></td>
+        <td><div class="c one num">5</div></td>
+        <td><div class="c two mono" title="D00260914-11-15">D00260914-11-15</div></td>
+        <td><div class="c two" title="乙腈/水 70:30，含微量稳定剂">乙腈/水 70:30，含微量稳定剂</div></td>
+        <td><div class="c two" title="客户要求 3 日内出具报告，样品需避光冷藏保存">客户要求 3 日内出具报告，样品需避光冷藏保存</div></td>
+        <td><div class="c"><span class="one">2026-09-23</span><span class="one tiny">08:15:22</span></div></td>
+        <td><div class="c one">液相</div></td>
+        <td><div class="c"><span class="chip st-wait">待取样</span></div></td>
+        <td><div class="c"><span class="btn" style="font-size:11px">📎 1 个</span> <span class="btn" style="font-size:11px">＋</span></div></td>
+        <td><div class="c"><div class="acts"><span class="btn err">取样</span><span class="btn more">更多 ▾</span></div></div></td>
+      </tr>
+      <tr>
+        <td><div class="c one ctr">#1626<div class="tiny mono">YP260923002</div></div></td>
+        <td><div class="c one">王强</div></td>
+        <td><div class="c one">生物合成2</div></td>
+        <td><div class="c one">D007</div></td>
+        <td><div class="c one">DAB</div></td>
+        <td><div class="c one num">3</div></td>
+        <td><div class="c two mono" title="D00260914-11-16">D00260914-11-16</div></td>
+        <td><div class="c two" title="甲醇/水 80:20">甲醇/水 80:20</div></td>
+        <td><div class="c two" title="复检一次，结果需留档">复检一次，结果需留档</div></td>
+        <td><div class="c"><span class="one">2026-09-23</span><span class="one tiny">09:02:41</span></div></td>
+        <td><div class="c one">气相</div></td>
+        <td><div class="c"><span class="chip st-test">待检测</span></div></td>
+        <td><div class="c"><span class="btn" style="font-size:11px">📎 0 个</span> <span class="btn" style="font-size:11px">＋</span></div></td>
+        <td><div class="c"><div class="acts"><span class="btn ok">完成检测</span><span class="btn more">更多 ▾</span></div></div></td>
+      </tr>
+      <tr>
+        <td><div class="c one ctr">#1627<div class="tiny mono">YP260923003</div></div></td>
+        <td><div class="c one">李红</div></td>
+        <td><div class="c one">分析检测</div></td>
+        <td><div class="c one">D002</div></td>
+        <td><div class="c one">DYX</div></td>
+        <td><div class="c one num">10</div></td>
+        <td><div class="c two mono" title="D00260914-11-17">D00260914-11-17</div></td>
+        <td><div class="c two" title="乙酸乙酯，工业级">乙酸乙酯，工业级</div></td>
+        <td><div class="c two" title="-">-</div></td>
+        <td><div class="c"><span class="one">2026-09-23</span><span class="one tiny">10:30:10</span></div></td>
+        <td><div class="c one">理化</div></td>
+        <td><div class="c"><span class="chip st-done">已检测</span></div></td>
+        <td><div class="c"><span class="btn" style="font-size:11px">📎 2 个</span> <span class="btn" style="font-size:11px">＋</span></div></td>
+        <td><div class="c"><div class="acts"><span class="btn dis">已录入</span><span class="btn more">更多 ▾</span></div></div></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="pager">1-3 / 128　每页 20 ▾　‹ 1 2 … 7 ›</div>
+</div>
+<div class="note">「更多 ▾」展开后为：编辑 / 录入工作量 / 退回 / 撤回取样 / 确认退回（按权限与状态动态决定，与改前逻辑完全一致，只改展示位置）。</div>
+
+<table class="spec">
+  <tr><th style="width:20%">列（库 label）</th><th style="width:11%">配置权重</th><th style="width:11%">改前实际</th><th style="width:11%">改后实际</th><th>变化说明</th></tr>
+  <tr><td>序号</td><td class="n">60</td><td class="n">48</td><td class="n">56</td><td class="up">+8</td><td>容纳第二行业务编号</td></tr>
+  <tr><td>送样人 / 所属部门</td><td class="n">100/100</td><td class="n">65/65</td><td class="n">72/88</td><td class="up">+7/+23</td><td>「生物合成1」需 88px 才不折行</td></tr>
+  <tr><td>实验室/车间 / 所属项目</td><td class="n">100/120</td><td class="n">65/78</td><td class="n">60/60</td><td class="down">-5/-18</td><td>实际为短编码，原宽度让给批号列</td></tr>
+  <tr><td>送样数量</td><td class="n">80</td><td class="n">52</td><td class="n">48</td><td class="steady">-4</td><td>数字列保底 48px</td></tr>
+  <tr><td>样品批号</td><td class="n">120</td><td class="n">78</td><td class="n">124</td><td class="up">+46</td><td class="up">关键修复：原 78px 装不下 18 字符批号，现两行完整显示</td></tr>
+  <tr><td>样品主要成分</td><td class="n">180</td><td class="n">116（内滚动）</td><td class="n">180</td><td class="up">+64</td><td class="up">可扩展列：两行展开，不再需要格内滚动</td></tr>
+  <tr><td>注意事项</td><td class="n">180</td><td class="n">116（内滚动）</td><td class="n">170</td><td class="up">+54</td><td class="up">可扩展列：两行展开</td></tr>
+  <tr><td>送样时间</td><td class="n">140</td><td class="n">91</td><td class="n">104</td><td class="up">+13</td><td>两行「日期 + 时间」需 104px</td></tr>
+  <tr><td>检测类型</td><td class="n">100</td><td class="n">65</td><td class="n">64</td><td class="steady">-1</td><td>2 字内容</td></tr>
+  <tr><td>状态</td><td class="n">80</td><td class="n">52</td><td class="n">88</td><td class="up">+36</td><td class="up">关键修复：52px 装不下状态标签，「已退回 + 退回原因」还需要更多</td></tr>
+  <tr><td>附件</td><td class="n">100</td><td class="n">65</td><td class="n">86</td><td class="up">+21</td><td class="up">关键修复：原 65px 装不下「Chip + 上传按钮」</td></tr>
+  <tr><td>操作</td><td class="n">628（Σ按钮）</td><td class="n">406</td><td class="n">160</td><td class="up">-246</td><td class="up">最大一笔回收：占表格宽度从 29.9% 降到 11.8%</td></tr>
+  <tr><td><b>合计</b></td><td class="n"><b>2102</b></td><td class="n"><b>1360</b></td><td class="n"><b>1360</b></td><td></td><td>改后 14 列全部一页显示，无横向滚动，且内容完整</td></tr>
+</table>
+<div class="note ok">回收的 246px 全部投给「样品批号 / 样品主要成分 / 注意事项 / 状态 / 附件」这五个原先装不下内容的列，这是本表改动收益最大的部分。</div>
+
+<!-- ======================== 交互与降级 ======================== -->
+<h2>三、两张表共用的交互</h2>
+<div class="card">
+  <ul class="tight">
+    <li><b>表头两行折行</b>：直接使用库里 label 原文（下次再评估是否给「实验室/车间」配简称），排序箭头与筛选漏斗跟随文字换行，不占额外列宽。</li>
+    <li><b>长文本两行 + 悬停看全文</b>：<code>样品主要成分</code>、<code>注意事项</code>、<code>方法</code>、<code>样品批号</code> 超出一行时展开到两行，鼠标悬停显示完整内容（<code>title</code>）。</li>
+    <li><b>列设置</b>：可勾选显示哪些列，按「用户 + 表名」记住；不勾选时列宽自动重新分配。</li>
+    <li><b>表头筛选</b>：多选 + 搜索，作用范围标注为「本页 N 条」；已选条件以标签形式汇总，可单独移除。</li>
+    <li><b>固定表头 + 冻结前两列（可选）</b>：表头在 72vh 内滚动时固定；横向空间极窄时可冻结序号与送样人列。</li>
+    <li><b>操作列三档</b>：≥1400px 文字档（主操作 + 次操作 + 更多）／1024~1400px 主操作 + 更多（本次预览形态）／&lt;1024px 仅更多菜单。</li>
+  </ul>
+</div>
+
+<h2>四、窄屏（1280px / 1024px）降级顺序</h2>
+<div class="card">
+  <table class="spec">
+    <tr><th style="width:10%">级</th><th style="width:30%">手段</th><th style="width:16%">省下</th><th>触发</th></tr>
+    <tr><td>L1</td><td>表头两行折行（已含在本次预览）</td><td>20~40px</td><td>始终</td></tr>
+    <tr><td>L2</td><td>单元格内边距 12 → 8px、字号 13 → 12.5px、行高 36 → 32px</td><td>约 6%</td><td>总需求 &gt; 容器宽</td></tr>
+    <tr><td>L3</td><td>长文本列两行换行（已含在本次预览）</td><td>长列 30%~45%</td><td>内容超自然宽</td></tr>
+    <tr><td>L4</td><td>「所属部门 / 实验室/车间 / 所属项目」竖排合并为一列「组织」</td><td>2 列宽</td><td>仍不足（仅这两张表可配）</td></tr>
+    <tr><td>L5</td><td>数量/时间列切紧凑，时间保留「MM-DD HH:mm」</td><td>约 4%</td><td>仍不足</td></tr>
+    <tr><td>L6</td><td>隐藏最低优先级列，表尾提示「N 列未显示 · 点此展开」</td><td>按列计</td><td>&gt; 14 列且容器 &lt; 1280px</td></tr>
+  </table>
+  <div class="note">L1~L5 全程保持全部列在一页内，不产生横向滚动；只有 L6 会隐藏列并明确提示。两张表在 <b>1440px 与 1280px</b> 下均可完整显示全部列，<b>1024px</b> 需启用 L2 + L4。</div>
+</div>
+
+<h2>五、列宽配置机制：默认值 + 可修改 + 可恢复默认</h2>
+
+<div class="card">
+  <span class="badge info">现状：可配置，但只有一个真值</span>
+  页面上那些数字<b>不是写死的</b>——它们来自后台配置。但目前只有「一个真值」：后台把 px 写进 <code>sample_info_columns.width</code> / <code>rd_record_columns.width</code>，前端再归一化成百分比。缺三样东西：
+  <ul class="tight">
+    <li><b>没有「未配置」状态</b>：每列必有值，所以内容测量永远没有机会接管，这也是 <code>getAdaptiveColumnWidths</code> 里那套测量逻辑变成死代码的原因。</li>
+    <li><b>没有默认值兜底</b>：某个值被改坏（例如误填 500）后，没有任何参照可以回退。</li>
+    <li><b>没有「恢复默认」入口</b>：想还原只能凭记忆手工改回去。</li>
+  </ul>
+  <table class="spec">
+    <tr><th style="width:22%">现有入口</th><th style="width:34%">位置</th><th>当前语义</th></tr>
+    <tr><td>研发送样字段宽度</td><td><code>AdminRdRecordColumns.tsx:217</code>「列表宽度」，48~500</td><td>固定像素，归一化为百分比</td></tr>
+    <tr><td>样品信息登记列宽度</td><td><code>ManagePage.tsx:2273</code>「宽度(px)」，48~500</td><td>提示文案原文：「记录列表按宽度比例铺满页面，<b>长内容在单元格内滚动</b>」</td></tr>
+    <tr><td>表格全局配置</td><td><code>types/layout.ts:46</code> <code>TableConfig</code></td><td>已有 <code>row_height / seq_column_width / checkbox_column_width</code>，但两张记录表<b>都没读取</b></td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <span class="badge good">建议：四级共存，逐级覆盖，每级都能单独恢复</span>
+  <table class="spec">
+    <tr><th style="width:18%">级别</th><th style="width:26%">存储位置</th><th style="width:16%">谁维护</th><th>生效条件</th></tr>
+    <tr><td>① 系统默认</td><td>代码常量 <code>DEFAULT_WIDTH_BOUNDS</code>（不入库）</td><td>开发者</td><td>永远存在的兜底值</td></tr>
+    <tr><td>② 内容测量</td><td>运行时计算（不入库）</td><td>系统</td><td>该列处于「自动」模式</td></tr>
+    <tr><td>③ 管理员覆盖</td><td><code>width</code> + 新增 <code>width_mode</code></td><td>管理员</td><td><code>width_mode = 'custom'</code></td></tr>
+    <tr><td>④ 用户覆盖</td><td>本机 localStorage，按「用户 + 表名」</td><td>使用人</td><td>用户手动拖拽调整过列宽（已确认要做）</td></tr>
+  </table>
+  <div class="note">
+    <b>优先级</b>：④ 用户覆盖 &gt; ③ 管理员覆盖 &gt; ② 内容测量 &gt; ① 系统默认。<br>
+    <b>默认落在哪一级</b>：<b>新装库与老库升级统一默认走「自动」（②）</b>，升级即生效，无需管理员逐列开启。管理员原有的 <code>width</code> 值保留在字段里不删除，随时切回「自定义」（③）即可复用；列管理页另设「全部列改为自定义」作为整体回退。
+  </div>
+</div>
+
+<div class="card">
+  <h3>1. 数据层：两个新字段 + 一个系统开关</h3>
+  <pre style="background:#f7f9fb;border:1px solid #e0e0e0;border-radius:2px;padding:9px 11px;font-size:11.5px;line-height:1.55;overflow-x:auto;margin:6px 0 0">-- 列级：宽度模式。默认 auto，升级后立即按内容测量生效
+ALTER TABLE rd_record_columns   ADD COLUMN IF NOT EXISTS width_mode TEXT   NOT NULL DEFAULT 'auto';
+ALTER TABLE sample_info_columns ADD COLUMN IF NOT EXISTS width_mode TEXT   NOT NULL DEFAULT 'auto';
+-- 升级时保留原有 width 值不动，切回 custom 时可直接复用
+
+-- 列级：可选的自定义区间（0 表示沿用系统默认区间）
+ALTER TABLE rd_record_columns   ADD COLUMN IF NOT EXISTS min_width BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE rd_record_columns   ADD COLUMN IF NOT EXISTS max_width BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE sample_info_columns ADD COLUMN IF NOT EXISTS min_width BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE sample_info_columns ADD COLUMN IF NOT EXISTS max_width BIGINT NOT NULL DEFAULT 0;
+
+-- 操作列收纳开关（本次决策新增）
+--   auto = 按容器宽度三档自动收敛（默认）
+--   full = 始终显示全部按钮，维持升级前体验
+INSERT INTO system_settings(key, value) VALUES ('record_table_action_mode', 'auto')
+ON CONFLICT DO NOTHING;</pre>
+  <p class="sub" style="margin-top:8px">「未配置」的三种等价写法：<code>width_mode='auto'</code>、<code>width=0</code>、<code>width=NULL</code>。命中任意一种即走内容测量；<code>width_mode='custom'</code> 时 <code>width</code> 才作为固定宽度参与归一化。</p>
+  <div class="note ok" style="margin-top:10px">
+    <b>已确认：老库升级默认走「自动」。</b>升级后两张表立即按内容测量排布；管理员原有的 width 值<b>保留在数据库里但不生效</b>，若某列想改回固定宽度，切到「自定义」即可直接沿用原值。如果整体不满意，列管理页的「全部列恢复自动宽度」旁边提供一个反向按钮「全部列改为自定义」，一键回到升级前的固定宽度模式。
+  </div>
+</div>
+
+<div class="card">
+  <h3>2. 系统默认值（代码常量，按输入方式给区间）</h3>
+  <table class="spec">
+    <tr><th style="width:20%">输入方式</th><th style="width:10%">默认 min</th><th style="width:10%">默认 max</th><th style="width:16%">本次预览取值</th><th>说明</th></tr>
+    <tr><td>number</td><td class="n">48</td><td class="n">96</td><td class="n">48~56</td><td>数字右对齐</td></tr>
+    <tr><td>date / datetime</td><td class="n">104</td><td class="n">150</td><td class="n">104</td><td>两行「日期 + 时间」的保底宽</td></tr>
+    <tr><td>text（短）</td><td class="n">56</td><td class="n">160</td><td class="n">按内容</td><td>姓名、部门、编码、批号</td></tr>
+    <tr><td>text（长 / 备注类）</td><td class="n">120</td><td class="n">360</td><td class="n">170~180</td><td>样品主要成分、注意事项，可扩展列</td></tr>
+    <tr><td>select</td><td class="n">64</td><td class="n">140</td><td class="n">按内容</td><td>检测类型、部门下拉</td></tr>
+    <tr><td>attachment</td><td class="n">76</td><td class="n">120</td><td class="n">86</td><td>Chip + 上传按钮</td></tr>
+    <tr><td>action</td><td class="n">96</td><td class="n">160</td><td class="n">160</td><td>按容器宽度取三档</td></tr>
+    <tr><td>序号 / 选择列</td><td colspan="2" class="n">固定</td><td class="n">58 / 44</td><td>读 <code>TableConfig.seq_column_width</code> / <code>checkbox_column_width</code></td></tr>
+  </table>
+  <div class="note">系统默认值本身也可被管理员调整：修改 <code>min_width</code> / <code>max_width</code> 即覆盖对应区间；清成 0 即回到系统默认。</div>
+</div>
+
+<div class="card">
+  <h3>3. 三个「恢复默认」入口</h3>
+  <table class="spec">
+    <tr><th style="width:16%">粒度</th><th style="width:38%">位置</th><th>动作</th></tr>
+    <tr><td>单列</td><td>列编辑弹窗 → 宽度模式选「自动（按内容）」</td><td>置 <code>width_mode='auto'</code>，立即按内容测量；<code>width</code> 值<b>保留不删</b>，切回自定义时还在</td></tr>
+    <tr><td>整表</td><td>列管理页顶部 → 「全部列恢复自动宽度」</td><td>批量置 auto，附二次确认</td></tr>
+    <tr><td>用户级</td><td>记录表「列设置」→ 「恢复默认宽度」</td><td>清空本机 localStorage 里的列宽覆盖，回到管理员设定</td></tr>
+  </table>
+  <h3 style="margin-top:14px">4. 界面长什么样</h3>
+  <pre style="background:#f7f9fb;border:1px solid #e0e0e0;border-radius:2px;padding:9px 11px;font-size:11.5px;line-height:1.6;overflow-x:auto;margin:6px 0 0">列管理 → 编辑列
+┌──────────────────────────────────────────────┐
+│ 宽度模式                                    │
+│   ( ) 自动（按内容计算）  (•) 自定义宽度      │
+│       当前实测：124px                        │
+│ 自定义宽度   [ 150 ] px      允许区间 48~500  │
+│ [ 恢复自动宽度 ]                             │
+└──────────────────────────────────────────────┘
+
+列管理列表
+字段          输入方式   宽度
+样品批号      text       自动（124px）
+注意事项      text       自动（170px）
+序号          number     自定义 60px
+检测类型      select     自动（64px）</pre>
+</div>
+
+<div class="card">
+  <h3>5. 顺带修正一处把缺陷写成说明的文案</h3>
+  <p class="sub" style="margin:0"><code>ManagePage.tsx:2277</code> 现有提示是「记录列表按宽度比例铺满页面，<b>长内容在单元格内滚动</b>」。建议改为：「自动模式按内容计算宽度，长内容两行展开；自定义模式按设定宽度固定，可在列设置中恢复自动」。</p>
+</div>
+
+<div class="card">
+  <b>请重点确认四件事：</b>
+  <ul class="tight">
+    <li>操作列收纳为「主操作 + 更多 ▾」是否可接受？如果不接受，样品信息登记表就只能走 L4 合并列来腾空间。</li>
+    <li>表头是否要保留库里 label 原文（「实验室/车间」「样品主要成分」会占两行）？还是允许配置简称（如「实验室」「主要成分」）缩短表头？</li>
+    <li>改后把「实验室/车间 65→60、所属项目 78→60、注意事项 116→170」这类此消彼长的调整是否符合预期优先级？</li>
+    <li><b>老库升级后默认走哪一档？</b>建议默认「自动」（立即见效），管理员可一键切回「自定义」保持原样；如果你希望升级后先完全不变、由管理员手动开启，那就反过来。</li>
+  </ul>
+</div>
+
+</body>
+</html>
