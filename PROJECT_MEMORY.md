@@ -318,7 +318,8 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
   - **所有占用表宽的列（含选择列）都必须纳入列宽引擎**，否则百分比总和之外会多出固定像素并产生横向滚动。
 - 影响范围：仅前端 3 个文件（`components/recordTable/columnLayoutHooks.tsx`、`utils/recordTableLayout.ts`、`pages/RdRecordsPage.tsx`）。后端与数据库零改动，v2.3.20 迁移不受影响，已升级的库无需重复迁移。
 - 验证：前端 `npm run build` 通过（仅既有大 chunk 警告）；后端沿用 v2.3.20 的 `cargo check --locked` 与 `cargo build --release --locked` 通过结果（本版未改后端）。
-- 发布：提交 `403ac924`（`fix: correct record table column width collapse in v2.3.21`）已推送 `origin/main`；注释标签 `v2.3.21` 已推送，触发 Windows 安装包与 Docker 工作流。**本版未做本地出包**，由 CI 构建并回写仓库根 `installers/`。
+- 发布：提交 `403ac924`（`fix: correct record table column width collapse in v2.3.21`）已推送 `origin/main`；注释标签 `v2.3.21` 已推送，触发 Windows 安装包与 Docker 工作流。
+- 本地出包（2026-09-23，复用 v2.3.20 的 `target/release` 缓存后 Release 构建 2 分 27 秒）：完整包 `LabFlow-v2.3.21.exe` 77,744,243 字节 sha256 `7897e37c17269e4a98058ec6de02d9af27df8f0968ae42825f48db87eb0fe54e`；热更新包 `LabFlow-v2.3.21-HotUpdate.exe` 27,251,176 字节 sha256 `a32959d835ef75df15714bd124a23a8274a5d3f380c4dbc6a0d105d8c7b40d48`；两者 `ProductVersion`/`FileVersion` 均为 `2.3.21.0`；校验和留档于版本目录 `installer/checksums.sha256`。Inno 编译：完整包 83.5 秒、热更新包 35.0 秒。本地包不提交到仓库根 `installers/`，由 tag 触发的 Windows 工作流入库。
 
 ### v2.3.20（已发布）
 
