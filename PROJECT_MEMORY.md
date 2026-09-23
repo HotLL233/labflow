@@ -2,9 +2,9 @@
 
 > 最后更新：2026-09-23
 >
-> 当前正式基线：`v2.3.20`（记录表列宽改版；已完成本地出包，标签与 CI 发布见第 10 节）
+> 当前正式基线：`v2.3.21`（记录表列宽改版 + 列宽塌陷修复；v2.3.20 的改版内容保留，v2.3.21 修正其渲染缺陷）
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.20/`
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.21/`
 
 ## 1. 文件定位与强制维护规则
 
@@ -304,7 +304,23 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
   - `LabFlow-v2.3.16.exe`：78,671,620 字节，版本 `2.3.16.0`。
   - `LabFlow-v2.3.16-HotUpdate.exe`：28,156,944 字节，版本 `2.3.16.0`。
 
-### v2.3.20（当前开发目录）
+### v2.3.21（当前开发目录）
+
+内容：修复 v2.3.20 引入的记录表列宽塌陷缺陷（详见 `source/LabFlow-PostgreSQL-v2.3.21/更新说明.md`）。
+
+- 现象：研发送样记录所有列被压到 20~30px，表头文字逐字竖排，行高被撑到数百像素，一屏只见一条记录，并出现横向滚动条。
+- 根因（两处叠加）：
+  1. `useContainerWidth` 用 `useEffect(..., [])` 读取 `ref.current`；研发送样页在加载态会提前 `return <CircularProgress/>`，表格尚未渲染 → 首次读到 `null` 且**之后永不重绑定** → 容器宽度恒为 0 → 引擎走「无宽度」分支按自然宽比例分配，而自然宽被长文本列上限（240px）拉高，短列占比被摊薄到约 2.5%（1360 × 2.5% ≈ 27px）。
+  2. 表头选择列硬编码 `width: 40` 未纳入列宽引擎，使 `Σ百分比 = 100%` 之外多出 40px。
+- 修复（**长期规则，后续不得回退**）：
+  - `useContainerWidth` 必须使用 **callback ref**（元素挂载/卸载时重新绑定），不要退回 `useRef + useEffect(..., [])`。
+  - 列宽引擎在容器宽度未知时必须用视口估算兜底（`max(720, innerWidth - 320)`），不得退化成纯自然宽比例分配。
+  - **所有占用表宽的列（含选择列）都必须纳入列宽引擎**，否则百分比总和之外会多出固定像素并产生横向滚动。
+- 影响范围：仅前端 3 个文件（`components/recordTable/columnLayoutHooks.tsx`、`utils/recordTableLayout.ts`、`pages/RdRecordsPage.tsx`）。后端与数据库零改动，v2.3.20 迁移不受影响，已升级的库无需重复迁移。
+- 验证：前端 `npm run build` 通过（仅既有大 chunk 警告）；后端沿用 v2.3.20 的 `cargo check --locked` 与 `cargo build --release --locked` 通过结果（本版未改后端）。
+- 发布：提交 `403ac924`（`fix: correct record table column width collapse in v2.3.21`）已推送 `origin/main`；注释标签 `v2.3.21` 已推送，触发 Windows 安装包与 Docker 工作流。**本版未做本地出包**，由 CI 构建并回写仓库根 `installers/`。
+
+### v2.3.20（已发布）
 
 内容（在 v2.3.19 目录基础上迭代，详见 `source/LabFlow-PostgreSQL-v2.3.20/更新说明.md`）：
 
