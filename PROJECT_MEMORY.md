@@ -304,7 +304,26 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
   - `LabFlow-v2.3.16.exe`：78,671,620 字节，版本 `2.3.16.0`。
   - `LabFlow-v2.3.16-HotUpdate.exe`：28,156,944 字节，版本 `2.3.16.0`。
 
-### v2.3.19（测试版，当前开发目录）
+### v2.3.20（当前开发目录）
+
+内容（在 v2.3.19 目录基础上迭代，详见 `source/LabFlow-PostgreSQL-v2.3.20/更新说明.md`）：
+
+- 记录表列宽改版 —— **长期规则**：
+  - 迁移 `2.3.20-column-width-mode`：`rd_record_columns` 与 `sample_info_columns` 各新增 `width_mode`（默认 `auto`）、`min_width`、`max_width`；新增系统设置 `record_table_action_mode`、`record_table_density`。
+  - 列宽改为四级模型：④ 本机覆盖（localStorage `labflow.record-col-widths:*`）＞ ③ 管理员 `custom` 模式固定宽 ＞ ② 内容测量（`max(表头, 内容 P90) + 内边距`）＞ ① 系统默认区间。**老库升级默认走「自动」**；原有 `width` 值保留在字段中不删除，切回 `custom` 即可复用。禁止再让列宽与内容无关（此前 `width` 是唯一真值，样品批号列只有 78px 却要显示 18 个字符）。
+  - 新增 `frontend/src/utils/recordTableLayout.ts`（列宽引擎：内容测量、上下限、富余优先给可扩展列、不足时先压缩可折行列、操作列三档）与 `frontend/src/components/recordTable/columnLayoutHooks.tsx`（容器宽度测量、本机覆盖、拖拽手柄、行操作收纳菜单）。
+  - 研发送样记录删除 `getRecordColumnBounds`：它把配置 `width` 直接返回为 `fixed`，使 `getAdaptiveColumnWidths` 的内容测量全部成为死代码。
+  - 样品信息登记 登记记录的 `recordDisplayWidths` 改为调用列宽引擎并与当前页数据联动；`Wrap` / `valueBoxSx` 去掉 `maxHeight + overflow:auto`，改为两行展示（附件列除外）。**不要**恢复单元格内嵌滚动。
+  - 操作列收纳由系统开关 `record_table_action_mode` 控制：样品信息登记记录默认「主操作 + 更多 ▾」；`full` 时回到按按钮宽度累加（等同升级前）。研发送样记录操作列本就是图标按钮，仅按容器宽度取档 160 / 132 / 108px。
+  - 表格配置三项接通记录表：`row_height` → 行高，`seq_column_width` → 序号列宽下限，`checkbox_column_width` → 选择列宽（样品信息登记记录无勾选列，不参与）。
+- 本次未包含：窄屏 L4「语义列合并」与 L6「隐藏低优先级列」；后台列编辑弹窗内的宽度模式单选区块与批量恢复按钮（数据库字段已具备，可直接开关）。
+- 踩坑记录：仓库根目录若存在空 `Cargo.toml`，cargo 搜索 workspace 会失败（`manifest is missing either a [package] or a [workspace]`）。本机根目录另有 6 个同名空文件（`VERSION`、`Cargo.lock`、两个 `.iss`、两个 `docker-compose*.yml`），均由一次失败的批量替换误创建，**尚未清理且未被提交**；清理前不要执行 `git add -A`。原因：`[IO.File]::ReadAllText/WriteAllText` 使用 .NET 当前目录，不受 PowerShell `cd`/`Set-Location` 影响，必须使用绝对路径。
+- 验证：`cargo fmt`、`cargo check --locked`（仅既有 4 个 `dead_code` 警告）、`cargo build --release --locked`（2 分 45 秒）、前端 `npm run build`（`tsc` + `vite`，产物写入 `backend/static`）全部通过。`cargo test --locked --lib` 因本机未配置 `WORKLOAD_TEST_DATABASE_URL` 无法运行：65 项需数据库的集成测试在 `src/db/connection.rs:60` 连接失败，与 v2.3.19 同环境行为一致，非本次改动引入。
+- 本地出包（2026-09-23）：完整包 `LabFlow-v2.3.20.exe` 77,749,816 字节 sha256 `50ec2ccc84c3a2f209a901cb10ace31e71a22d9175868084a3449e6017c5d924`；热更新包 `LabFlow-v2.3.20-HotUpdate.exe` 27,258,464 字节 sha256 `0d4e55029ecd1f28ec0ba53d3b61473ea85a0c459b488342ce92634e46649a36`；两者 `ProductVersion`/`FileVersion` 均为 `2.3.20.0`；校验和留档于版本目录 `installer/checksums.sha256`（182 字节）。Inno 编译耗时：完整包 95.8 秒、热更新包 37.9 秒。
+- 暂存清单核对：2290 个文件，未包含 `target`、`frontend/node_modules`、版本目录 `installer/` 与仓库根 `installers/`。
+- 源码提交 `224ff99c`（`feat: release LabFlow v2.3.20`）已推送 `origin/main`；注释标签 `v2.3.20` 已推送，触发 Windows 安装包与 Docker 工作流。CI 回写与 Release 结果待核对后补记。
+
+### v2.3.19（测试版，已发布）
 
 内容（在 v2.3.18 目录基础上继续迭代，未打标签、未发布）：
 
