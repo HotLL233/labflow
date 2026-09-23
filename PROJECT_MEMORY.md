@@ -2,9 +2,9 @@
 
 > 最后更新：2026-09-23
 >
-> 当前正式基线：`v2.3.18`
+> 当前正式基线：`v2.3.19`（更新说明中定位为测试版，但已按惯例完成完整发布：标签 + GitHub Release + CI 安装包 + Docker 镜像）
 >
-> 当前开发目录（测试版，未发布）：`source/LabFlow-PostgreSQL-v2.3.19/`
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.19/`
 
 ## 1. 文件定位与强制维护规则
 
@@ -157,7 +157,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - GitHub 网络不通时可对单次 Git 命令使用系统代理参数（`-c http.proxy=... -c https.proxy=...`），不修改全局 Git 配置。
 - 2026-09-20 实测：代理 `127.0.0.1:7897` 先报 `TLS connect error: ... unexpected eof`，随后即使端口仍可连通（`Test-NetConnection` 为 True）也返回 `http_code=000`，而此时直连 GitHub 已可用。排查顺序应为：先用 `git ls-remote origin` 直连试一次，失败再考虑代理，避免把可用的直连误判为断网。
 - 网络受限时可用 GitHub REST API 核对发布结果：`/repos/<owner>/<repo>/actions/runs`、`/commits?sha=main`、`/releases/latest`。
-- 本机 Inno Setup 6 参考路径：`D:\APP\Inno Setup 6\ISCC.exe`。
+- 本机 Inno Setup 6 路径：`C:\Program Files (x86)\Inno Setup 6\ISCC.exe`（2026-09-23 实测存在，且与 `windows-release.yml` 使用的路径一致）。早期记录的 `D:\APP\Inno Setup 6\ISCC.exe` 在本机已不存在，出包前必须先 `Test-Path` 探测，不要沿用旧路径。
 - 本机安装的 LabFlow 配置通常位于 `C:\ProgramData\WorkloadTool`，业务数据目录和连接凭据不得写入仓库。
 - 使用 `psql` 非交互查询时带 `-w`，设置控制台输出和 `PGCLIENTENCODING=UTF8`；PowerShell 命令参数中直接传中文 SQL 可能发生编码破坏，可改用 ASCII 条件、`type_key` 或 `chr(...)`。
 - 读取 UTF-8 配置可使用 `[System.IO.File]::ReadAllText(..., [Text.Encoding]::UTF8)`。
@@ -325,6 +325,28 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 验证：`cargo fmt --check`、`cargo check --locked`、`cargo test --locked --lib`、前端 `npm run build`（产物写入 `backend/static`，含 `tsc` 类型检查）。
 - 未改动的既有行为（有意保留，见 11.2）：服务监听 `0.0.0.0`、CORS 保持宽松、`ManagePage` 4 处原生 `confirm`。
 
+本地出包与远端同步记录（2026-09-23）：
+
+- 本机 Inno Setup 实际路径为 `C:\Program Files (x86)\Inno Setup 6\ISCC.exe`；本文件第 6 节早期记录的 `D:\APP\Inno Setup 6\ISCC.exe` 在本机不存在，出包前必须先探测实际路径。
+- `postgres-runtime/installer/vcredist_x64.exe` 从 `build-resources/postgres-runtime/installer/` 复制补齐（25,635,768 字节，与 CI 下载的同名文件一致）；该路径被 `.gitignore` 的 `/source/**/installer/` 忽略，不进入提交。
+- 本地出包结果：完整包 `LabFlow-v2.3.19.exe` 78,694,469 字节、sha256 `2B8786A3E996BD066D4FC0B4D1D770FCB2C44D15B41750D671163D17FCB6633D`；热更新包 `LabFlow-v2.3.19-HotUpdate.exe` 28,184,718 字节、sha256 `D07B894C5E55FD2887C50313734EED92C71B120CAE2B289F4BA3233E96A9B0B0`；两者 `ProductVersion`/`FileVersion` 均为 `2.3.19.0`；校验和留档于版本目录 `installer/checksums.sha256`（184 字节，与 v2.3.17/18 格式一致）。Inno 编译耗时：完整包 89.6 秒、热更新包 34.9 秒；release 构建沿用本机缓存 8 分 04 秒。
+- 提交清单核对：2284 个文件，未包含 `target`、`frontend/node_modules`、版本目录 `installer/` 与仓库根 `installers/`。
+- 源码提交 `4bfc3776`（`fix: release LabFlow v2.3.19 (test build)`）已推送 `origin/main`，远端 `main` 核对为 `4bfc3776`。
+- 推送 `main` 按既有工作流触发 `docker-publish.yml`，**会把 `ghcr.io/hotll233/labflow:latest` 一并指向 2.3.19**（该工作流在 `branches: [main]` 上的既有行为）。若测试版不应影响 `latest`，需要在推送前调整触发条件或改用仅 tag 触发。
+- 本地安装包不提交到仓库根 `installers/`（沿用 v2.3.17 起口径）；根 `installers/` 由 tag 触发的 Windows 工作流入库。
+发布结果（2026-09-23，仅 GitHub）：
+
+- 注释标签 `v2.3.19`（tag 对象 `7911545b`）指向源码提交 `4bfc3776`；远端 `refs/tags/v2.3.19` 已核对。
+- Windows 安装包工作流 run `35850123635` 成功（891 秒）；Docker 工作流 tag 运行 `35850123429` 成功（368 秒）、main 推送运行 `35849052027` 成功（381 秒）。
+- Windows CI 回写提交 `591f758a`（`build: add LabFlow v2.3.19 Windows installers [skip ci]`），本地 `main` 已快进到该提交，远端 `main` 核对为 `591f758a`。
+- GitHub Release `v2.3.19` 已发布（非草稿、非预发布）：
+  - `LabFlow-v2.3.19.exe` 78,695,339 字节 sha256 `01E40DE6F0CBBEDC2D208E8FEDD368AA88EB1476279D56695B4265931188247D`；
+  - `LabFlow-v2.3.19-HotUpdate.exe` 28,182,306 字节 sha256 `A2506121B9EC503973F9D808899C18468B910356FFA6C02A603BE6ABDE318B32`（均为 CI 构建版）。
+- GHCR `2.3.19` 与 `latest` 指向同一摘要 `sha256:ef8b18715efa27f702eeeb30915477caea82850d1679a4a18566b936d32a9ecf`（可用匿名 token 核对，本地镜像需 `docker pull ghcr.io/hotll233/labflow:2.3.19`）。
+- 本地产物与 CI 产物差异在万分之一量级（完整包 78,694,469 vs 78,695,339；热更新包 28,184,718 vs 28,182,306），属构建环境差异，不是内容差异。
+- Gitee 未推送，沿用 2026-09-21 起的暂停决定（见 5.4）。
+- 体积提示：本版再次把约 102 MB 安装包写入仓库历史（根 `installers/`）。若要止住增长，应先移除 `windows-release.yml` 的 `Publish installers into repository` 步骤，再发下一版（见 11.1）。
+
 ### v2.3.18（当前正式基线）
 
 内容（在 v2.3.17 目录基础上继续迭代，未升版本号）：
@@ -403,9 +425,9 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 - 仓库交付与当前版本：`README.md`
 - 唯一长期记忆与开发惯例：`PROJECT_MEMORY.md`
-- 当前开发版本说明：`source/LabFlow-PostgreSQL-v2.3.19/更新说明.md`
+- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.19/更新说明.md`
 - 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.19/README.md`
-- 正式基线版本说明：`source/LabFlow-PostgreSQL-v2.3.18/更新说明.md`
+- 上一版基线说明：`source/LabFlow-PostgreSQL-v2.3.18/更新说明.md`
 - 记录表交互规范：`docs/表格.md`
 - 通用编码原则：`skills/ponytail/SKILL.md`
 - 自动发布事实来源：当前 `.github/workflows/` 下的工作流文件
