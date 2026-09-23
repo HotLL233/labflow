@@ -1,10 +1,10 @@
 # LabFlow 项目统一记忆
 
-> 最后更新：2026-09-21
+> 最后更新：2026-09-23
 >
 > 当前正式基线：`v2.3.18`
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.18/`
+> 当前开发目录（测试版，未发布）：`source/LabFlow-PostgreSQL-v2.3.19/`
 
 ## 1. 文件定位与强制维护规则
 
@@ -178,6 +178,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 分析人员工作量：`数量 × 系数`。
 - 金额：`数量 × 单价 × 单价倍率`。
 - 倍率只用于金额，系数只用于工作量，二者不可混用。
+- 取样来源的工作量允许分批累计录入，但「剩余数量校验」必须与插入处于同一事务并对来源行加锁（`record_repo::create_inner` 统一收口）；只在前端或 handler 里查一次剩余量属于竞态缺陷，不得再引入。
 - Excel 中需要动态计算的值优先写公式，不能无依据写死结果。
 - 同一检测人、相同方法的明细应按既定口径合并，避免无意义拆行。
 
@@ -303,6 +304,27 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
   - `LabFlow-v2.3.16.exe`：78,671,620 字节，版本 `2.3.16.0`。
   - `LabFlow-v2.3.16-HotUpdate.exe`：28,156,944 字节，版本 `2.3.16.0`。
 
+### v2.3.19（测试版，当前开发目录）
+
+内容（在 v2.3.18 目录基础上继续迭代，未打标签、未发布）：
+
+- 安全修复（长期规则，后续不得回退）：
+  - JWT 签名密钥不再有内置默认值。优先 `JWT_SECRET`，否则在数据目录生成并持久化 `jwt_secret`；响应中不区分数据库/连接池/内部错误细节。**禁止**再出现随安装包分发的固定密钥、或在日志/响应里输出管理员口令。
+  - `/api/auth/login` 不再与配置文件口令做明文比对（该旁路绕过 bcrypt 与停用校验，且改密后旧口令仍可用）。所有登录统一走 `auth_service::login`；`config.admin_pass` 只用于数据库首次初始化写入密码。
+  - 登录失败限流：同账号连续 5 次失败锁定 15 分钟（进程内计数，多实例需改共享存储）。
+  - 只读接口补齐登录校验：`/api/settings`（`theme` 保持匿名可读，登录页启动时取主题）、`/api/instruments`、`/api/sample-info-types(/all)`、`/api/rd-record-columns`、`/api/sample-info/columns(/active,/manage)`。前端读取系统设置统一走 `getSetting()`（带 Token），**不要**再用裸 `fetch('/api/settings/...')`。
+  - 采用「逐接口补鉴权」而非全局中间件：前端仍存在登录前调用 `/api/settings/theme` 的需求，全局白名单容易误伤；如需改中间件必须先穷举登录前接口。
+- 数据一致性：
+  - 工作量累计录入改为在插入同一事务内对来源行加 `FOR UPDATE` 后重算剩余量（`guard_source_quantity`），修复 v2.3.18 移除唯一约束后引入的超额录入竞态。
+  - 时区统一：连接池取连接时把数据库会话时区设为程序所在机器的当前偏移；容器部署（两个 compose 文件）程序与数据库默认 `TZ=Asia/Shanghai`。原因：业务时间存在「显式 +8」与「`Local::now()`/`CURRENT_TIMESTAMP`」两套写法，数据库会话时区与程序不一致时同一列会混入相差 8 小时的数据。
+  - 分页参数钳制（`page≥1`、`page_size` 钳在 1..500）；仪器永久清理预检补算 `instrument_id_snapshot` 外键引用；Excel 导入接口显式 21 MB Body 上限；样品信息导出新增 `status` 参数，导出与列表口径一致。
+- 前端：请求序号守卫（统计页、样品统计页）、翻页不再重复请求且保留排序、写操作失败可见提示、`ConfirmDialog` 支持 `loading`/`reasonLabel`、`InlineEditCard` 去掉原生 `confirm`、401 统一清会话并跳登录、`WorkRecord` 补 `group_id`。
+- 记录表优化（依据 `docs/表格.md`，组件 `frontend/src/components/recordTable/RecordTableTools.tsx`）：固定表头、自定义列（按用户+表缓存在本机）、表头筛选（多选+搜索）、已选条件与匹配数量、批量操作（研发送样记录批量撤回取样）。
+  - 约定：**表头筛选只作用于当前页已加载记录**，界面必须标注范围与匹配数量；如需全量列筛选，应在列表接口增加白名单化列过滤参数，不得在前端假装已全量过滤。
+  - 未做「行操作收纳为更多菜单」：样品信息登记记录的操作列由 `sample_info_columns` 的 `data_type='action'` 配置驱动，收纳会与后台配置冲突。
+- 验证：`cargo fmt --check`、`cargo check --locked`、`cargo test --locked --lib`、前端 `npm run build`（产物写入 `backend/static`，含 `tsc` 类型检查）。
+- 未改动的既有行为（有意保留，见 11.2）：服务监听 `0.0.0.0`、CORS 保持宽松、`ManagePage` 4 处原生 `confirm`。
+
 ### v2.3.18（当前正式基线）
 
 内容（在 v2.3.17 目录基础上继续迭代，未升版本号）：
@@ -339,6 +361,17 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 ## 11. 当前已知风险与后续注意
 
+### 11.2 v2.3.19 有意保留的取舍（再次改动前先读本节）
+
+- 服务仍监听 `0.0.0.0`：局域网多用户访问是既有功能，改为仅回环会破坏现有部署方式。加固方向是防火墙规则与 TLS 反向代理，而不是改监听地址。
+- CORS 仍为 `CorsLayer::permissive()`：Token 通过 `Authorization` 头传递、前端由本服务托管（同源），收紧需要枚举所有部署来源，收益低于误伤风险。
+- 鉴权仍是「各 handler 自行校验 + 本次补齐已知缺口」，不是全局中间件。新增接口必须显式调用 `authz_service::authenticate`；代码评审应把「新增只读接口是否鉴权」作为固定检查项。
+- `frontend/src/pages/ManagePage.tsx` 仍有 4 处原生 `window.confirm`：该页约 3500 行，替换为统一弹窗需要引入确认目标状态，风险高于收益，留作独立重构。
+- 表头筛选范围仅当前页（见 10 节 v2.3.19），全量列筛选需要后端白名单参数，属于独立需求。
+- 迁移脚本 `postgres_migrations.rs` 末尾仍有无版本守卫的 `role_permissions` 补偿写入（每次启动执行），会使管理员收回的 `manage:notifications` 权限被重新写回；如需修正应改为带 `schema_migrations` 标记的一次性迁移。
+- `src/service/stats_service.rs` 为无调用点的死代码，且其中 `GROUP BY p.id` 与 `SELECT pg.name/pg.sort_order` 在 PostgreSQL 下非法；接入前必须修正分组列或删除该实现。
+- `stats_handler::StatsQuery.ownership_basis` 声明后未被使用（`/api/stats/*` 忽略该参数）；`stats_handler::by_division` 固定按 `detection_division_id` 分组，与 `division_id` 过滤列不同源。当前前端只传 `detection_division_ids`/`sending_division_ids`，故不触发；新增调用方前需先统一口径。
+
 ### 11.1 仓库体积与历史构建产物审计（2026-09-20）
 
 现象：推送 Gitee 被拒，`Repo size: 1095.398MB, exceeds quota 1024MB`，而本次推送内容只有文档。
@@ -370,8 +403,10 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 - 仓库交付与当前版本：`README.md`
 - 唯一长期记忆与开发惯例：`PROJECT_MEMORY.md`
-- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.18/更新说明.md`
-- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.18/README.md`
+- 当前开发版本说明：`source/LabFlow-PostgreSQL-v2.3.19/更新说明.md`
+- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.19/README.md`
+- 正式基线版本说明：`source/LabFlow-PostgreSQL-v2.3.18/更新说明.md`
+- 记录表交互规范：`docs/表格.md`
 - 通用编码原则：`skills/ponytail/SKILL.md`
 - 自动发布事实来源：当前 `.github/workflows/` 下的工作流文件
 
