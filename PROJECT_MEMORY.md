@@ -320,6 +320,12 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 影响范围：仅前端 3 个文件（`utils/recordTableLayout.ts`、`pages/RdRecordsPage.tsx`、`components/SampleInfoRecordList.tsx`）。后端与数据库零改动，v2.3.20 迁移不受影响。
 - 本地出包（2026-09-24）：完整包 `LabFlow-v2.3.22.exe` 77,749,332 字节 sha256 `89906de17e37bee9e4cf02bf4d910ecab9cd3f06ba133ed92a0ba310680e1deb`；热更新包 `LabFlow-v2.3.22-HotUpdate.exe` 27,255,698 字节 sha256 `ac411f472cb2afc42c01228860ae75c7be1f2acc51a081e702c6f057eee7a3d1`；两者均为 `2.3.22.0`；校验和留档于版本目录 `installer/checksums.sha256`。
 - 使用建议：label 的文字量超过列宽承载能力时（如「检测元素及其精度（铅、镉、砷、汞、铬等）」），应在后台改为简短显示名称；后台暂未提供独立的「列表简称」配置项，如需另行排期。
+- 补做（2026-09-24，仍在该版本目录内）：按 `docs/记录表改版界面清单.html` 补齐后台配置界面 ——
+  - 研发送样字段编辑弹窗新增「列表宽度」区块（自动 / 自定义单选 + 自定义 px 输入 + 「恢复自动宽度」），字段列表顶部新增「全部列恢复自动宽度」（`AdminRdRecordColumns.tsx`）；新增字段默认 `width_mode='auto'`。
+  - 样品信息登记「编辑列」弹窗同样新增宽度模式区块；`colForm` / `saveCol` / `editCol` 同步 `width_mode`、`min_width`、`max_width`；修正原提示文案「记录列表按宽度比例铺满页面，长内容在单元格内滚动」（`ManagePage.tsx`）；`api/sampleInfo.ts` 的 create / update 入参类型补三个字段。
+  - **注意**：这批改动提交在 `main`（`f4a2a077`）上，但源码目录仍是 `v2.3.22`，因此**标签 `v2.3.22` 指向的提交不含后台配置界面**。下一版必须从当前 `v2.3.22` 目录复制，否则会丢掉这部分。
+- 重新出包（2026-09-24，含后台配置界面）：完整包 `LabFlow-v2.3.22.exe` 77,750,820 字节 sha256 `4c392a702ea4a5b4405d1c3ecf9911b198b6dc5f45ced5eb626dfd1a9963b957`；热更新包 `LabFlow-v2.3.22-HotUpdate.exe` 27,253,387 字节 sha256 `409c234f2323ce2a587431714782dd8e576085f2bf8fec2ff742ab0b62c368e8`；均为 `2.3.22.0`。仓库根 `installers/` 中由 CI 回写的 v2.3.22 包（提交 `36d3f8fd`）不含后台配置界面，**以本地重出包为准**。
+- 待清理：`source/LabFlow-PostgreSQL-v2.3.20/` 内有早先未还原的修复改动，已 `git stash`（条目信息 "v2.3.20 leftover fix"）；仓库根目录另有 7 个误创建的空文件（`VERSION`、`Cargo.lock`、`Cargo.toml.empty-unused`、两个 `.iss`、两个 `docker-compose*.yml`），均未提交。
 
 ### v2.3.21（已发布）
 
