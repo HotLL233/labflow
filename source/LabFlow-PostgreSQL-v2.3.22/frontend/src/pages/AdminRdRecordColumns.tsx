@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
-  FormControl, FormControlLabel, InputLabel, MenuItem, Paper, Select, Snackbar,
+  FormControl, FormControlLabel, InputLabel, MenuItem, Paper, Radio, RadioGroup, Select, Snackbar,
   Switch, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -34,6 +34,8 @@ const emptyDraft = (): RdRecordColumnInput => ({
   name: '', label: '', data_type: 'text', width: 140, is_required: false,
   is_active: true, show_in_list: true, show_in_form: true, show_in_export: true,
   options: '', option_detail_rules: '', default_value: '', placeholder: '', applicable_types: '', entry_row: 2,
+  // v2.3.23：新增字段默认按内容自动计算宽度。
+  width_mode: 'auto', min_width: 0, max_width: 0,
 });
 
 const SortableColumnRow: React.FC<{
@@ -104,6 +106,8 @@ const AdminRdRecordColumns: React.FC = () => {
     setEditing(column);
     setDraft({
       name: column.name, label: column.label, data_type: column.data_type, width: column.width,
+      width_mode: column.width_mode === 'custom' ? 'custom' : 'auto',
+      min_width: column.min_width ?? 0, max_width: column.max_width ?? 0,
       is_required: column.is_required, is_active: column.is_active, show_in_list: column.show_in_list,
       show_in_form: column.show_in_form, show_in_export: column.show_in_export, options: column.options,
       option_detail_rules: column.option_detail_rules,
@@ -149,6 +153,37 @@ const AdminRdRecordColumns: React.FC = () => {
     }
   };
 
+  /** v2.3.23：一键把全部字段切回「自动（按内容）」。原自定义宽度值保留，可随时切回。 */
+  const resetAllToAuto = async () => {
+    const targets = cols.filter(item => item.width_mode === 'custom');
+    if (targets.length === 0) {
+      setError(false); setMessage('所有字段都已是自动宽度');
+      return;
+    }
+    if (!window.confirm(`将 ${targets.length} 个字段的宽度改为「自动（按内容）」？原自定义宽度会保留，可随时切回。`)) return;
+    setSaving(true);
+    try {
+      for (const item of targets) {
+        const response = await updateRdRecordColumn(item.id, {
+          name: item.name,
+          label: item.label,
+          data_type: item.data_type,
+          width: item.width,
+          width_mode: 'auto',
+          min_width: item.min_width ?? 0,
+          max_width: item.max_width ?? 0,
+        });
+        if (response.code !== 0) throw new Error(response.message || '恢复自动宽度失败');
+      }
+      setError(false); setMessage('已全部恢复为自动宽度');
+      await load();
+    } catch (e: any) {
+      setError(true); setMessage(e?.message || '恢复自动宽度失败');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const remove = async (column: RdRecordColumn) => {
     if (!window.confirm(`删除自定义字段“${column.label}”后，历史记录中的原始值仍会保留。是否继续？`)) return;
     try {
@@ -180,7 +215,10 @@ const AdminRdRecordColumns: React.FC = () => {
           <Typography variant="subtitle1" fontWeight={700}>研发送样信息登记配置</Typography>
           <Typography variant="caption" color="text.secondary">启用字段 {activeCount} 个，按住排序图标可拖拽调整顺序；启用、必填与显示范围在“编辑字段”弹窗内设置</Typography>
         </Box>
-        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openCreate} sx={{ borderRadius: R }}>新增字段</Button>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Button variant="outlined" size="small" disabled={saving} onClick={resetAllToAuto} sx={{ borderRadius: R }}>全部列恢复自动宽度</Button>
+          <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openCreate} sx={{ borderRadius: R }}>新增字段</Button>
+        </Box>
       </Box>
       <Paper elevation={0} sx={{ borderRadius: R, border: '1px solid rgba(0,0,0,0.1)', overflowX: 'hidden' }}>
         {/* v2.3.18: 启用 / 必填 / 显示范围都收进编辑弹窗，表格固定布局后一屏即可显示完整行。 */}
@@ -217,7 +255,32 @@ const AdminRdRecordColumns: React.FC = () => {
                 {TYPES.map(type => <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>)}
               </Select>
             </FormControl>
-            <TextField label="列表宽度" type="number" value={draft.width ?? 140} inputProps={{ min: 48, max: 500 }} onChange={event => patchDraft({ width: Number(event.target.value) || 48 })} />
+            {/* v2.3.23：宽度模式。默认「自动」由列表按内容测量，自定义时固定使用配置值。 */}
+            <Box sx={{ gridColumn: { sm: '1 / -1' }, border: '1px solid', borderColor: 'divider', borderRadius: R, p: 1.25, display: 'grid', gap: 1, bgcolor: '#fbfcfe' }}>
+              <Typography fontSize="0.86rem" fontWeight={700}>列表宽度</Typography>
+              <RadioGroup row value={draft.width_mode === 'custom' ? 'custom' : 'auto'} onChange={event => patchDraft({ width_mode: event.target.value === 'custom' ? 'custom' : 'auto' })}>
+                <FormControlLabel value="auto" control={<Radio size="small" />} label="自动（按内容计算）" />
+                <FormControlLabel value="custom" control={<Radio size="small" />} label="自定义宽度" />
+              </RadioGroup>
+              <Typography variant="caption" color="text.secondary">
+                {draft.width_mode === 'custom'
+                  ? `固定使用 ${draft.width ?? 140}px，不随内容变化。`
+                  : '列表按表头与本页内容自动计算宽度，长内容列优先获得更多空间；表头过长时按两行显示。'}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                <TextField
+                  label="自定义宽度（px）"
+                  type="number"
+                  size="small"
+                  value={draft.width ?? 140}
+                  disabled={draft.width_mode !== 'custom'}
+                  inputProps={{ min: 48, max: 500 }}
+                  onChange={event => patchDraft({ width: Number(event.target.value) || 48 })}
+                  sx={{ width: 170 }}
+                />
+                <Button size="small" variant="outlined" disabled={draft.width_mode !== 'custom'} onClick={() => patchDraft({ width_mode: 'auto' })}>恢复自动宽度</Button>
+              </Box>
+            </Box>
             <TextField label="占位提示" value={draft.placeholder || ''} onChange={event => patchDraft({ placeholder: event.target.value })} />
             <TextField label="默认值" value={draft.default_value || ''} onChange={event => patchDraft({ default_value: event.target.value })} />
             <TextField label="适用检测类型" value={draft.applicable_types || ''} placeholder="留空表示全部；多个类型用逗号分隔" onChange={event => patchDraft({ applicable_types: event.target.value })} sx={{ gridColumn: { sm: '1 / -1' } }} />

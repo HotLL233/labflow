@@ -121,6 +121,10 @@ export const createSampleInfoColumn = (data: {
   label: string;
   data_type: string;
   width?: number;
+  /** v2.3.23：auto 按内容测量，custom 使用 width 作为固定宽度 */
+  width_mode?: 'auto' | 'custom';
+  min_width?: number;
+  max_width?: number;
   sort_order?: number;
   options?: string;
   is_required?: boolean;
@@ -136,6 +140,10 @@ export const updateSampleInfoColumn = (id: number, data: {
   is_active?: boolean;
   is_required?: boolean;
   width?: number;
+  /** v2.3.23：auto 按内容测量，custom 使用 width 作为固定宽度 */
+  width_mode?: 'auto' | 'custom';
+  min_width?: number;
+  max_width?: number;
   options?: string;
   show_in_list?: boolean;
   show_in_export?: boolean;

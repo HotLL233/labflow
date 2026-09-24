@@ -624,6 +624,8 @@ const ManagePage: React.FC = () => {
     field_key: '', label: '', data_type: 'text' as string,
     width: 100, sort_order: 0, options: '',
     is_active: true, is_required: false, show_in_list: true, show_in_export: true, show_in_form: true,
+    // v2.3.23：列宽模式，默认按内容自动计算。
+    width_mode: 'auto' as 'auto' | 'custom', min_width: 0, max_width: 0,
   });
 
   // 记录行内编辑
@@ -945,6 +947,7 @@ const ManagePage: React.FC = () => {
           label: colForm.label, data_type: colForm.data_type,
           is_active: colForm.is_active, is_required: colForm.is_required,
           width: colForm.width, options: colForm.options || undefined,
+          width_mode: colForm.width_mode, min_width: colForm.min_width, max_width: colForm.max_width,
           show_in_list: colForm.show_in_list, show_in_export: colForm.show_in_export,
           show_in_form: colForm.show_in_form,
         });
@@ -956,6 +959,7 @@ const ManagePage: React.FC = () => {
           field_key: colForm.field_key, label: colForm.label, data_type: colForm.data_type,
           width: colForm.width, sort_order: colForm.sort_order,
           options: colForm.options || undefined,
+          width_mode: colForm.width_mode, min_width: colForm.min_width, max_width: colForm.max_width,
           is_required: colForm.is_required, show_in_list: colForm.show_in_list,
           show_in_export: colForm.show_in_export, show_in_form: colForm.show_in_form,
         });
@@ -977,6 +981,8 @@ const ManagePage: React.FC = () => {
       width: col.width, sort_order: col.sort_order, options: col.options || '',
       is_active: col.is_active, is_required: col.is_required, show_in_list: col.show_in_list,
       show_in_export: col.show_in_export, show_in_form: col.show_in_form,
+      width_mode: col.width_mode === 'custom' ? 'custom' : 'auto',
+      min_width: col.min_width ?? 0, max_width: col.max_width ?? 0,
     });
     // v2.3.13: 回填该列在所有检测类型下的可见 / 必填状态。
     const visible = new Set(col.visible_types || []);
@@ -2201,7 +2207,7 @@ const ManagePage: React.FC = () => {
             <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={() => {
               setColEditItem(null);
               const maxSo = siColumns.length ? Math.max(...siColumns.map(c => c.sort_order)) : 0;
-              setColForm({ field_key: '', label: '', data_type: 'text', width: 100, sort_order: maxSo + 1, options: '', is_active: true, is_required: false, show_in_list: true, show_in_export: true, show_in_form: true });
+              setColForm({ field_key: '', label: '', data_type: 'text', width: 100, sort_order: maxSo + 1, options: '', is_active: true, is_required: false, show_in_list: true, show_in_export: true, show_in_form: true, width_mode: 'auto', min_width: 0, max_width: 0 });
               setColTypeRules(sampleTypes.map(type => ({ type_key: type.type_key, is_visible: true, is_required: false })));
               setColEditOpen(true);
             }} sx={{ borderRadius: BORDER_RADIUS, borderColor: '#2e7d32', color: '#2e7d32' }}>新增列</Button>
@@ -2270,11 +2276,28 @@ const ManagePage: React.FC = () => {
                 onChange={e => setColForm(p => ({ ...p, options: e.target.value }))} />
             )}
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label="宽度(px)" type="number" size="small" value={colForm.width}
-                onChange={e => {
-                  const v = Number(e.target.value);
-                  setColForm(p => ({ ...p, width: v || 100 }));
-                }} inputProps={{ min: 48, max: 500 }} helperText={colForm.data_type === 'action' ? '操作按钮宽度（px），直接决定列表按钮显示大小' : '记录列表按宽度比例铺满页面，长内容在单元格内滚动'} sx={{ width: 190 }} />
+              {/* v2.3.23：宽度模式。默认「自动」由列表按内容测量；操作按钮类字段按按钮宽度计算。 */}
+              <Box sx={{ border: '1px solid #e0e0e0', borderRadius: BORDER_RADIUS, p: 1.25, display: 'grid', gap: 1, bgcolor: '#fbfcfe' }}>
+                <Typography sx={{ fontSize: '0.84rem', fontWeight: 700 }}>列表宽度</Typography>
+                <RadioGroup row value={colForm.data_type === 'action' ? 'custom' : colForm.width_mode} onChange={e => setColForm(p => ({ ...p, width_mode: e.target.value === 'custom' ? 'custom' : 'auto' }))}>
+                  <FormControlLabel value="auto" disabled={colForm.data_type === 'action'} control={<Radio size="small" />} label="自动（按内容计算）" />
+                  <FormControlLabel value="custom" control={<Radio size="small" />} label="自定义宽度" />
+                </RadioGroup>
+                <Typography variant="caption" color="text.secondary">
+                  {colForm.data_type === 'action'
+                    ? '操作按钮宽度直接决定列表按钮显示大小。'
+                    : colForm.width_mode === 'custom'
+                      ? `固定使用 ${colForm.width}px，不随内容变化。`
+                      : '列表按表头与本页内容自动计算宽度，长内容列优先获得更多空间；表头过长时按两行显示。'}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <TextField label="自定义宽度（px）" type="number" size="small" value={colForm.width}
+                    disabled={colForm.data_type !== 'action' && colForm.width_mode !== 'custom'}
+                    onChange={e => { const v = Number(e.target.value); setColForm(p => ({ ...p, width: v || 100 })); }}
+                    inputProps={{ min: 48, max: 500 }} sx={{ width: 170 }} />
+                  <Button size="small" variant="outlined" disabled={colForm.data_type === 'action' || colForm.width_mode !== 'custom'} onClick={() => setColForm(p => ({ ...p, width_mode: 'auto' }))}>恢复自动宽度</Button>
+                </Box>
+              </Box>
               <TextField label="排序" type="number" size="small" value={colForm.sort_order}
                 onChange={e => {
                   const v = Number(e.target.value);
