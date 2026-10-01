@@ -131,6 +131,8 @@ export function useRecordTableStyle(
       const base = previous ?? globalSpec;
       const next = mutate(base);
       savePersonalStyle(storageKeyRef.current, next);
+      setMessage('已保存到本机个人视图；如需所有用户生效，请点击“发布为全局”');
+      setMessageError(false);
       return next;
     });
   }, [globalSpec]);

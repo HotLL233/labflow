@@ -251,7 +251,7 @@ const RdRecordsPage: React.FC = () => {
     const buttonWidthSum = 5 * 96;
     return computeActionColumnLayout(tableStyle.spec.table.actionDisplay, tableWidth, buttonWidthSum);
   }, [tableStyle.spec.table.actionDisplay, tableWidth, visibleColumns.length]);
-  const actionsWidth = actionLayout.px;
+  const actionsWidth = tableStyle.spec.columns._action?.width ?? actionLayout.px;
 
   // v2.3.20：列宽引擎。后台自定义配置优先，其次内容测量。
   const columnLayouts = useMemo(() => {
@@ -869,7 +869,7 @@ const RdRecordsPage: React.FC = () => {
         <Box sx={{ mb: 1 }}>
           <TableStyleBar
             api={tableStyle}
-            columns={displayColumns.map(col => ({ key: col.name, label: col.label }))}
+            columns={[{ key: '_action', label: '操作' }, ...displayColumns.map(col => ({ key: col.name, label: col.label }))]}
             rows={styleRowOptions}
             hasCheckbox
             hasSeq={displayColumns.some(col => col.name === 'seq_no')}

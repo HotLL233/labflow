@@ -729,7 +729,7 @@ export default function SampleInfoRecordList(props: SampleInfoRecordListProps) {
           <Box sx={{ mb: 1 }}>
             <TableStyleBar
               api={tableStyle}
-              columns={dataColumns.map(column => ({ key: column.field_key, label: column.label }))}
+              columns={[{ key: '_action', label: '操作' }, ...dataColumns.map(column => ({ key: column.field_key, label: column.label }))]}
               rows={styleRowOptions}
               hasSeq={dataColumns.some(column => column.field_key === 'seq_no')}
               dateColumns={dataColumns.filter(column => column.data_type === 'date').map(column => column.field_key).concat(['submitted_at', 'detection_date', 'sampled_at'])}

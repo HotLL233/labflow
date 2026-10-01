@@ -154,6 +154,7 @@ const TableStyleBar: React.FC<TableStyleBarProps> = ({
   const hiddenCount = api.spec.hiddenColumns.length;
   const visibleCount = columns.length - columns.filter(item => api.spec.hiddenColumns.includes(item.key)).length;
   const isDateColumn = dateColumns.includes(activeColumn);
+  const isActionColumn = activeColumn === '_action';
   const isPersonal = api.source === 'personal';
 
   const scopeHint = scope === 'row'
@@ -433,7 +434,9 @@ const TableStyleBar: React.FC<TableStyleBarProps> = ({
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
                 {cardLayout
                   ? '窄屏为卡片布局，列宽由卡片自适应，不适用。'
-                  : '也可以直接拖动表头右侧的竖线调整列宽，拖完会自动写入这里。'}
+                  : isActionColumn
+                    ? '操作列也支持自定义宽度；“全部显示（自动换行）”会在该宽度内换行。'
+                    : '也可以直接拖动表头右侧的竖线调整列宽，拖完会自动写入这里。'}
               </Typography>
             </>
           )}
@@ -564,7 +567,7 @@ const TableStyleBar: React.FC<TableStyleBarProps> = ({
             )}
           </Stack>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-            未发布的修改只保存在本机个人视图，不影响其他人。
+            未发布的修改只保存在本机个人视图，刷新本机页面会保留；要让所有用户刷新后都生效，请点击“发布为全局”。
           </Typography>
         </Box>
       </Drawer>

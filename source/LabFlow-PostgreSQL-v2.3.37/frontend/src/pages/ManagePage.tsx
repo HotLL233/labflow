@@ -954,7 +954,8 @@ const ManagePage: React.FC = () => {
         });
         if (r.code !== 0) { showMessage(r.message, true); return; }
         await saveColumnTypeRules(colEditItem.id);
-        showMessage('更新成功'); setColEditOpen(false); setColEditItem(null); loadSiColumns(siColTypeKey || undefined);
+        await loadSiColumns(siColTypeKey || undefined);
+        showMessage('更新成功'); setColEditOpen(false); setColEditItem(null);
       } else {
         const r = await createSampleInfoColumn({
           field_key: colForm.field_key, label: colForm.label, data_type: colForm.data_type,
@@ -972,7 +973,8 @@ const ManagePage: React.FC = () => {
           if (activeResponse.code !== 0) { showMessage(activeResponse.message || '启用状态保存失败', true); return; }
         }
         await saveColumnTypeRules(r.data.id);
-        showMessage('创建成功'); setColEditOpen(false); setColEditItem(null); loadSiColumns(siColTypeKey || undefined);
+        await loadSiColumns(siColTypeKey || undefined);
+        showMessage('创建成功'); setColEditOpen(false); setColEditItem(null);
       }
     } catch (e: any) { showMessage(e.message || '操作失败', true); }
   };
