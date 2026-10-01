@@ -1,0 +1,4757 @@
+{
+  "baseline": "0001ee08776393f62238ed4e1d35bf5887d46f21",
+  "complete": false,
+  "scopeNote": "按基线补齐 CSS、配置及遗漏的迁移；第三方 postgres-runtime 与生成的 backend/static 不重复审查；依赖锁文件为元数据，不计为业务语义完成。",
+  "files": [
+    {
+      "index": 0,
+      "path": ".github/workflows/docker-publish.yml",
+      "sha256": "38b60cb78053abfad3c8c7b33c0fa5b35b6181ce5bcccc82d9d5430a2e41a0b5",
+      "lines": 97,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          97
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 1,
+      "path": ".github/workflows/republish-v237-windows.yml",
+      "sha256": "375af0d75bbdbf1ba83a48634c1f38c0f4daebee321d1478485bdb369ee3e285",
+      "lines": 54,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 2,
+      "path": ".github/workflows/windows-release.yml",
+      "sha256": "cb8815d5ef2e8629b3eb52574d86435b93e72678ba792d5b413d466f728fe548",
+      "lines": 84,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          84
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 3,
+      "path": "build-resources/build_full_installer.ps1",
+      "sha256": "5ee9abc40d07e17265b9693a9aa42d2757d286b05845c304914fb9baf417d91c",
+      "lines": 69,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          69
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 4,
+      "path": "docker-compose.deploy.yml",
+      "sha256": "443b00f9f7b482e87572df7c200bcaae781db35dcd9dc44a2ab3dddb040796c7",
+      "lines": 63,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          63
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 5,
+      "path": "scripts/pull-labflow-image.ps1",
+      "sha256": "47806bbc1f97e3838b172cc4910518ebc1ed49ee1a705ad36105a44ce39b9251",
+      "lines": 47,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 6,
+      "path": "scripts/pull-labflow-image.sh",
+      "sha256": "2bd024b910b46cd93173983f232d73cd085373a4eda36720a5a2b753d45b823c",
+      "lines": 50,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 7,
+      "path": "scripts/update-labflow.ps1",
+      "sha256": "6b7874dfdef3c239388bb2bc653806ffd07eb6d55d10101369435d0cfe53464c",
+      "lines": 73,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          73
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 8,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/.github/workflows/release-ghcr.yml",
+      "sha256": "fe59c6bc853391a51da07eddf5c8fead90ca76aa4c3d9b7f6d7b0476ca98c5e7",
+      "lines": 59,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          59
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 9,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/Dockerfile",
+      "sha256": "e9b302f5198aa2330f105adb9b0ee22613d2d89134f1f7eba60416a991249f61",
+      "lines": 47,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 10,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/build_hot_update_installer.iss",
+      "sha256": "106c5d948d40010a4133014525e110955683991f2748ee686fd0c938694ac458",
+      "lines": 149,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          149
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 11,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/build_server_installer.iss",
+      "sha256": "b0c7ba29dba899de211b9be8d022eba62ff849a7a8d5d2dea5e8fe9fdcaf49c7",
+      "lines": 817,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          817
+        ]
+      ],
+      "notes": "完整审读安装、升级、服务、ACL、卸载。799–804 无条件清除业务数据库、附件及备份；467 向所有本地 Users 授予数据根目录继承修改权限；未运行安装/卸载。"
+    },
+    {
+      "index": 12,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/docker-compose-ghcr.yml",
+      "sha256": "f464e49ea9f92a65c2a7b5320c7c60597c4a8b49ad8a03d0865fd5062be8ecfd",
+      "lines": 63,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          63
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 13,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/docker-compose.yml",
+      "sha256": "105ede46594ec8ecd01cdc40044aa9160693a52a289c53c236950ebc26607f6d",
+      "lines": 52,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 14,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/pnpm-lock.yaml",
+      "sha256": "7a3df3cd12e67ec29f9bd4856972dfe107d7ff191f3f80ad1408265100323fdf",
+      "lines": 2901,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          2901
+        ]
+      ],
+      "notes": "2026-10-01 按连续带行号原文完整审读1–2901：importer声明、311包的版本/完整性/引擎/平台/peer、311 snapshot依赖与可选平台链。另用check-pnpm-lock.mjs验证全部引用和SHA512编码；机器检查不代替阅读。仅审锁文件元数据，不声称审查第三方包源代码、签名、已下载内容或漏洞库。"
+    },
+    {
+      "index": 15,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/pnpm-workspace.yaml",
+      "sha256": "47c662884ac8599a54a3a9e896fc957fc1d70f1dedb4f372a5509717b6ccba7f",
+      "lines": 3,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          3
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 16,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/App.tsx",
+      "sha256": "289b3b7fdbcdf2bf9f3a9dd70e0bb53ff626c1ce1e968ad03748277678b107b6",
+      "lines": 77,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          77
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 17,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/UiDisplayContext.tsx",
+      "sha256": "7ede015aeb7d0188b5a7993009429fcbe8ea4bb26cc09edf3cf96ccf605ce594",
+      "lines": 85,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 18,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/UserContext.tsx",
+      "sha256": "021599d4d19c103d15ef2e84df834b9ee41956fa1e4b2a8dfbd84c2b841b6547",
+      "lines": 158,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          158
+        ]
+      ],
+      "notes": "完整逐行语义审读已完成；当前未新增独立高严重度发现。"
+    },
+    {
+      "index": 19,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/api/admin.ts",
+      "sha256": "543224420283e5171bf11690b5119233d0fa221ae69bae47f96cb634ea9e8c59",
+      "lines": 219,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          219
+        ]
+      ],
+      "notes": "完整逐行语义审读已完成；当前未新增独立高严重度发现。"
+    },
+    {
+      "index": 20,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/api/client.ts",
+      "sha256": "a086af5a0aae6572944094f11131e3918581823572a6dad87f29d25e240d77a2",
+      "lines": 15,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          15
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 21,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/api/help.ts",
+      "sha256": "acd9c09256ec51060549efbaba7c27e926eaf75752821e02c600b3cdf2c604e7",
+      "lines": 83,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 22,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/api/http.ts",
+      "sha256": "86968e260c09af7f33f82ad4edd50234b6d367e1e1faf82c4e907f4eb1cb658f",
+      "lines": 134,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          134
+        ]
+      ],
+      "notes": "完整逐行语义审读已完成；当前未新增独立高严重度发现。"
+    },
+    {
+      "index": 23,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/api/masterData.ts",
+      "sha256": "e8e898cb586c5709de41a3ff4e3b770c26d9acaef06cd458d1d90cfcd21a9cf6",
+      "lines": 162,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          162
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 24,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/api/personnelChange.ts",
+      "sha256": "1745ba344c346fde0a5aeac36596bfe406f49ffff2a173383a768d9b7bc2e71e",
+      "lines": 69,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          69
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 25,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/api/rd.ts",
+      "sha256": "ae0e318816b71b9b9f6156473f113d09c491fcd7ab680efd3281fbfe7ccf9c37",
+      "lines": 127,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          127
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 26,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/api/sampleInfo.ts",
+      "sha256": "0d48e7de97c1b1391d7a364501a66556b9ce57a41d3d647b1d5ff384a68b9bd4",
+      "lines": 222,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          222
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 27,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/api/system.ts",
+      "sha256": "6870494c71e49d6dc48fb826a1613a1bf24e82bfd8a3bd9fd8b4b2fdeef44508",
+      "lines": 73,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          73
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 28,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/api/workload.ts",
+      "sha256": "011ba713dbdda27f7372b8cc4d2a452c8eb22e3c3b7bbf5ed1331fbdd916e5f5",
+      "lines": 112,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          112
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 29,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/api/workloadPreview.ts",
+      "sha256": "766e01c07592e307843afc121837036baacc05a1bb25b0fed3673b90026a5fc7",
+      "lines": 60,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 30,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/AnnouncementButton.tsx",
+      "sha256": "5006a082ae4088334da76cb0eeba466c0085b258b9da17ddf73f950ede3d8bfb",
+      "lines": 14,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          14
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 31,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/AnnouncementSlot.tsx",
+      "sha256": "f6e0cfa88ad840c5f80a2f8a076fdd7d9ac3bac2972f95d0deb5b6f937dd7d24",
+      "lines": 21,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 32,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/AuditDiffTable.tsx",
+      "sha256": "92538e1153c1af985c93dad83526454404b5f5d5183b1cccebc3486bacbe8b43",
+      "lines": 83,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 33,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/BackToTop.tsx",
+      "sha256": "5e3604a66cc392ad1256e0eb3ccee3dc91aaf637ebd58e3e7a5236f968dc88a5",
+      "lines": 52,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 34,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/ConfirmDialog.tsx",
+      "sha256": "b4c8efbe441aa8e8b873043390d8c912ac935f608d13600ad08d12367b4eaa35",
+      "lines": 89,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          89
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 35,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/DateRangePicker.tsx",
+      "sha256": "e92c3745325630c339a61bedf6ae7cdac73a4a379a9f829970e89e7a1f4af4ab",
+      "lines": 132,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          132
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 36,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/DivisionChips.tsx",
+      "sha256": "52f95c7b1d5cf640f4e67ee0fea91689517afc4365c508d8f4849692926d29ed",
+      "lines": 56,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 37,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/EditableField.tsx",
+      "sha256": "938b2e255746e1ef3ff227dbf8e4288acb87acd1d87b8ef301b025b783c85e00",
+      "lines": 103,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          103
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 38,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/EditablePageShell.tsx",
+      "sha256": "a490c256424c101176cc33c503d97b83833fccc4ae156f7c272e5325aa7c5e43",
+      "lines": 141,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          141
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 39,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/FieldLibrary.tsx",
+      "sha256": "7f659506e10e95bf2bfa88c8ef8d4554d3a45b04274bc592683aaedec938c0b3",
+      "lines": 82,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          82
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 40,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/FieldPropertyPanel.tsx",
+      "sha256": "6af1b9c8587ab85ab0717bc8eef683838a40c6fbf4d0ca85806ca4d6feb3f176",
+      "lines": 129,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 41,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/GroupCard.tsx",
+      "sha256": "5ba62576f76c3b4320e5bebb8912c516755bd219154d16acc6e728593b2cdeef",
+      "lines": 36,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          36
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 42,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/InlineEditCard.tsx",
+      "sha256": "3254a1c5d368ce2fd1d5d5fef6df3c2905676d26a39cb61c38a3a2779d287619",
+      "lines": 162,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          162
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 43,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/Layout.tsx",
+      "sha256": "cc0cca5c6de82c21b114f7fed2d918bcbb35e0d34bf538caebde51a764c6b17c",
+      "lines": 101,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          101
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 44,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/LayoutDesigner.tsx",
+      "sha256": "9091ad182464de3d9e94c07ebbc0bfaeedbc031e826cf65845b32794c68e2962",
+      "lines": 282,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          282
+        ]
+      ],
+      "notes": "完整逐行语义审读已完成。"
+    },
+    {
+      "index": 45,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/LogMaintenancePanel.tsx",
+      "sha256": "4eeb6c9492303ef24c0df2324f54913628a9df5e133ad6b23a024f386effc989",
+      "lines": 101,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          101
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 46,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/ManageExportConfig.tsx",
+      "sha256": "68477c938427de24bc5314f9fca1d2497cf614e286db9cc261cd3929bb3a7267",
+      "lines": 88,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          88
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 47,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/ManageFormConfig.tsx",
+      "sha256": "5f12f70a44098e4e22cde8eb60af16f0864182d0bbafea44eb5d58a0994aaf92",
+      "lines": 317,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          317
+        ]
+      ],
+      "notes": "完整逐行语义审读已完成。"
+    },
+    {
+      "index": 48,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/ManageNav.tsx",
+      "sha256": "283dea39694d8aa5f1734127efb8cfe67d22196e8a390396e779365a01140e48",
+      "lines": 222,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          222
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 49,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/MasterDataPanel.tsx",
+      "sha256": "0de46a105ce51834263bf0ac2c4f69df44d6188225e31c8f0b1cc8d830ecdb25",
+      "lines": 164,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          164
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 50,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/MasterImportPanel.tsx",
+      "sha256": "970aa08a5b4c4a506b82dbf5840fccfd7dbc16b994bfbe18cae56a822fc257e1",
+      "lines": 208,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          208
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 51,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/NotificationTemplateEditor.tsx",
+      "sha256": "c9172464ee00b570a03126dd4f8081043bcc1283e39fce96e1c72be45e0b3160",
+      "lines": 120,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 52,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/PageLayoutAdmin.tsx",
+      "sha256": "888f535534a8a18acb7e67e3e09ffadee9c4783cc19e9054bbe3a3a8f0fdfffa",
+      "lines": 562,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          562
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 53,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/PageSectionEditor.tsx",
+      "sha256": "36c7b67eaeb6efe21d1c166c6c9ebdf34ceba832d17154d577968885b369e0c8",
+      "lines": 450,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          450
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 54,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/PermissionGate.tsx",
+      "sha256": "13aed921c879689969622ebc7dacdc97a2225e35ad976d97e59ffa2edb11e586",
+      "lines": 47,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 55,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/PersonnelFeedbackConfigPanel.tsx",
+      "sha256": "2ed0c220462b7353a3586dbfeb71b00e60f124e5b335912b36aad9bb5968e90e",
+      "lines": 38,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          38
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 56,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/PreviewTable.tsx",
+      "sha256": "0004f573fb2ce93b8195752b36977bc7d2b7270c58ce7e5cb3067e284c35d97a",
+      "lines": 130,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          130
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 57,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/ProjectRow.tsx",
+      "sha256": "38e1f34d4edc439723f27c9f3dc12f4f3b0e660ba6dd0620f4fb94f85017cea5",
+      "lines": 67,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          67
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 58,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/ProtectedRoute.tsx",
+      "sha256": "e5137435cb09aa6ba4b12c177558416c17a7f8f8a3b4a79b5471cffae8abdf5a",
+      "lines": 34,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 59,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/RecordToolbar.tsx",
+      "sha256": "347c7379a89e05b0b1ae9470cb99582328d1e3bf3f0aac5525287ae191e21a41",
+      "lines": 29,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 60,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/RecordsCard.tsx",
+      "sha256": "37d085f2e4d3c514bd2bac5eb7f1706283a34d735d337ea0b73a3bced96a51f0",
+      "lines": 24,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          24
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 61,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/ResponsiveEditDrawer.tsx",
+      "sha256": "3b1a7b222919f8677b5db61a36b277e995218714b43fb85b1f4a27ff014b5110",
+      "lines": 38,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          38
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 62,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/SampleInfoRecordList.tsx",
+      "sha256": "74fd390756f4bab4e86731360ba54cf8921088d7d7f0d7f7922bdaeab29cadf2",
+      "lines": 776,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          776
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 63,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/SampleWorkloadDialog.tsx",
+      "sha256": "1ba886acaeaf61b149e9757286d7a2e58cff1c8a476e76d646e2ce6b686cc558",
+      "lines": 111,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          111
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 64,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/SessionsPanel.tsx",
+      "sha256": "2b9249afb63e5b1cda63a8d868e0e662dbbbd8627b0105cf00d8f89bcbde3d18",
+      "lines": 91,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          91
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 65,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/SortableSampleInfoColumnRow.tsx",
+      "sha256": "88c1091dad8b8f91492b18d2f90a7ff3c850c25309386067910440355380c7a8",
+      "lines": 80,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          80
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 66,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/SpreadsheetTemplateEditor.tsx",
+      "sha256": "00745e83aab1e35a18388e287b460ab508109f93b81bbdd915441076865beb08",
+      "lines": 168,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          168
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 67,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/StatsCardChartGlyph.tsx",
+      "sha256": "bf9b5371188548ed12b62c1e4af5a106c0ccbd4f25b760b71cc515f9f5915fea",
+      "lines": 30,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          30
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 68,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/StatsCards.tsx",
+      "sha256": "69307b934c0ed505507d1a3d78532175b40a5bc441daab6bf71d9618faa9b30f",
+      "lines": 222,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          222
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 69,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/StatsChartPanel.tsx",
+      "sha256": "29ece18a6bc28f984dd5e8dd01576ef9e6aa74ddce42084678936404dc11c88e",
+      "lines": 278,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          278
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 70,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/StatsMiniChart.tsx",
+      "sha256": "64b395d0803b8177c17c708f391fe0be01ed8e3cfb0dc8382269418ac6f0eec7",
+      "lines": 49,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          49
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 71,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/TruncatedCell.tsx",
+      "sha256": "77b292f6bd80802f8d7693d2f786f98b9b1f90ed49d10d39e449f81a8fbf9385",
+      "lines": 45,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          45
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 72,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/UserImportDialog.tsx",
+      "sha256": "1d7425380234d09b45e9ab3cad75d53fce391fec0b4e43667facbe4dc9bd017d",
+      "lines": 159,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          159
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 73,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/UserMenu.tsx",
+      "sha256": "a3e8afb17e625ff35be6c995945563c1ec3d03ed8a080b90c079d4271045c892",
+      "lines": 222,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          222
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 74,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/exportTemplateDefaults.ts",
+      "sha256": "c48b5a297edaeaa766ade6cf836f4299e174cc577d5c992d7c78a5bafb60c631",
+      "lines": 111,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          111
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 75,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/recordTable/RecordActionSettings.tsx",
+      "sha256": "e9ed8827a1b425c5fcc453d371160a26096102c6cf2d590a15b8a9fa8e8a2234",
+      "lines": 81,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          81
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 76,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/recordTable/RecordTableTools.tsx",
+      "sha256": "f285e105d7cc9c24697f2c58a66072671dd21af2925e92d7f99c78a1da436f29",
+      "lines": 294,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          294
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 77,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/components/recordTable/columnLayoutHooks.tsx",
+      "sha256": "bc5a43d7f2538cf7fd3f2a407898820f92e44125ad6fdfa3b63a6e89f0eae1c1",
+      "lines": 260,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          260
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 78,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/constants/permissions.ts",
+      "sha256": "4eff0f1a50f722d31cb3f3322004460976d39f0a81c3e603623751147899f454",
+      "lines": 122,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          122
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 79,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/hooks/useTableConfig.ts",
+      "sha256": "e13397570dd52deb1cdcd232e2958626fae392996f67ed2eb06e90393b8677dd",
+      "lines": 36,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          36
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 80,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/main.tsx",
+      "sha256": "92513886d921fa9af79ae11039871634d7977c0e3bd4d37bc5fbd0845cc099ae",
+      "lines": 92,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 81,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/AdminRdRecordColumns.tsx",
+      "sha256": "7be7bb93f141ea89dc147ce77bb598d44468cbbce0315a97ba88dfb65374832f",
+      "lines": 364,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          364
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 82,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/AdminRolesPage.tsx",
+      "sha256": "fa3d9d3e0a4470bbbaff6cdc039089644ec33c7e62423776cdb16dd8ecd4a029",
+      "lines": 260,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          260
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 83,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/AnnouncementAdminPage.tsx",
+      "sha256": "7c9314c7388e8e3301fe6a3b712ca3898198fe71435a0ced24b176b67e6a2c77",
+      "lines": 25,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 84,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/DataGovernancePage.tsx",
+      "sha256": "f0a435032a50daeed98a032ae7e557022fe45ab5acd72abab45fd84c2486678c",
+      "lines": 412,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          412
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 85,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/EntryPage.tsx",
+      "sha256": "373a5b1e8c4902080c49d901ec704ae2b93db32b9db4c5808dfef39d0bb0a90b",
+      "lines": 490,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          490
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 86,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/HelpPage.tsx",
+      "sha256": "f8bd9372137b9dacf61dcd74b9191bd71c62ce790d0b852476a9b1268c9dce4c",
+      "lines": 190,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          190
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 87,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/HomePage.tsx",
+      "sha256": "f1a43cbf435c4a6d28f14c8e6a1a0f08d3ac4de78317f430d6862596249b336d",
+      "lines": 158,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          158
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 88,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/LoginPage.tsx",
+      "sha256": "736e62807ca2528d9b6b12265ca07fff34e87a3c65b5ad305f1336cb23fc128d",
+      "lines": 212,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          212
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 89,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/ManagePage.tsx",
+      "sha256": "cabf427b2903e86914897881391fcddab7751194079f0b71b9ddd0418ff8bf58",
+      "lines": 3739,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          3739
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行语义阅读1–3739，补齐截断片段；核实当前可达管理入口，排除退休矩阵/主题入口。原自动保存闭包、方法一览业务失败、原sx断点隔离验证通过；F74/F75与F72扩展证据见增量记录。未修改业务代码或数据。"
+    },
+    {
+      "index": 90,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/MyNotificationsPage.tsx",
+      "sha256": "17a29d38eec8b5e69e336cc88dbd7344326661888114c94a0de78f8793998830",
+      "lines": 59,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          59
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 91,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/NotificationPage.tsx",
+      "sha256": "34eac7c73f10e78de17494163e954284c8bf659d0835bc276ac22e694bfc206b",
+      "lines": 123,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          123
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 92,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/PersonnelChangePage.tsx",
+      "sha256": "e699bc0f15cd4b214a8a61392f07ef04e865adae963c00f7ce8eec591b74a13f",
+      "lines": 349,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          349
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 93,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/RdRecordsPage.tsx",
+      "sha256": "d43c21e33e5820effa49e2beccd732a1770bf26f2b54ffdc4017d19a32a82efc",
+      "lines": 1025,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1025
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 94,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/SampleEntryPage.tsx",
+      "sha256": "6b301b072559a8fee8cae49b857bfb170f1c56d0abfdc2d37da6554220eae84d",
+      "lines": 1339,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1339
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 95,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/SampleInfoEntry.tsx",
+      "sha256": "d45dd1a1814391f59c7e0c8039862cd2b33efe91bd2d4c076bd43f5c9ece2139",
+      "lines": 1559,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1559
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 96,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/SampleInfoHome.tsx",
+      "sha256": "03a8654f26c728ca0a8e20d25e68df2a7b1400a571504e221c0625a85fc0e94d",
+      "lines": 124,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          124
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 97,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/SampleInfoStatsPage.tsx",
+      "sha256": "b916770b3a08e284c5ea4fc6bf0f54a361d6f339f489498db3817fa7612492d7",
+      "lines": 639,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          639
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 98,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/SamplePortal.tsx",
+      "sha256": "a3037f62083e8975e5f90df888070bfed5f9455b648f23e67f14ea7678bd49c1",
+      "lines": 198,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          198
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 99,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/SampleStatsPage.tsx",
+      "sha256": "13306486db1a44d9b4d93e74ae7e30084759b7d4c8a9bb2f6139ac9be8653dea",
+      "lines": 2292,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          2292
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 100,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/StatsPage.tsx",
+      "sha256": "42cd8b0d5fd61e79d71c70430a73c80831794965a77b1e707630e9ce6eb9c6f2",
+      "lines": 2316,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          2316
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 101,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/WorkloadPortal.tsx",
+      "sha256": "b0b8dfec33042e3368b40a4c8b7b5e657a90ffded0bc9ad1292221acb716e6f3",
+      "lines": 241,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          241
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 102,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/pages/statsConfig.tsx",
+      "sha256": "2771fca5902d5130ffdfbda47674140ab684bb153f3e0c6f8df7e346f9cc8574",
+      "lines": 77,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          77
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 103,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/types/index.ts",
+      "sha256": "58ebc98ec199ed621c3eff41f01c8a1ed8304efef375ed5975357a8d23752540",
+      "lines": 1125,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1125
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 104,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/types/layout.ts",
+      "sha256": "41ef8e1d67ddd94c563fb86046d787b051d059b27b43e20a901495b9e4be3599",
+      "lines": 63,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          63
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 105,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/utils/adaptiveColumns.ts",
+      "sha256": "87744b25be67b0d1db29bfcfe87b8b8400f4ab05def28b9d4b2566fd99f6928e",
+      "lines": 97,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          97
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 106,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/utils/rdOptionDetails.ts",
+      "sha256": "a136fbc71e3cf4fd2baa76e15a16d9d5974bb1e55734a374b79783e5cfe8a1c7",
+      "lines": 59,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          59
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 107,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/utils/recordActionLayout.test.mjs",
+      "sha256": "580b9453a7f525d363360258b80aa5580a91d0b84d77d499aed6c4a2fd48a6f2",
+      "lines": 17,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 108,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/utils/recordActionLayout.ts",
+      "sha256": "15d1dc240790799b3844e8cfeb20f34db82411e1b5a92e14c2daf4024ebed135",
+      "lines": 36,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          36
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 109,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/utils/recordCellStyles.ts",
+      "sha256": "13a01e15de018214abaef5b7ac31cf0b1181e447dc71ca40014a2c28ba3814dd",
+      "lines": 22,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 110,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/utils/recordTableLayout.test.mjs",
+      "sha256": "fb49b1c50bdae5b85ac47db9eed05e90d0f0fc9e8b48386beb7f0518b4a86ffa",
+      "lines": 23,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          23
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 111,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/utils/recordTableLayout.ts",
+      "sha256": "bb0d6be193ef50c1e06836836e7afcb44fd361d9417d151cc250da9265eaad95",
+      "lines": 332,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          332
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 112,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/utils/sampleColumnTypeRules.test.mjs",
+      "sha256": "4ae21b5a35b886acc2c7fa90c775bd5f3f38ea6e94733780782dfdb4bce6f528",
+      "lines": 22,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 113,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/utils/sampleColumnTypeRules.ts",
+      "sha256": "278af857be40b2a7a6a634b9470560f20e71492fe0849d1a87791990348a5ae7",
+      "lines": 32,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 114,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/vite-env.d.ts",
+      "sha256": "4544facc1fd3a5dc729d0072478144111e0fc324350ab612a226cc65c3a108c9",
+      "lines": 7,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          7
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 115,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/tailwind.config.ts",
+      "sha256": "f23a35b65ef7e520ad011b53cdb0b681469073a1e087e570f27acf0d144820f5",
+      "lines": 13,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 116,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/vite.config.ts",
+      "sha256": "73e1f7e3503badd9de2d333b6850ce67f77eb46d3e6ea1cae802a0d1e0b59dff",
+      "lines": 20,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          20
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 117,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/packaging/ubuntu/install.sh",
+      "sha256": "be46b3c4bf436b9cd8817634694a54a616f683191c42f0f80ef45ec4ec8daf6a",
+      "lines": 59,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          59
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 118,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/postgres-compat/src/lib.rs",
+      "sha256": "910cab8b8bc9856fc2de5aa388fe2a61ffd4da5e4004f18cf3cd04ce8cb25aa2",
+      "lines": 1024,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1024
+        ]
+      ],
+      "notes": "完整审读兼容层；最小运行验证 NUMERIC 解码、整数截断、分号切分和 aborted transaction commit 假成功；业务可达性仍需追踪。"
+    },
+    {
+      "index": 119,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/scripts/check-version.sh",
+      "sha256": "33a1552f16bc094be3f194182625e3883ec8f07b86df399e7a3e61c51c23c83e",
+      "lines": 26,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 120,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/scripts/pull-labflow-image.ps1",
+      "sha256": "86408f01d08bde831fa9717a74e620e5d25f22ed74d9f0465e3961d759cd6b1c",
+      "lines": 38,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          38
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 121,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/scripts/pull-labflow-image.sh",
+      "sha256": "07b1f9146a2a16e8e14211c74fab19f1b1fee923fe92730cce5595925b7aeba2",
+      "lines": 37,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 122,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/scripts/set-version.sh",
+      "sha256": "ad9c4e81fbe6e7626f26fb8b92f61d5ec8ba6fed5398d308b35ebd6c79c3fff1",
+      "lines": 55,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          55
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 123,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/article_handler.rs",
+      "sha256": "88db8c52ca22c0d73afb2282f1722a7230ccdc74a8778927de9d04d97d63e933",
+      "lines": 136,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          136
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 124,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/audit_handler.rs",
+      "sha256": "8c08605b41a760fae765370d46d30805bdabfab48054c0d992ca00618150205a",
+      "lines": 58,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          58
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 125,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/auth_handler.rs",
+      "sha256": "c135698fe7349cccc9a16c35843e4c2afcc1d5854c5bd954795852ab014f6f64",
+      "lines": 41,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 126,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/backup_handler.rs",
+      "sha256": "fefc690bda83169b37651e0619525cb8bc2b385829238af7368de2dc07c41eaa",
+      "lines": 537,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          537
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 127,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/data_governance_handler.rs",
+      "sha256": "2a6439a71f0890e6bf68c9b939be08e960a6939b8bcb98de1d0cfc7209a345ec",
+      "lines": 1639,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1639
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 128,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/division_handler.rs",
+      "sha256": "12042461d350ccb160fe2c48f2c6fd902627949c9fd926d3de848c5a7ed07027",
+      "lines": 158,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          158
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 129,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/docx_parser.rs",
+      "sha256": "139725150319f8ade6b4281be9e256dde5cc2735ed830cbf33eac76252aecfb9",
+      "lines": 361,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          361
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 130,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/export_data.rs",
+      "sha256": "99014d198faa94ac46fcf96688931b2051b600e6a2cc26102ef189615f241f82",
+      "lines": 1176,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1176
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 131,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/export_handler.rs",
+      "sha256": "ed0d99e7feba7e1a6231b92e9b9410a468ec3ed7b413af78b4d4f540ae96ebe1",
+      "lines": 1044,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1044
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 132,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/export_preview_handler.rs",
+      "sha256": "1c914ae18a3431638907db5643151858ff580cf92efa3c0334d546183c6f8e72",
+      "lines": 373,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          373
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 133,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/export_write.rs",
+      "sha256": "eaa2a24018f82552c98ac92307045d2a5dc9ed9333464217c5d5b6e5bbaaa676",
+      "lines": 2104,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          2104
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 134,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/group_handler.rs",
+      "sha256": "87be06bec53d91fc4e73a359e6c0ec877d7635a31c8bd97219043c838c6366e4",
+      "lines": 95,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 135,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/help_attachment_handler.rs",
+      "sha256": "1c7b355630c64f4440217633e4ca1db75000eeba549b843dfdbe6e33b0d6afe1",
+      "lines": 177,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          177
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 136,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/help_handler.rs",
+      "sha256": "42d74f3552e1f898ca96be39dfbe19e8237ac38b42478e0c75150e560e74d3d3",
+      "lines": 481,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          481
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 137,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/import_handler.rs",
+      "sha256": "017453d4d83f46fee788777a34ec8336370daf2639f34456216252075acf90aa",
+      "lines": 250,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          250
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 138,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/instrument_handler.rs",
+      "sha256": "5111df8d67181158f6772bbfdafe38621945b2d14ffcc7501d8754518bba7a52",
+      "lines": 84,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          84
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 139,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/log_maintenance_handler.rs",
+      "sha256": "90729e9a1fa4eabec7955a353ef01ae36c3aae168604fea060e49b2f96ef6d1e",
+      "lines": 246,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          246
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 140,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/master_import_handler.rs",
+      "sha256": "c0b61445bc6f7594ccfde3f220f38209418550739183482a40d0bccbf541e212",
+      "lines": 4208,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          4208
+        ]
+      ],
+      "notes": "已完整阅读 1–4208 行，覆盖模板生成、Excel 解析、预检、事务写入、覆盖删除、关联重建及测试；新增 F26。"
+    },
+    {
+      "index": 141,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/master_import_utils.rs",
+      "sha256": "26757b0b9f4526368ac79406a7633ba1e73becb92b518a791389ef0a2cb4a2c3",
+      "lines": 128,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          128
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 142,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/method_handler.rs",
+      "sha256": "7bee774df1bc30affe83d08033456044bd3883b0d873d904274460af5e3ad173",
+      "lines": 385,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          385
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 143,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/mod.rs",
+      "sha256": "4fa4c3651c7c3d1d090d773893756d45b55c6035f6e23513b546ccadc3df63be",
+      "lines": 142,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          142
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 144,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/notification_handler.rs",
+      "sha256": "2e2d15d241409ab24314416bfb1f9b50f77bae9b7dc463e49ccf3ce87896ad39",
+      "lines": 421,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          421
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 145,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/organization_handler.rs",
+      "sha256": "e2a1c247711d12e1d7a398c2590c90f2472212f6b3c8780bb5ebc5c253b6702a",
+      "lines": 9,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 146,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/pdf_parser.rs",
+      "sha256": "6153f4a7a5df803ceddf563837eba5aabb4871f81af6d9dab1cd8ec7d7c6dac3",
+      "lines": 71,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          71
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 147,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/pdf_render.rs",
+      "sha256": "b287dbdc0f804749e717123271cd9b3f4a109fe1e7ad30d0056c7d4f6b8d3ee6",
+      "lines": 196,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          196
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 148,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/personnel_change_handler.rs",
+      "sha256": "d30be510cb8670b321a9e7c1b878c314b3803bb31b997b28d876f2d1ae6c0ec3",
+      "lines": 1822,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1822
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 149,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/personnel_feedback_handler.rs",
+      "sha256": "423e3cc997c00d5af6724f9d8022b863568651555aaee61ad2133dbd58981769",
+      "lines": 153,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          153
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 150,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/project_handler.rs",
+      "sha256": "ede48fed26251b6df9fcbcbbf98d0a0fd856798549c441fa2c01fabe29f80186",
+      "lines": 145,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          145
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 151,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/rd_export_data.rs",
+      "sha256": "6d021a264f6176c8055e4832f57f0c2fceb0aad8a43e63f4612a0b5d35856192",
+      "lines": 774,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          774
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 152,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/rd_export_handler.rs",
+      "sha256": "79cbe9b1aeba00b9ddc2418104784b9e06a34d389ddaab04da984a8a0f7729d2",
+      "lines": 733,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          733
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 153,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/rd_export_preview_handler.rs",
+      "sha256": "ec45a3814be5edff156e214080a5d3ee1b51a8eeeca67c0d25166e731e3b3e80",
+      "lines": 364,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          364
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 154,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/rd_record_column_handler.rs",
+      "sha256": "7c23cde9ef7ac1befcb56fa387608a32642fb38e6f807fe1c56602558fee7c5b",
+      "lines": 93,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          93
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 155,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/rd_record_handler.rs",
+      "sha256": "3f17538c1b11c3bffda5f5a4daacc915f231205f39cb7e3f71b1eaeff317f41d",
+      "lines": 987,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          987
+        ]
+      ],
+      "notes": "已完整阅读 1–987 行，覆盖研发送样列表、创建/编辑/批量删除、取样与工作量、撤回、退回、恢复及测试；新增 F30–F32。"
+    },
+    {
+      "index": 156,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/rd_stats_handler.rs",
+      "sha256": "8ae0414ce049604a65a6ed1a4d15eaa29d02b7663141c493d538d9affcd4c872",
+      "lines": 571,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          571
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 157,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/record_handler.rs",
+      "sha256": "a786f9bbdd8f7223d4d47c6c76436ddc177103d2d9403a62ee7a72eda367548f",
+      "lines": 510,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          510
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 158,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/role_handler.rs",
+      "sha256": "97b946200172bfa5ecd8a03fef3c98e4d8534829bb74a451217cfe2b2c5e5621",
+      "lines": 214,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          214
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 159,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/sample_info_attachment_handler.rs",
+      "sha256": "04325bbf1bd5c1807048729646a517ad4ddfd7be825a2faf710fe069b3b51855",
+      "lines": 1279,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1279
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 160,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/sample_info_column_handler.rs",
+      "sha256": "e486db0a9b6fae4c4dd40a23166c9c50062864efc9ed6b0ff9e29859de911e3c",
+      "lines": 353,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          353
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 161,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/sample_info_draft_handler.rs",
+      "sha256": "3fa23b99bf6c11a761e77373dafea7705af530138f1132e233744e50c0715127",
+      "lines": 241,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          241
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 162,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/sample_info_export_data.rs",
+      "sha256": "dec54a656d51dd3a845182adf1669fd63e94ac77566f3ac28bfe71cfdc2b4e53",
+      "lines": 627,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          627
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 163,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/sample_info_export_handler.rs",
+      "sha256": "8fc0188cfa1d89ddd5ada9c7aec38c1777d8994c1f3e58a2ac3a435d732c8a96",
+      "lines": 440,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          440
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 164,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/sample_info_export_write.rs",
+      "sha256": "63910b3705934f3fecf45e553bd2c0c3e63e47920b1496155b70d540c09e381a",
+      "lines": 170,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          170
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 165,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/sample_info_handler.rs",
+      "sha256": "0a153d2665f8ab02855c22edc157389a62b19f19afa27c9ad071ab48420b7a39",
+      "lines": 1605,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1605
+        ]
+      ],
+      "notes": "已完整阅读 1–1605 行，覆盖样品信息权限、登记、附件事务、取样工作量、退回、统计及测试；新增 F27。"
+    },
+    {
+      "index": 166,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/sample_info_type_handler.rs",
+      "sha256": "70031647a1ae41944149c743155e3a315ca10f5dc15d217a7c5e93a03bc554c1",
+      "lines": 108,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          108
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 167,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/session_handler.rs",
+      "sha256": "b1e3f762cef82e99c232bf81353862bcbe77f0d10dbda213ded7baf3d30fa8ad",
+      "lines": 87,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          87
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 168,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/settings_handler.rs",
+      "sha256": "d00a49d1a5e8b203569cdb39615a4a66112622dae22d9730899c94eecbbb11a7",
+      "lines": 117,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          117
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 169,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/stats_handler.rs",
+      "sha256": "e9dd97f68879d72475a25faf93d3157f4877b55a7b8fa458c5c8d70c694bd456",
+      "lines": 551,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          551
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 170,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/trace_handler.rs",
+      "sha256": "e80829e3053b14cdc1f21da2c4f7ef62cfe27b8c942e3b41a5492522a71c0604",
+      "lines": 39,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 171,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/trash_handler.rs",
+      "sha256": "e47dba8fc7f9e2cdc2074cb350d27f68609d97b79be7c85ec8d230db4c7f58a8",
+      "lines": 310,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          310
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 172,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/user_handler.rs",
+      "sha256": "d6e4744be16854a42a7b21b0e93412c8fad1e276142748e545a4561b345f7443",
+      "lines": 2174,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          2174
+        ]
+      ],
+      "notes": "完整审读登录、用户管理、角色赋予、导入与测试。隔离 HTTP 实测确认 role_ids 提权、role_id 绕过、改密码旧会话有效、导入绕过受保护目标。"
+    },
+    {
+      "index": 173,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/api/xlsx_parser.rs",
+      "sha256": "39f5ad13c0d5b9444268559152dadc423b499602871d42e1c54f3893ee7dd588",
+      "lines": 114,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          114
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 174,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/audit.rs",
+      "sha256": "9078cf9ac0f2ff79a1232c4c294230fd6839bc6bf241ce5d868e82358dd30de5",
+      "lines": 50,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 175,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/config.rs",
+      "sha256": "e67c58d09e986fd92e46a059a1a27293bc61325a2d8ac40341b0d5ec0b0d6f1d",
+      "lines": 221,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          221
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 176,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/connection.rs",
+      "sha256": "8e67a1653e33b1826da6c907bb1536573ff5905ca669879dae9df7d9901e8226",
+      "lines": 80,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          80
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 177,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/import.rs",
+      "sha256": "ed5ad1a00213e88637f5d83153136add287818c2102d5427364912f20bec495a",
+      "lines": 113,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          113
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 178,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/mod.rs",
+      "sha256": "c65ed891125b295adf3068ac19ab794d0afb951d1d7100de228eb8c56180a7c2",
+      "lines": 9,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 179,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_migrations.rs",
+      "sha256": "3b96b9cbf79500c9146cea1fa25acaef8545c3dee488500a560966639112a3b7",
+      "lines": 1252,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1252
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 180,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_notification_migration.sql",
+      "sha256": "254a79f187298c1c3fbb058d440327a52cd23c7a4ebfd6b4c7f0d06f7ce39f9d",
+      "lines": 76,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 181,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_schema.sql",
+      "sha256": "7c15c22b9e0644e45c4cd69a399bf28d67c62c73c6a26fd3f1aa267397716ccf",
+      "lines": 954,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          954
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 182,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_seed.sql",
+      "sha256": "bc5a9bed2c9c891cf823482a3f379d354c2c05253d2c296210e122b717d3232d",
+      "lines": 194,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          194
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 183,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v115_beta1_draft_attachments_migration.sql",
+      "sha256": "81b6a78376297c7231c49841bfe36b2acba809445798ca97f172b5dd53557ed5",
+      "lines": 7,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          7
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 184,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v115_beta1_migration.sql",
+      "sha256": "c4be05322893febb408d300ed33ee7a5765b91f371e776516a30a403cb06a6ac",
+      "lines": 62,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          62
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 185,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v115_beta2_migration.sql",
+      "sha256": "f98f855e8eaec8d0deeb6b2e73c1e8e5aeb2af85b4c903a0320aa5f3f40cba6e",
+      "lines": 57,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          57
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 186,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v115_beta3_migration.sql",
+      "sha256": "322e4492cd0137a635de36ca4e380e7706432d589592112ee46f29fc3db6aeb6",
+      "lines": 40,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 187,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v115_beta6_migration.sql",
+      "sha256": "79c09f41d7283a5f91da476f77d1a721a18437fd74757f9459cfad1254c4dc1c",
+      "lines": 36,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          36
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 188,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v115_beta7_migration.sql",
+      "sha256": "1cdf5c2941ee33ab8e71b068aa50ffd6d56d79ddd3b01559ae186babfc3b8225",
+      "lines": 18,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 189,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v115_beta8_rd_return_migration.sql",
+      "sha256": "79060b9dfd29020bc3b0249d4b00755c824e81c824540ab2fc7972a78089c94c",
+      "lines": 28,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          28
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 190,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_1_migration.sql",
+      "sha256": "cb0c9c84325f634ddcf17d65e1e15e680c13b81a70568a747f315f4259aeffa1",
+      "lines": 7,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          7
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 191,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_5_final_rd_workflow.sql",
+      "sha256": "709af1f0fa61a7e033c719a9ec7739684c4dfae63f87628a2d4ce2bee5007716",
+      "lines": 31,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          31
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 192,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_beta10_option_detail_rules.sql",
+      "sha256": "680be35fb1a4880c2499e244ff5c20c0107a12d2f0b1989970336c767653d2ab",
+      "lines": 17,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 193,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_beta2_roles_sessions.sql",
+      "sha256": "a3b527e53e173cc435920106ee34c6c04ffaed8dc17e971e8d2042e71f009a32",
+      "lines": 51,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          51
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 194,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_beta2_workflow_completion.sql",
+      "sha256": "3e408b49932c314e7e5c5c0493ac0d35ffe4ecc2f153fa27fcbc699854b4e384",
+      "lines": 32,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 195,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_beta4_rd_columns_void.sql",
+      "sha256": "2d491c4d2d3fc97380968aca2734463b0abad58891f2cf053452153f55e4daef",
+      "lines": 33,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 196,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_beta6_role_scopes_notification_groups.sql",
+      "sha256": "b1615d16abf248223f6360047298200957bd5c21807da378a9764f46fc460cfe",
+      "lines": 35,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 197,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_hotfix14_sample_sequence.sql",
+      "sha256": "8be5b8d9a6eca633cf365805be278eee981b1c0c2bccc20c3b1bb0b59c68bb1d",
+      "lines": 25,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 198,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_hotfix16_rd_resubmission_notifications.sql",
+      "sha256": "377fe0394f24a0f2cc94f6b596214f74ee00a14f662e09f221240a93c94bf8a8",
+      "lines": 12,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 199,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_hotfix18_sheet1_type_columns.sql",
+      "sha256": "10413813fa3dcf0f76c7d93afb4c67a2428081626292f5db047dec5c406de734",
+      "lines": 15,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          15
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 200,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_hotfix19_analysis_public_account.sql",
+      "sha256": "5a3acb47622261ea1d0c4fb450215c0c42e6943d45c0f44e72fbaff4ebaceb3f",
+      "lines": 39,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 201,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_hotfix20_rd_sample_withdraw.sql",
+      "sha256": "17b32accc7d9adedad23f4d13b3a824a2aaa22a021c25692356a6400bdb54c78",
+      "lines": 12,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 202,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_hotfix4_user_affiliations.sql",
+      "sha256": "e09b19b0f6c9f7bbbfeb30aa4e31d3facb2fb38dfb079fa60e92eb0c631bf105",
+      "lines": 40,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 203,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_hotfix6_common_method_scopes.sql",
+      "sha256": "865065b7005652f616cb630ead6078bb8cc8f5f2ca8c5ae33e3c8923ba4592c8",
+      "lines": 18,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 204,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_hotfix6_work_scopes.sql",
+      "sha256": "8217825e7bb06f4eda6bafea09ebbe6b812f9abc97a756663eb8459d8bed6bf1",
+      "lines": 21,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 205,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_hotfix8_trash_active_index.sql",
+      "sha256": "66d7d4d2c3b4ab013f79599757feaf315ab1ca5ebc4b21d13b6e6b61d84b3f5c",
+      "lines": 12,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 206,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_hotfix9_rd_rejection_notifications.sql",
+      "sha256": "3c6b2f56776cab43d64f0e558dea5441493ae1a2f4647f23504193ee170bd66b",
+      "lines": 13,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 207,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_notification_dedup_title.sql",
+      "sha256": "6716be57d849f05f1afa917649b0fcf4d8ec628491629b62677a8dc719893c7f",
+      "lines": 12,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 208,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_7_beta1_sample_info_return.sql",
+      "sha256": "c0c2c2ab9ebda12dca75c860665639f14f903faa2e080f23be45fc926faa0dae",
+      "lines": 27,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 209,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_7_beta2_return_visibility.sql",
+      "sha256": "3a8148f6b5d254a27000402b4f5cb8491a17aec90c9646a0be2923781efb2451",
+      "lines": 17,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 210,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_7_beta5_analysis_public_account_cards.sql",
+      "sha256": "92ec9023f620cdcc8bc5ddba6bc8f1673ed2240cab6c87a9331872dd6a50cdf9",
+      "lines": 17,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 211,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_7_beta5_analysis_public_account_home_cards.sql",
+      "sha256": "6257f606687f4076799499f52134d6c012c300b6db11ca561c2adc72cc33e854",
+      "lines": 11,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 212,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_7_beta6_analysis_public_account_business_scope.sql",
+      "sha256": "7c4bcbcb733d62c88aae7fa41c153d66e928928c03aec0fce287235133c8b584",
+      "lines": 11,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 213,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_7_beta8_sample_info_return_permissions.sql",
+      "sha256": "6ae6d20902ac62de2287850af3aa5b912f70721e4bdbca63ab2ceb90d8deb8a8",
+      "lines": 17,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 214,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_2_0_alpha10_known_fixes.sql",
+      "sha256": "e8a536edbaa525de203d66ede5688d2efcbb1e1353de4d0356cd33a918f07645",
+      "lines": 8,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          8
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 215,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_2_0_alpha10_method_type_single.sql",
+      "sha256": "711350b677efa9005fd3ab9e28d7cb7382400a3ad41f167d40abc2669d5e5f1a",
+      "lines": 26,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 216,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_2_0_alpha11_login_persistence.sql",
+      "sha256": "fc588f9d3bd9cc8ce24059f125394cd289d0c2e7b3fbf3e81516a60ec8098ad2",
+      "lines": 8,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          8
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 217,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_2_0_alpha12_sending_analysis_permissions.sql",
+      "sha256": "0a3352457ad663a97682428453762a38021139d2aab74751089a8b4011c84ed4",
+      "lines": 96,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 218,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_2_0_alpha1_role_templates.sql",
+      "sha256": "7391dc4eafaa901224de67c5d09e2ac1e06d7214dcf3cfe7ac7bf233b201e391",
+      "lines": 94,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          94
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 219,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_2_0_alpha2_user_departments.sql",
+      "sha256": "a41e461129a022655bb3c4a50d1966cf462fc4cb0871fad701aef126c161c81c",
+      "lines": 20,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          20
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 220,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_2_0_alpha3_record_ownership_snapshots.sql",
+      "sha256": "f7decd6fa566df2fa1f45a083256e995f04578999ca1a199bd2d134123b16ce3",
+      "lines": 106,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          106
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 221,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_2_0_alpha4_department_role_assignment_sources.sql",
+      "sha256": "60749da6e707217f508fd1c2e495b2ad033764a6a7f5bd519b3770382552ef0c",
+      "lines": 13,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 222,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_2_0_alpha4_organization_governance.sql",
+      "sha256": "bfd9424b7e746cec644bc8740f7e829e7fcd18b08c8701feefec8ab23a2bbc58",
+      "lines": 172,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          172
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 223,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_2_0_alpha5_analysis_export_dimensions.sql",
+      "sha256": "7bc674175a31e083eb462a9de97b31a9a2e892d43c5cb4767e8e0b0d184cd6cd",
+      "lines": 69,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          69
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 224,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_2_0_alpha6_scoped_workload_export.sql",
+      "sha256": "f18c88c9aef9cadeeb16c884707c9bb6c58c8d339749a28ea52ec8ae99c0bec8",
+      "lines": 26,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 225,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_2_0_alpha7_ownership_confirmation.sql",
+      "sha256": "78c193e0c7a449f9d3feecddd0ef8bd6ef6ac1c61dff744c3c1d55735ef3452d",
+      "lines": 11,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 226,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_2_0_alpha8_strict_role_scopes.sql",
+      "sha256": "a655de0824f9aeaac1f1ac728478e73743d67c06fb7325f9ae184f728fcb398c",
+      "lines": 6,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          6
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 227,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_1_0_personnel_feedback_rejection_notification.sql",
+      "sha256": "f4b0f996276b6de548bcc101b9044bf80c52a6831bdf1eacde7f3cb7e17a02aa",
+      "lines": 12,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 228,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_2_0_help_tutorial.sql",
+      "sha256": "d6eaba04c0885d67385c78846e01cafbe915c002dd82354c19717f227d8ce4c4",
+      "lines": 17,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 229,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_2_11_export_template.sql",
+      "sha256": "eef0d6c569a526b2c7239ffcc19b9247fbeffd63e71b46b2229c10f2028b6408",
+      "lines": 3,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          3
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 230,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_2_16_detection_type_visibility.sql",
+      "sha256": "9fbfc71a07f441c603081a14f50b1a9d9ab4577dda66aec656ce12ee7154406c",
+      "lines": 16,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 231,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_2_17_auxiliary_work.sql",
+      "sha256": "73436669f87ae4c69193e4f6a0e291b89fd07092edd6fe047da3a7496c8cc3a5",
+      "lines": 52,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 232,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_2_4_sample_info_editor.sql",
+      "sha256": "868d03ba831712e4b16962b419422adc0f4275616ae6752ac9099c2fe826990f",
+      "lines": 12,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 233,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_2_8_performance_indexes.sql",
+      "sha256": "8fec17383901ce64a51f937b8bdfe5425cc7580ad3d6ddf3a42013596e37b43f",
+      "lines": 15,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          15
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 234,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_3_12_sample_info_action_columns.sql",
+      "sha256": "2d6497d3a0ccbbf10c3bf4c7695e54c26a1f9847afc3d0312e47f7b64f8a76f1",
+      "lines": 21,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 235,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_3_18_sample_workload_quantity.sql",
+      "sha256": "0c2a4a4100cbeb90a9fb9981c1da88d0960df9ddf746fe9278c0ca561cc28614",
+      "lines": 10,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 236,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_3_20_column_width_mode.sql",
+      "sha256": "9971d07ef5d203d4e5303a3443aad81b72413247c96b1fb9e0d1b65bd9e6a80a",
+      "lines": 35,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 237,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_3_25_record_column_display_mode.sql",
+      "sha256": "1d0eb4e3791ffb0e4336493c91fcd215c0812396ec7015358483e01934960e52",
+      "lines": 12,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 238,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_3_4_sample_workload.sql",
+      "sha256": "856ecc62562791c77024fc62536231a39fc803fb5506d394a32267bccf0e0f6a",
+      "lines": 12,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 239,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_3_5_sample_info_action_columns.sql",
+      "sha256": "c111c28c5a11f860974c3b1053319272b01c6c9d4f64ed36e929a4342b715a39",
+      "lines": 20,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          20
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 240,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_3_6_workload_permissions_and_action_form.sql",
+      "sha256": "88798cf4468665bcded829436e555a50ef5c6f3e34a0ce95913dd342b1b5ffcb",
+      "lines": 48,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 241,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_3_7_workload_permission_whitelist_and_role_repair.sql",
+      "sha256": "c2337c43bf551f6f6b8011168a82f0b3621f9441daaa735325e516b911a1aa8e",
+      "lines": 63,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          63
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 242,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v2_3_8_sample_workload_operator_ownership.sql",
+      "sha256": "244f4aaad7f543715d9d699ad583c9f76f115da79bce270ddfa2337cad9e0b80",
+      "lines": 18,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 243,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/seed.rs",
+      "sha256": "b364aba0e60baf9f7eb9650bc26940c9fd78998898b9fc59feb96653d2ca0a87",
+      "lines": 7,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          7
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 244,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/test_migrations.rs",
+      "sha256": "0af340d0f92bce0b1d6179145e3dd45b13d87383f2dfeba207d3dad946e137de",
+      "lines": 9,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 245,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/error.rs",
+      "sha256": "932753bd0cc99caaa403819c84a0a7e1358a926a2a8f44275f055c296212955b",
+      "lines": 75,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          75
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 246,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/lib.rs",
+      "sha256": "633b05afccb5b26a56950d422b0dbaaa3290944a532cfa078eaade3b5f4526a6",
+      "lines": 11,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 247,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/main.rs",
+      "sha256": "ad3cc90f3f2b3d9eac74bd20cc356710749d380eac2aaa45d3bfcde7b5444952",
+      "lines": 240,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          240
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 248,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/article.rs",
+      "sha256": "158825ac0d5fdcd31c5e49c8be7ecd765571db58a51376e0e2b672d9974f7c5b",
+      "lines": 24,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          24
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 249,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/audit.rs",
+      "sha256": "886c2f3c3b9e5c89998b5b6ee67f02685b678520322448ef31ab1c24f3afae49",
+      "lines": 25,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 250,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/division.rs",
+      "sha256": "f438b4ae4e675fd35734803fa25f3c67759977ba090845cf3fdafa7c00a0d65c",
+      "lines": 63,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          63
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 251,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/group.rs",
+      "sha256": "4bd9dde2e71ca5c4e636b30cdaac7776092ecc1f317e61b4d7a1bf8f08d7de6b",
+      "lines": 74,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          74
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 252,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/help.rs",
+      "sha256": "56d25825ee112520f6aaefa7c30b88efc83e711712c1ad5e7a3919a368c452ad",
+      "lines": 24,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          24
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 253,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/help_attachment.rs",
+      "sha256": "f58464aad2a57cdf58dc19a5947c6e8a669548d49af772cc63441ced312c218e",
+      "lines": 23,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          23
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 254,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/import.rs",
+      "sha256": "3fcef968d717e9a2f0a1917c6f897bb094fed677d624060ac60b6565ee1dbcc0",
+      "lines": 13,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 255,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/import_record.rs",
+      "sha256": "bbbb6cc3473a63edb0107cedf89e8eac6a8469507c04ea47f5ad907ad529c25e",
+      "lines": 59,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          59
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 256,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/instrument.rs",
+      "sha256": "4b8ddfe476f5f740fb7dd2d9fd08b9e7d1a527dbb7b0a5af801969d0222b02ad",
+      "lines": 31,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          31
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 257,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/method.rs",
+      "sha256": "5cfcfefd865bf88b95dbd1ecfed6362d0954fa7abe159b5728b39e716da5b606",
+      "lines": 68,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 258,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/mod.rs",
+      "sha256": "8f5bbb61a6c700535597fb01ca8b3e5e312764923f357c0c05cc3055c7c825b8",
+      "lines": 70,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          70
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 259,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/notification.rs",
+      "sha256": "63ba8115ea7181ffdeb2c8ce0433dcea63f7349d55911374688638e7290cee75",
+      "lines": 133,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          133
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 260,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/organization.rs",
+      "sha256": "4f39af39cc218e420aab43f3444568ec6f1508591bf85f3fa31756b00a2cc163",
+      "lines": 119,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          119
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 261,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/personnel_feedback.rs",
+      "sha256": "2e60dcbb0d0bc3e16bcbc6673bce57013ffe253b1b1e717bcb4a7ae7beda1c11",
+      "lines": 46,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          46
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 262,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/project.rs",
+      "sha256": "5ba4e84326194110f18765ad97dc791cdef831f6d8efd503b497d20d4b62c3f9",
+      "lines": 128,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          128
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 263,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/rd_record.rs",
+      "sha256": "86ce2775b1377c93561f39675cd215363cdd2a62349511743b1fbd7f6846e38c",
+      "lines": 74,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          74
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 264,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/rd_record_column.rs",
+      "sha256": "d474ac8853017fc71d13b51d589c79d14c286996d9609c16f1103ef7aac8df24",
+      "lines": 137,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          137
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 265,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/record.rs",
+      "sha256": "3fc36a22227b81168cbebe83944296b27162603bcc49de68ca07d3c9aeca0ead",
+      "lines": 83,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 266,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/role.rs",
+      "sha256": "a3da7eaafce9d44258be79bfe0b3b26f1516f98f9dfa23d7018263534a25efb8",
+      "lines": 912,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          912
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 267,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/sample_info.rs",
+      "sha256": "01ddf1a61a3a451c797d0f9b127a3a1d800ac782936d25319e7d958d04bea1a5",
+      "lines": 261,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          261
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 268,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/sample_info_attachment.rs",
+      "sha256": "accbd7dbcdbdf30626c9cacc79ec310eec18072b21cebf96b6d99815f6b58cd9",
+      "lines": 14,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          14
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 269,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/sample_info_column.rs",
+      "sha256": "14b48b927784c631f11fbadbc4f504e8abcd1d10673d68855a381e002a836b0f",
+      "lines": 110,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 270,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/sample_info_column_visibility.rs",
+      "sha256": "cf569e408206dacd2b6a0850b8dcb39d108b72226eb6d37af285f7e3a27b7770",
+      "lines": 43,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          43
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 271,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/sample_info_draft.rs",
+      "sha256": "9174cedc21dd499206e52e93be1e8ed5fbfda5cf843d430a0c127d2929bf5739",
+      "lines": 37,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 272,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/sample_info_type.rs",
+      "sha256": "2435f0f2697fd875c9c2bba14fddb073e6a2ddec2deeec81953c6034e701e37e",
+      "lines": 36,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          36
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 273,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/settings.rs",
+      "sha256": "3b59aeb0352763d9e62d9496bc37e76144f5eba7dd1d3f07aa476eece4d676e8",
+      "lines": 14,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          14
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 274,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/trace.rs",
+      "sha256": "68ae5591bd6a5bf87b28d8c0b682e839e0a61b287be9d030f358c5936357793e",
+      "lines": 19,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          19
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 275,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/trash.rs",
+      "sha256": "91a840cc4f4408cbdeac33f4fec0645a325b4884f15eae59cb05dea49a7a0dbf",
+      "lines": 60,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 276,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/models/user.rs",
+      "sha256": "101be095ab3a479fef177e95db1c8e860cd552778cd8405dd94e8786b46247a4",
+      "lines": 150,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          150
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 277,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/article_repo.rs",
+      "sha256": "351bc5d815615675a525ed2f3c7790f11d687f29c3d48914e13b6ef273f407f4",
+      "lines": 218,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          218
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 278,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/audit_repo.rs",
+      "sha256": "466ee2fe55a04bbc052e60c770e424c6897588314466d85922a506cce6ee0707",
+      "lines": 319,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          319
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 279,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/division_repo.rs",
+      "sha256": "a89b73ee93cbf9bd2d27095144e5a73e811389d9c56d9a8497d877e46f943e24",
+      "lines": 435,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          435
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 280,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/group_repo.rs",
+      "sha256": "827cb84f25ad21cd155d4c6fa82fa896a53b751b56f3d377c14cd28392c3d207",
+      "lines": 317,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          317
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 281,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/help_attachment_repo.rs",
+      "sha256": "b23e8a1744455c2bb720c846465a1bc1f7fd723f9eaf74f034eeef1bf05268c7",
+      "lines": 84,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          84
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 282,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/help_repo.rs",
+      "sha256": "1706e06d7944fe6d996f24769491a6143f4b11912c828daeadb01db9dcf9f63f",
+      "lines": 241,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          241
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 283,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/instrument_repo.rs",
+      "sha256": "5e913dddea61606f17032ee110e73633645fae158882d07fa8dae5e26b37f602",
+      "lines": 227,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          227
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 284,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/method_repo.rs",
+      "sha256": "0a1b2511382ae87c9df9f7c029f5b9f1f5d67bfa3c3f624b3a27e6d22e2469c7",
+      "lines": 1299,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1299
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 285,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/mod.rs",
+      "sha256": "12b2ff88defc1704cca353332fbeebdd1e122caab155f2a5bbbdef861c2bfc5d",
+      "lines": 27,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 286,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/notification_repo.rs",
+      "sha256": "ff92a98bee0db15fd80b023249d76758c83807cfd44b6335635f68309d31c15c",
+      "lines": 1253,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1253
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 287,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/organization_repo.rs",
+      "sha256": "4be811a011370b25657dff08ed2a72aea83af2405d30bd2ba4ec685a61fe3d8f",
+      "lines": 904,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          904
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 288,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/personnel_feedback_repo.rs",
+      "sha256": "3f2bb8c7b83e4cb9c2f42a0492dd8066163a0fd9023d31dc41476e847c560d6f",
+      "lines": 320,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          320
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 289,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/project_repo.rs",
+      "sha256": "0cf662814eea4894a297a07e6377a756c3f862200e0205735dcfc10a1b74cd0b",
+      "lines": 724,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          724
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 290,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/rd_record_column_repo.rs",
+      "sha256": "8a5eafc438a8075857cb8e5fa6aaa3047f71ad9bcd7511ee576f9c5ff6dac74f",
+      "lines": 496,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          496
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 291,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/rd_record_repo.rs",
+      "sha256": "182bcdbb8a5bcefc73815d98f8f1e360f98524c87c14b460257307f4e80add8c",
+      "lines": 1257,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1257
+        ]
+      ],
+      "notes": "完整逐行语义审读已完成；本文件发现 F33-F35。"
+    },
+    {
+      "index": 292,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/record_repo.rs",
+      "sha256": "740836e57257a1bc94207e81d3a9b12e5fc7cabc5b40e3316189da6eab982db6",
+      "lines": 1180,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1180
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 293,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/role_repo.rs",
+      "sha256": "ba4f1b025bf69e594904af934e8757ae16889273423992409f0a91d26f05c5ef",
+      "lines": 787,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          787
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 294,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/sample_info_attachment_repo.rs",
+      "sha256": "41fc75a94f4730526e79998b9523b341f30f01b48d5e2ed076143f279aa15d9a",
+      "lines": 211,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          211
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 295,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/sample_info_column_repo.rs",
+      "sha256": "904e261af89438a6e979692b99726d0825329b4db71554a2058fa4f34586054d",
+      "lines": 673,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          673
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 296,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/sample_info_column_visibility_repo.rs",
+      "sha256": "34b6aed6e0987ff1ba82eedd83ca49041a78a6e7127c58f5bcc55a437984f3d2",
+      "lines": 143,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          143
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 297,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/sample_info_draft_repo.rs",
+      "sha256": "7571a826c94ce464b0983ab07296a3a2312ffd9e10d15c79b2d79cbd67a99bfa",
+      "lines": 179,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          179
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 298,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/sample_info_repo.rs",
+      "sha256": "519ce3e08011a70e54c5396c3c27440ee69db751538cb8543c9f8563b04764f2",
+      "lines": 1696,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1696
+        ]
+      ],
+      "notes": "已完整阅读 1–1696 行，覆盖样品登记查询、权限范围 SQL、创建/编辑、退回草稿、删除/恢复、状态流转、撤回和测试；新增 F28/F29。"
+    },
+    {
+      "index": 299,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/sample_info_type_repo.rs",
+      "sha256": "0a92f7bcd60bdf8f59f4fbe6aafaee4e3ddd249991bf142873977fc2405a993f",
+      "lines": 277,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          277
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 300,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/settings_repo.rs",
+      "sha256": "7c05ca71f779dd395c12ea3a8f96ad7c0a5e53dbeb6a923e5275f2ba08789056",
+      "lines": 109,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          109
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 301,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/trace_repo.rs",
+      "sha256": "7658341ee1b82d3c8836798e1af5ab277ae27c137cb31caedd9f8a2bc13932f6",
+      "lines": 84,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          84
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 302,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/trash_repo.rs",
+      "sha256": "228f221e6e9465b49eed09e3a0bab8f6c772f02402ac43171b18c17c19b7b96e",
+      "lines": 805,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          805
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 303,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/repo/user_repo.rs",
+      "sha256": "9f51e8ed729f3469ca6c2ad46518a346a3f7ce5165f1b87526765b6c5a462f06",
+      "lines": 879,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          879
+        ]
+      ],
+      "notes": "完整审读身份水合、多角色回退、事务与会话撤销；配合 handler 完成隔离 API 验证。"
+    },
+    {
+      "index": 304,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/runtime_log.rs",
+      "sha256": "ccd89395dd44178188b5708134ac749df0144430874fea90a96b8403af7e5d98",
+      "lines": 120,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 305,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/service/auth_service.rs",
+      "sha256": "59fa964b6e66aed4c4a01895f40dfd4a708781363c423cecf079a784389efabd",
+      "lines": 478,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          478
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 306,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/service/authz_service.rs",
+      "sha256": "9a2fbd82096e41a5d8dd1598a9cf3f1916249b26c51d4e2f7ea90aa9a6913d7c",
+      "lines": 809,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          809
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 307,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/service/backup_service.rs",
+      "sha256": "cc79efa7b99322a1786ab8681a87d5f0fc0ee74f89e1327e939b7014edf21af9",
+      "lines": 930,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          930
+        ]
+      ],
+      "notes": "完整审读备份创建、ZIP 清单、路径校验、暂存与启动恢复。已有 F01–F03/F14；validate_full_archive 只验证清单列出的文件，未验证归档集合、重复路径、file_count/total_bytes/format_version，恢复上传还以 bytes 一次性载入内存。"
+    },
+    {
+      "index": 308,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/service/log_maintenance_service.rs",
+      "sha256": "1cba01409044833fe8d56e9ea6139612764dfdf51f83d4561b9ff8be84d8095a",
+      "lines": 828,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          828
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 309,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/service/mod.rs",
+      "sha256": "56e3b8fd7618080630e0effa7c317becd07ac38960fc314c91ca8e9b94323af7",
+      "lines": 10,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 310,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/service/notification_service.rs",
+      "sha256": "44f6d3a7093734801656bab354e41315287773045acdabb5af7155e167f78444",
+      "lines": 1131,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          1131
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 311,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/service/rd_record_service.rs",
+      "sha256": "c3b8ecf1e6f5fa7c35877cceea9709e0e61d20f940e381e9a8885b70bbb42fb7",
+      "lines": 101,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          101
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 312,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/service/record_service.rs",
+      "sha256": "3ce25090fb6e29dab260455cb6101705e37a2895289ffc164fb02a87ce500076",
+      "lines": 90,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 313,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/service/sample_attachment_service.rs",
+      "sha256": "66e5e46bb5fb4bcd22f62e563fe03290f464d42fc7e218ec2ee89668dbc6f84d",
+      "lines": 79,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          79
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 314,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/service/stats_service.rs",
+      "sha256": "090a41080be190f1c65668cb1ae98cab579d43579984d36b01415b75d15388df",
+      "lines": 440,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          440
+        ]
+      ],
+      "notes": "完整审读统计及测试。前五个旧聚合函数存在 NUMERIC/分组问题，src 中未找到 stats_service:: 对应调用，不认定线上统计已坏。by_division 有范围过滤和显式类型转换。"
+    },
+    {
+      "index": 315,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/tray.rs",
+      "sha256": "f7ef14b12d90054b742fbd4c957c14e7685daadbe48f7ff16b240d253a1434e6",
+      "lines": 248,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          248
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 316,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/utils/excel_reader.rs",
+      "sha256": "8c62e8d541acc5994e8d028690ee125b2f5760a648e7f437efb354e82dcb223e",
+      "lines": 498,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          498
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：附件/帮助资料、导入转换、数据库初始化及迁移、回收站、镜像拉取脚本。结论与验证边界见 F49–F54 及增量记录；完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 317,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/utils/mod.rs",
+      "sha256": "a316846ac73543b3b85f0dc44c6a89eec33e7d8d1bd150a2cf1a423e2b50d5e2",
+      "lines": 2,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          2
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 318,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/tools/apply-hot-update.ps1",
+      "sha256": "901c75d627ea75715f94373516cb41b240417394ee5bece0b6ff38322db45b42",
+      "lines": 56,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "notes": "已完整阅读；详细结论需与发现清单及调用链复核记录合并。"
+    },
+    {
+      "index": 319,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/tools/build-linux-package.sh",
+      "sha256": "ca2c5d0b8fa562af69736a06c2b5386de3413ef2ba40915e9bd65c425e0725f1",
+      "lines": 40,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 320,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/tools/dev.ps1",
+      "sha256": "23cca752ccec585da272124527469f808b52594afe28c1524d9ed94266c0c29b",
+      "lines": 101,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          101
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 321,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/tools/install-libreoffice.ps1",
+      "sha256": "766eeb8251fd307481807206e41d706e480249896ef712b1c11fdb49c9d2a505",
+      "lines": 64,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          64
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 322,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/tools/postgres_multi_role_stress_test.mjs",
+      "sha256": "9f3e42ee04913d8dfbaf89df202a5e057ca814ca3766eed49bfcaf4f26e9e356",
+      "lines": 217,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          217
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 323,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/tools/postgres_stress_test.mjs",
+      "sha256": "b174509d520850445b8287f63542b148863927166d706daf4043b0a16dbd347a",
+      "lines": 195,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          195
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 324,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/tools/record_action_permissions.mjs",
+      "sha256": "35b464c1d436ba38d82ff0c6776051ad0a602cfac1ff644ede9f783f16e65394",
+      "lines": 49,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          49
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读：主数据与请求模型、样品信息导出、权限加载和相关组件/统计。只登记实际读完的文件；运行验证与静态结论边界见增量记录。"
+    },
+    {
+      "index": 325,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/Cargo.lock",
+      "sha256": "8c2ad8b896cf28613dcdbadb861cbffdf290869e40608134375a28624fbe3470",
+      "lines": 5838,
+      "status": "dependency-metadata",
+      "ranges": [],
+      "notes": "依赖锁文件只登记版本元数据，不按业务语义审读计数。"
+    },
+    {
+      "index": 326,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/Cargo.toml",
+      "sha256": "3d2bc0f4214977906ef844552457bff35a5b70c01a0db9e61ac27eb84cd7d6e0",
+      "lines": 60,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 327,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/config.example.toml",
+      "sha256": "f352b98b11bc8d878a923beac0a0be08cb875fc382f9db41aa01b86b7ebc78e5",
+      "lines": 20,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          20
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 328,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/index.html",
+      "sha256": "dda2bc1316a9c1956873b670e097180c437da8979739b20a293161aa886a9255",
+      "lines": 18,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 329,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/package-lock.json",
+      "sha256": "2897148629a9263af160597f7ce94c2ba662e89dac5e340bf5a674c3f91f889a",
+      "lines": 4340,
+      "status": "dependency-metadata",
+      "ranges": [],
+      "notes": "依赖锁文件只登记版本元数据，不按业务语义审读计数。"
+    },
+    {
+      "index": 330,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/package.json",
+      "sha256": "8112f726b8ed8f4c447ef1772d9e144f93a57d7ec713a4f7a4f8e38bc95b725a",
+      "lines": 42,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 331,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/postcss.config.js",
+      "sha256": "98e8d8a143f16216f4b50a2520024f6254987049b2e199026742a96e16ba411e",
+      "lines": 7,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          7
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 332,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/styles/global-fix.css",
+      "sha256": "372e0223c7a38e10b694a42f5106d7017b0f71f615b142c56d035c3a35dc3bbd",
+      "lines": 12,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 333,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/src/styles/index.css",
+      "sha256": "ef7a3c277206c57d57473c90098d74889595f8b092b17edc5c76ce8d147df996",
+      "lines": 225,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          225
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 334,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/tsconfig.json",
+      "sha256": "2c590b787790ce0f621ce3af8f4c10720922750e154ca10e07e7c63c9c6f9572",
+      "lines": 25,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 335,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/frontend/tsconfig.node.json",
+      "sha256": "3fec5da33b1a1af805ec979f86b86f323935db89828db80ac8ef953b92996c4a",
+      "lines": 11,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 336,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/postgres-compat/Cargo.toml",
+      "sha256": "4a56bdd3ec76643203ddc5fe71ae35a1e8a051a4f547508ce601598028eacb37",
+      "lines": 13,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 337,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_1_6_beta7_notification_targets.sql",
+      "sha256": "a8573732161af3fd5364b52f978f983471fc0ff998dcc782493643fb467c773f",
+      "lines": 32,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 338,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/src/db/postgres_v1_3_2_personnel_feedback_notification_target.sql",
+      "sha256": "92bfe0468a1accb3457ab4b3792981bb629b70dbe06f1ce177392160d9fd0fde",
+      "lines": 12,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    },
+    {
+      "index": 339,
+      "path": "source/LabFlow-PostgreSQL-v2.3.28/tools/dev.config.example.toml",
+      "sha256": "48eab486d5d375bcdd4203278334b9b15fb9a004254dab3bd5cc7609e3cec7db",
+      "lines": 13,
+      "status": "fully-read",
+      "ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "notes": "2026-10-01 完整逐行审读。列配置/布局/草稿/工作量调用链复核；结果参见增量发现与原函数内存模拟。完整审读不等于全部运行行为已验证。"
+    }
+  ]
+}

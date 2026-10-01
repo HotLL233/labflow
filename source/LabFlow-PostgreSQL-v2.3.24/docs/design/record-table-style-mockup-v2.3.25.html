@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>记录表 Excel 化样式 · UI 设计稿 v2.3.25</title>
+<style>
+  :root{
+    --primary:#1976d2;
+    --primary-weak:#e8f1fb;
+    --primary-line:#a9c8ea;
+    --ink:#1f2d3d;
+    --ink2:#5b6b7c;
+    --ink3:#8d9aa8;
+    --line:#d9dfe7;
+    --line2:#c2ccd6;
+    --head:#f5f7f5;
+    --bg:#eef2f6;
+    --radius:2px;
+    --danger:#c62828;
+    --warn:#ef6c00;
+    --ok:#2e7d32;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;padding:28px 22px 60px;background:#f4f6f9;color:var(--ink);
+    font:13px/1.55 "Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+  }
+  .doc-head{max-width:1460px;margin:0 auto 22px}
+  .doc-head h1{margin:0 0 6px;font-size:20px;letter-spacing:.2px}
+  .doc-head p{margin:0;color:var(--ink2);font-size:12.5px}
+  .doc-head .tags{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .tag{padding:2px 9px;border:1px solid var(--line2);border-radius:999px;font-size:11.5px;color:var(--ink2);background:#fff}
+
+  .screen{max-width:1460px;margin:0 auto 30px;background:#fff;border:1px solid var(--line);border-radius:4px;overflow:hidden;box-shadow:0 1px 3px rgba(31,45,61,.07)}
+  .screen-cap{display:flex;align-items:baseline;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:#fafbfc}
+  .screen-cap b{font-size:14px}
+  .screen-cap span{color:var(--ink2);font-size:12px}
+
+  /* ---------- 页面头部 ---------- */
+  .page-head{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .page-head .title{font-weight:700;font-size:14px}
+  .page-head .sub{color:var(--ink3);font-size:12px}
+  .page-head .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .btn{height:28px;padding:0 10px;border:1px solid var(--line2);background:#fff;border-radius:var(--radius);font-size:12px;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+  .btn:hover{background:#f6f8fa}
+  .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .btn.active{border-color:var(--primary);color:var(--primary);background:var(--primary-weak)}
+  .btn.mini{height:24px;font-size:11.5px;padding:0 8px}
+
+  /* ---------- 样式工具栏 ---------- */
+  .ribbon{padding:8px 12px;border-bottom:1px solid var(--line);background:#fbfcfd}
+  .ribbon-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .ribbon-row + .ribbon-row{margin-top:7px}
+  .group{display:flex;align-items:center;gap:3px;padding:3px 8px;border:1px solid var(--line);background:#fff;border-radius:var(--radius);position:relative}
+  .group > .glabel{position:absolute;top:-8px;left:9px;background:#fbfcfd;padding:0 4px;font-size:10px;color:var(--ink3);letter-spacing:.4px}
+  .group:first-child > .glabel{left:6px}
+  .tb{height:24px;min-width:24px;padding:0 6px;border:1px solid transparent;background:transparent;border-radius:var(--radius);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px;color:var(--ink)}
+  .tb:hover{background:#eef3f9;border-color:var(--line2)}
+  .tb.on{background:var(--primary-weak);border-color:var(--primary-line);color:var(--primary)}
+  .tb.bold{font-weight:800}
+  .tb.italic{font-style:italic;font-family:Georgia,serif}
+  .tb.under{text-decoration:underline}
+  .sel{height:24px;border:1px solid var(--line2);border-radius:var(--radius);background:#fff;font-size:12px;padding:0 4px;color:var(--ink)}
+  .swatch{width:24px;height:24px;border:1px solid var(--line2);border-radius:var(--radius);cursor:pointer;position:relative;background:#fff;display:inline-flex;align-items:center;justify-content:center}
+  .swatch i{position:absolute;left:3px;right:3px;bottom:2px;height:5px;border:1px solid rgba(0,0,0,.18)}
+  .swatch b{font-size:11.5px;font-weight:700;margin-top:-4px}
+  .vsep{width:1px;height:20px;background:var(--line);margin:0 3px}
+  .scope{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:12px;color:var(--ink2)}
+  .scope .pill{display:inline-flex;border:1px solid var(--line2);border-radius:var(--radius);overflow:hidden}
+  .scope .pill button{height:24px;padding:0 9px;border:0;background:#fff;font-size:11.5px;cursor:pointer;color:var(--ink2)}
+  .scope .pill button.on{background:var(--primary);color:#fff}
+  .scope .pill button + button{border-left:1px solid var(--line2)}
+
+  /* ---------- 主体三栏 ---------- */
+  .body{display:grid;grid-template-columns:minmax(0,1fr) 306px;align-items:stretch}
+  .grid-wrap{padding:12px;min-width:0}
+  .rule-hint{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:11.5px;color:var(--ink2)}
+  .rule-hint .dot{width:8px;height:8px;border-radius:2px;display:inline-block}
+
+  table.sheet{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:12px}
+  table.sheet th,table.sheet td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 7px;vertical-align:top;overflow:hidden}
+  table.sheet thead th{position:sticky;top:0;background:var(--head);font-weight:700;z-index:2;white-space:nowrap}
+  table.sheet tbody td{background:#fff}
+  table.sheet tbody tr:nth-child(even) td{background:#fcfdfe}
+  .col-sel{background:var(--primary-weak)!important;box-shadow:inset 0 0 0 1px var(--primary-line)}
+  .cell-sel{position:relative;outline:2px solid var(--primary);outline-offset:-2px}
+  .cell-sel::after{content:"";position:absolute;right:-2px;bottom:-2px;width:6px;height:6px;background:var(--primary)}
+  .frozen{border-right:2px solid var(--line2)!important}
+  .row-wait td{background:#fff5f5!important}
+  .row-wait td:first-child{box-shadow:inset 3px 0 0 var(--danger)}
+  .chip{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;line-height:18px;border:1px solid}
+  .chip.wait{color:var(--danger);border-color:#efb8b8;background:#fdeaea;font-weight:700}
+  .chip.test{color:var(--warn);border-color:#f6cf9a;background:#fdf3e3}
+  .chip.done{color:var(--ok);border-color:#b3d9b6;background:#edf6ee}
+  .num-hot{color:#b53b00;font-weight:700;background:#fff2e0!important}
+  .dt-late{color:var(--danger)}
+  .muted{color:var(--ink3)}
+
+  /* ---------- 右侧属性面板 ---------- */
+  .panel{border-left:1px solid var(--line);background:#fbfcfd;min-width:0}
+  .ptabs{display:flex;border-bottom:1px solid var(--line);background:#fff}
+  .ptabs button{flex:1;height:34px;border:0;border-bottom:2px solid transparent;background:transparent;font-size:12px;color:var(--ink2);cursor:pointer}
+  .ptabs button.on{color:var(--primary);border-bottom-color:var(--primary);font-weight:700;background:#fff}
+  .psec{padding:9px 12px;border-bottom:1px solid var(--line);background:#fff}
+  .psec > .ph{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink);margin-bottom:8px}
+  .psec > .ph .caret{color:var(--ink3);font-size:10px}
+  .frow{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+  .frow:last-child{margin-bottom:0}
+  .frow label{width:62px;flex:none;color:var(--ink2);font-size:11.5px}
+  .frow .grow{flex:1;min-width:0}
+  .swrow{display:flex;gap:5px;flex-wrap:wrap}
+  .sw{width:20px;height:20px;border:1px solid rgba(0,0,0,.16);border-radius:2px;cursor:pointer}
+  .sw.on{outline:2px solid var(--primary);outline-offset:1px}
+  .align9{display:grid;grid-template-columns:repeat(3,24px);grid-auto-rows:24px;gap:3px}
+  .align9 button{border:1px solid var(--line2);background:#fff;border-radius:2px;cursor:pointer;font-size:10px;color:var(--ink2)}
+  .align9 button.on{border-color:var(--primary);background:var(--primary-weak);color:var(--primary)}
+  .numfmt{display:flex;gap:6px}
+  .rule{display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;margin-bottom:6px}
+  .rule .idx{width:18px;height:18px;flex:none;border-radius:2px;background:#eef2f6;color:var(--ink2);font-size:11px;display:flex;align-items:center;justify-content:center}
+  .rule .txt{flex:1;min-width:0;font-size:11.5px;color:var(--ink)}
+  .rule .txt small{display:block;color:var(--ink3);font-size:10.5px}
+  .rule .preview{width:26px;height:18px;border:1px solid var(--line2);border-radius:2px;flex:none}
+  .foot{padding:8px 14px;border-top:1px solid var(--line);background:#fafbfc;color:var(--ink2);font-size:11.5px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+  /* ---------- 标注 ---------- */
+  .anno{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--danger);color:#fff;font-size:10px;font-weight:700;margin-left:5px;vertical-align:middle}
+  .legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 18px;padding:11px 14px;border-top:1px solid var(--line);background:#fbfcfd}
+  .legend div{font-size:11.5px;color:var(--ink2)}
+  .legend b{color:var(--ink);margin-right:4px}
+
+  /* ---------- 弹窗 ---------- */
+  .modal-scope{padding:14px;background:#eef2f6;display:flex;justify-content:center}
+  .modal{width:640px;background:#fff;border:1px solid var(--line2);border-radius:3px;box-shadow:0 6px 18px rgba(31,45,61,.16)}
+  .modal .mh{padding:10px 14px;border-bottom:1px solid var(--line);font-weight:700;font-size:13px;display:flex;align-items:center}
+  .modal .mb{padding:14px;min-width:0}
+  .modal .mf{padding:10px 14px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;background:#fafbfc}
+  .kv{display:grid;grid-template-columns:96px minmax(0,1fr);gap:9px 10px;align-items:center;font-size:12px}
+  .kv > label{color:var(--ink2);font-size:11.5px}
+  .inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+  /* ---------- 映射表 ---------- */
+  .maptbl{width:100%;border-collapse:collapse;font-size:12px}
+  .maptbl th,.maptbl td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+  .maptbl th{background:var(--head);font-weight:700}
+  code{background:#f2f5f8;border:1px solid var(--line);border-radius:2px;padding:0 4px;font-size:11.5px;font-family:Consolas,monospace}
+  .callout{margin:12px 14px;padding:10px 12px;border:1px solid var(--primary-line);background:var(--primary-weak);border-radius:var(--radius);font-size:12px;color:#123}
+  .callout.warn{border-color:#f3d19a;background:#fdf6ea;color:#5a3c00}
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <h1>记录表 Excel 化样式配置 · UI 设计稿</h1>
+  <p>适用于：分析检测登记 / 研发送样记录 / 样品信息登记 三类记录页，以及后续管理端其它列表。目标：在不破坏数据校验、统计口径与审计的前提下，提供接近 Excel 的列宽行高、字体字号、颜色填充、对齐边框与条件格式能力。</p>
+  <div class="tags">
+    <span class="tag">v2.3.25 设计稿</span>
+    <span class="tag">样式与导出共用同一份规格</span>
+    <span class="tag">默认只开放列级 + 行级 + 条件格式</span>
+    <span class="tag">单元格级样式为受控可选能力</span>
+  </div>
+</div>
+
+<!-- ============ 屏 1：日常记录页 ============ -->
+<section class="screen">
+  <div class="screen-cap"><b>屏 1｜记录页主界面</b><span>样式工具栏固定顶部，右侧属性面板按需展开，表格区保持现有列宽引擎与冻结表头</span></div>
+
+  <div class="page-head">
+    <div>
+      <div class="title">样品信息登记 · 记录列表</div>
+      <div class="sub">共 1,286 条 · 本页 20 条 · 当前视图：我的视图（张东丽）</div>
+    </div>
+    <div class="right">
+      <button class="btn">我的视图 ▾</button>
+      <button class="btn">另存为模板</button>
+      <button class="btn primary">保存样式</button>
+    </div>
+  </div>
+
+  <!-- 工具栏 -->
+  <div class="ribbon">
+    <div class="ribbon-row">
+      <div class="group" style="padding-left:10px">
+        <span class="glabel">字体</span>
+        <select class="sel" style="width:96px"><option>微软雅黑</option><option>宋体</option></select>
+        <select class="sel" style="width:58px"><option>12</option></select>
+        <button class="tb bold" title="加粗">B</button>
+        <button class="tb italic" title="斜体">I</button>
+        <button class="tb under" title="下划线">U</button>
+      </div>
+      <div class="group" style="padding-left:12px">
+        <span class="glabel">颜色</span>
+        <span class="swatch" title="字体颜色"><b>A</b><i style="background:#c62828"></i></span>
+        <span class="swatch" title="单元格填充"><i style="background:#fff5f5;bottom:3px;height:12px"></i></span>
+        <span class="swatch" title="恢复默认"><i style="background:repeating-linear-gradient(45deg,#fff,#fff 3px,#e0e0e0 3px,#e0e0e0 6px);bottom:3px;height:12px"></i></span>
+      </div>
+      <div class="group" style="padding-left:12px">
+        <span class="glabel">对齐</span>
+        <div class="align9">
+          <button class="on">↖</button><button>↑</button><button>↗</button>
+          <button>←</button><button>·</button><button>→</button>
+          <button>↙</button><button>↓</button><button>↘</button>
+        </div>
+        <button class="tb on" title="自动换行" style="height:auto;padding:6px 7px">换<br>行</button>
+      </div>
+      <div class="group" style="padding-left:12px">
+        <span class="glabel">边框</span>
+        <button class="tb" title="边框">▦</button>
+        <button class="tb" title="仅外框">▣</button>
+        <button class="tb" title="无边框">□</button>
+      </div>
+      <div class="group" style="padding-left:12px">
+        <span class="glabel">格式</span>
+        <button class="tb" title="数字格式">0.00</button>
+        <button class="tb" title="日期格式">2026-09-30</button>
+        <button class="tb" title="格式刷">🖌</button>
+      </div>
+      <div class="group" style="padding-left:12px">
+        <span class="glabel">表格</span>
+        <button class="tb" title="行高">行高 ▾</button>
+        <button class="tb" title="列宽">列宽 ▾</button>
+        <button class="tb" title="冻结窗格">冻结 ▾</button>
+        <button class="tb" title="斑马纹">斑马纹</button>
+      </div>
+      <div class="group" style="padding-left:12px">
+        <span class="glabel">规则</span>
+        <button class="tb on" title="条件格式">条件格式 3</button>
+        <button class="tb" title="全表还原">还原</button>
+      </div>
+    </div>
+
+    <div class="ribbon-row">
+      <div class="scope">
+        <span>作用范围：</span>
+        <span class="pill">
+          <button class="on">本列（数量）<span class="anno">1</span></button>
+          <button>本行</button>
+          <button>选中区域</button>
+          <button>全表</button>
+        </span>
+        <span class="vsep"></span>
+        <span>选中：<b>H3:H20</b> · 约 18 个单元格</span>
+        <span class="vsep"></span>
+        <span class="muted">样式会同时用于界面与 Excel 导出</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 表格 + 面板 -->
+  <div class="body">
+    <div class="grid-wrap">
+      <div class="rule-hint">
+        <span>当前生效条件格式：</span>
+        <span><span class="dot" style="background:#c62828"></span> 状态 = 待取样 → 整行浅红 + 红色状态标签</span>
+        <span><span class="dot" style="background:#ef6c00"></span> 数量 ≥ 30 → 数量列加粗橙字</span>
+        <span><span class="dot" style="background:#1565c0"></span> 送样日期距今 &gt; 7 天且状态 ≠ 已检测 → 日期标红</span>
+      </div>
+
+      <div style="overflow:auto;max-height:420px;border:1px solid var(--line)">
+        <table class="sheet">
+          <colgroup>
+            <col style="width:46px"><col style="width:118px"><col style="width:96px"><col style="width:84px">
+            <col style="width:96px"><col style="width:104px"><col style="width:104px"><col style="width:88px">
+            <col style="width:132px"><col style="width:150px"><col style="width:84px"><col style="width:150px"><col style="width:96px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="frozen">序号<span class="anno">2</span></th>
+              <th class="frozen">送样编号</th>
+              <th>批号</th><th>送样人</th><th>实验室</th><th>项目</th><th>检测类型</th>
+              <th class="col-sel">数量<span class="anno">3</span></th>
+              <th>送样日期</th><th>主要成分</th><th>状态</th><th>备注</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-wait">
+              <td class="frozen">1</td><td class="frozen">S260930-014</td><td>B20260930-1</td><td>张东丽</td>
+              <td>质量控制室</td><td>A001</td><td>理化检测</td>
+              <td class="col-sel num-hot">36</td>
+              <td class="dt-late cell-sel">2026-09-21</td>
+              <td>聚酯多元醇 / 阻燃剂</td>
+              <td><span class="chip wait">待取样</span></td>
+              <td class="muted">加急，需当日取样</td>
+              <td class="muted">取样 · 更多 ▾</td>
+            </tr>
+            <tr>
+              <td class="frozen">2</td><td class="frozen">S260930-013</td><td>B20260930-2</td><td>李慧</td>
+              <td>质量控制室</td><td>A002</td><td>仪器分析</td><td class="col-sel">12</td>
+              <td>2026-09-29</td><td>环氧树脂</td>
+              <td><span class="chip test">待检测</span></td><td class="muted">—</td><td class="muted">完成检测 · 更多 ▾</td>
+            </tr>
+            <tr>
+              <td class="frozen">3</td><td class="frozen">S260930-012</td><td>B20260929-7</td><td>王强</td>
+              <td>研发一室</td><td>A014</td><td>理化检测</td><td class="col-sel num-hot">42</td>
+              <td>2026-09-28</td><td>水性聚氨酯分散体</td>
+              <td><span class="chip test">待检测</span></td><td class="muted">需复检</td><td class="muted">完成检测 · 更多 ▾</td>
+            </tr>
+            <tr>
+              <td class="frozen">4</td><td class="frozen">S260930-011</td><td>B20260929-3</td><td>张东丽</td>
+              <td>质量控制室</td><td>A001</td><td>微生物</td><td class="col-sel">6</td>
+              <td>2026-09-27</td><td>防腐剂复配物</td>
+              <td><span class="chip done">已检测</span></td><td class="muted">—</td><td class="muted">查看 · 更多 ▾</td>
+            </tr>
+            <tr class="row-wait">
+              <td class="frozen">5</td><td class="frozen">S260930-010</td><td>B20260925-2</td><td>陈明</td>
+              <td>研发二室</td><td>A021</td><td>理化检测</td><td class="col-sel">18</td>
+              <td class="dt-late">2026-09-23</td><td>钛白粉 / 分散剂</td>
+              <td><span class="chip wait">待取样</span></td><td class="muted">超期 2 天</td><td class="muted">取样 · 更多 ▾</td>
+            </tr>
+            <tr>
+              <td class="frozen">6</td><td class="frozen">S260930-009</td><td>B20260924-5</td><td>李慧</td>
+              <td>质量控制室</td><td>A002</td><td>仪器分析</td><td class="col-sel">24</td>
+              <td>2026-09-24</td><td>丙烯酸乳液</td>
+              <td><span class="chip done">已检测</span></td><td class="muted">—</td><td class="muted">查看 · 更多 ▾</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 属性面板 -->
+    <div class="panel">
+      <div class="ptabs">
+        <button class="on">单元格格式</button>
+        <button>行与列</button>
+        <button>条件格式</button>
+      </div>
+
+      <div class="psec">
+        <div class="ph"><span class="caret">▾</span>作用范围<span class="anno">1</span></div>
+        <div class="frow"><label>应用对象</label><div class="grow inline">
+          <button class="btn mini active">本列 数量</button>
+          <button class="btn mini">本行</button>
+          <button class="btn mini">全表</button>
+        </div></div>
+        <div class="frow"><label>生效位置</label><div class="grow inline">
+          <button class="btn mini active">表体</button>
+          <button class="btn mini">表头</button>
+          <button class="btn mini">表体 + 表头</button>
+        </div></div>
+      </div>
+
+      <div class="psec">
+        <div class="ph"><span class="caret">▾</span>字体</div>
+        <div class="frow"><label>字体</label><select class="sel grow"><option>跟随全局</option><option>微软雅黑</option><option>宋体</option><option>等宽</option></select></div>
+        <div class="frow"><label>字号</label><select class="sel grow"><option>跟随全局（12px）</option><option>11px</option><option>13px</option><option>14px</option></select></div>
+        <div class="frow"><label>字形</label><div class="grow inline">
+          <button class="tb bold on">B</button><button class="tb italic">I</button><button class="tb under">U</button>
+        </div></div>
+        <div class="frow"><label>字体颜色</label><div class="grow swrow">
+          <span class="sw" style="background:#1f2d3d"></span>
+          <span class="sw on" style="background:#b53b00"></span>
+          <span class="sw" style="background:#c62828"></span>
+          <span class="sw" style="background:#2e7d32"></span>
+          <span class="sw" style="background:#1976d2"></span>
+          <span class="sw" style="background:#6d4c41"></span>
+        </div></div>
+      </div>
+
+      <div class="psec">
+        <div class="ph"><span class="caret">▾</span>填充与边框</div>
+        <div class="frow"><label>填充色</label><div class="grow swrow">
+          <span class="sw" style="background:#ffffff"></span>
+          <span class="sw on" style="background:#fff2e0"></span>
+          <span class="sw" style="background:#eef7ee"></span>
+          <span class="sw" style="background:#e9f2fc"></span>
+          <span class="sw" style="background:#fdf3e3"></span>
+          <span class="sw" style="background:#f5f7f5"></span>
+        </div></div>
+        <div class="frow"><label>边框</label><div class="grow inline">
+          <button class="btn mini">全部</button><button class="btn mini">外框</button>
+          <button class="btn mini">下框线</button><button class="btn mini active">无</button>
+        </div></div>
+      </div>
+
+      <div class="psec">
+        <div class="ph"><span class="caret">▾</span>对齐与换行</div>
+        <div class="frow"><label>对齐</label><div class="grow align9">
+          <button>↖</button><button>↑</button><button>↗</button>
+          <button>←</button><button class="on">·</button><button>→</button>
+          <button>↙</button><button>↓</button><button>↘</button>
+        </div></div>
+        <div class="frow"><label>文本</label><div class="grow inline">
+          <button class="btn mini active">自动换行</button>
+          <button class="btn mini">单行省略</button>
+          <button class="btn mini">最多两行</button>
+        </div></div>
+      </div>
+
+      <div class="psec">
+        <div class="ph"><span class="caret">▾</span>数字与日期</div>
+        <div class="frow"><label>格式</label><select class="sel grow"><option>常规</option><option>0</option><option>0.00</option><option>0.0%</option><option>yyyy-mm-dd</option><option>yyyy-mm-dd hh:mm</option></select></div>
+        <div class="frow"><label>小数位</label><select class="sel" style="width:70px"><option>0</option><option>1</option><option>2</option></select></div>
+      </div>
+
+      <div class="psec">
+        <div class="ph"><span class="caret">▾</span>视图</div>
+        <div class="frow"><label>行高</label><input class="sel grow" value="36" /></div>
+        <div class="frow"><label>表头行高</label><input class="sel grow" value="32" /></div>
+        <div class="frow"><label>冻结</label><div class="grow inline">
+          <button class="btn mini active">首行</button>
+          <button class="btn mini active">前 2 列</button>
+        </div></div>
+        <div class="frow"><label>斑马纹</label><div class="grow inline"><button class="btn mini active">开启</button><button class="btn mini">关闭</button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div><b>①</b>作用范围是本次设计的核心：先选对象，再改样式，避免"改了不知道改到哪"。</div>
+    <div><b>②</b>冻结列：序号 + 送样编号固定，横向滚动时始终可见。</div>
+    <div><b>③</b>列头灰底表示该列被选中，工具栏与面板同时指向"数量"列。</div>
+    <div><b>④</b>橙字加粗来自条件格式"数量 ≥ 30"，不是手工上色。</div>
+    <div><b>⑤</b>浅红整行来自条件格式"状态 = 待取样"，左侧色条用于超期提示。</div>
+    <div><b>⑥</b>所有样式一处配置，界面与 Excel 导出同时生效。</div>
+  </div>
+
+  <div class="foot">
+    <span>样式来源优先级：<b>个人视图覆盖 → 分组/角色模板 → 全局样式 → 系统默认</b></span>
+    <span class="vsep"></span>
+    <span>全局样式变更写入审计日志（含变更前后差异）</span>
+    <span class="vsep"></span>
+    <span class="muted">超过 200 行自动启用虚拟滚动，样式解析结果做缓存</span>
+  </div>
+</section>
+
+<!-- ============ 屏 2：条件格式 ============ -->
+<section class="screen">
+  <div class="screen-cap"><b>屏 2｜条件格式规则编辑器</b><span>推荐用规则替代"逐行手工上色"，既满足视觉需求，又不会随数据更新失效</span></div>
+  <div class="modal-scope">
+    <div class="modal">
+      <div class="mh">条件格式规则 · 样品信息登记</div>
+      <div class="mb">
+        <div class="kv">
+          <label>规则类型</label>
+          <div class="inline">
+            <button class="btn mini active">按单元格值</button>
+            <button class="btn mini">按公式</button>
+            <button class="btn mini">数据条</button>
+            <button class="btn mini">图标集</button>
+          </div>
+
+          <label>应用范围</label>
+          <div class="inline">
+            <button class="btn mini active">整行</button>
+            <button class="btn mini">仅此列（数量）</button>
+            <button class="btn mini">表头</button>
+          </div>
+
+          <label>条件</label>
+          <div class="inline">
+            <select class="sel" style="width:110px"><option>状态</option></select>
+            <select class="sel" style="width:110px"><option>等于</option></select>
+            <select class="sel" style="width:140px"><option>待取样</option></select>
+            <button class="btn mini">+ 添加条件</button>
+          </div>
+
+          <label>格式预览</label>
+          <div class="inline" style="gap:14px">
+            <span style="padding:3px 10px;border:1px solid #c62828;border-radius:2px;font-size:12px;color:#c62828;font-weight:700;background:#fdeaea">状态标签</span>
+            <span style="padding:3px 10px;border:1px solid var(--line2);border-radius:2px;font-size:12px;background:#fff5f5">整行底色 #FFF5F5</span>
+            <span style="padding:3px 10px;border:1px solid var(--line2);border-left:3px solid #c62828;border-radius:2px;font-size:12px">左侧色条</span>
+            <button class="btn mini">编辑格式</button>
+          </div>
+
+          <label>优先级</label>
+          <div>
+            <div class="rule"><span class="idx">1</span>
+              <span class="txt">状态 = 待取样 → 整行浅红<small>范围：整行 · 停用不受影响</small></span>
+              <span class="preview" style="background:#fff5f5"></span>
+              <button class="btn mini">上移</button><button class="btn mini">下移</button>
+            </div>
+            <div class="rule"><span class="idx">2</span>
+              <span class="txt">数量 ≥ 30 → 数量列橙字加粗<small>范围：数量列</small></span>
+              <span class="preview" style="background:#fff2e0;color:#b53b00;font-weight:700;font-size:10px;text-align:center;line-height:18px">36</span>
+              <button class="btn mini">上移</button><button class="btn mini">下移</button>
+            </div>
+            <div class="rule"><span class="idx">3</span>
+              <span class="txt">送样日期距今 &gt; 7 天 且 状态 ≠ 已检测 → 日期标红<small>范围：送样日期列 · 按公式</small></span>
+              <span class="preview" style="color:#c62828;font-size:10px;text-align:center;line-height:18px">日期</span>
+              <button class="btn mini">上移</button><button class="btn mini">下移</button>
+            </div>
+          </div>
+
+          <label>生效视图</label>
+          <div class="inline">
+            <button class="btn mini active">全局（所有用户）</button>
+            <button class="btn mini">我的视图</button>
+            <button class="btn mini">导出同样生效</button>
+          </div>
+        </div>
+      </div>
+      <div class="mf">
+        <button class="btn">取消</button>
+        <button class="btn">仅本机预览</button>
+        <button class="btn primary">保存并发布</button>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <span>上限：单表 20 条规则 · 规则命中结果做记忆化，避免逐格重算</span>
+    <span class="vsep"></span>
+    <span>发布到全局需要 <code>table_style:edit-global</code> 权限</span>
+  </div>
+</section>
+
+<!-- ============ 屏 3：屏幕样式 ↔ 导出样式 ============ -->
+<section class="screen">
+  <div class="screen-cap"><b>屏 3｜一处配置、两端生效</b><span>同一份样式规格同时驱动屏幕渲染与 Excel 导出，避免"界面好看、导出变形"</span></div>
+  <div style="padding:14px">
+    <table class="maptbl">
+      <thead>
+        <tr><th style="width:200px">样式项</th><th style="width:250px">界面实现</th><th>Excel 导出实现（rust_xlsxwriter）</th><th style="width:190px">是否建议开放</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>列宽 / 行高</td><td><code>colgroup</code> + <code>rowHeight</code></td><td><code>set_column_width</code> / <code>set_row_height</code></td><td>开放（已有基础）</td></tr>
+        <tr><td>字体 / 字号 / 加粗 / 斜体 / 下划线</td><td>单元格 <code>sx</code> 注入</td><td><code>Format::set_font_name/size/bold/italic/underline</code></td><td>开放</td></tr>
+        <tr><td>字体颜色 / 填充色</td><td>CSS <code>color</code> / <code>background</code></td><td><code>Format::set_font_color</code> / <code>set_background_color</code></td><td>开放</td></tr>
+        <tr><td>对齐 / 自动换行</td><td><code>textAlign</code> / <code>whiteSpace</code></td><td><code>Format::set_align</code> / <code>set_text_wrap</code></td><td>开放</td></tr>
+        <tr><td>边框</td><td><code>border</code> 系列</td><td><code>Format::set_border*</code></td><td>开放</td></tr>
+        <tr><td>数字 / 日期格式</td><td>前端格式化函数</td><td><code>Format::set_num_format</code></td><td>开放（需与统计口径一致）</td></tr>
+        <tr><td>冻结窗格</td><td><code>stickyHeader</code> / 冻结列</td><td><code>set_freeze_panes</code></td><td>开放</td></tr>
+        <tr><td>条件格式</td><td>样式解析函数</td><td>导出时按规则逐行求值后写样式</td><td>开放（推荐主入口）</td></tr>
+        <tr><td>斑马纹</td><td><code>tr:nth-child</code></td><td>按行交替写填充</td><td>开放</td></tr>
+        <tr><td>合并单元格</td><td><code>rowSpan</code> / <code>colSpan</code></td><td><code>merge_range</code></td><td>仅表头标题，数据区禁用</td></tr>
+        <tr><td>逐格自由上色</td><td>单元格级样式映射</td><td>逐格写 Format</td><td>受控：仅管理员/本机</td></tr>
+        <tr><td>公式 / 计算列</td><td>只读计算列</td><td><code>write_formula</code></td><td>仅预置公式，禁止自由公式</td></tr>
+        <tr><td>插入 / 删除行列</td><td>不适用</td><td>不适用</td><td>不开放</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <b>设计要点：</b>界面上"看起来像 Excel"，不等于"行为上完全等于 Excel"。本方案刻意不开放自由插入行列、自由公式与无限制逐格上色，因为这三项会直接破坏数据校验、统计口径与审计可追溯性。
+    </div>
+    <div class="callout warn">
+      <b>性能边界：</b>样式解析必须按「表 → 列 → 行 → 单元格」四层缓存。建议单页 ≤ 200 行直接渲染，超过后启用虚拟滚动；条件格式规则上限 20 条；禁止在单元格 <code>render</code> 内遍历规则数组。
+    </div>
+  </div>
+  <div class="foot"><span>本页可作为开发与验收对照表：每一行都应有对应的自动化测试用例</span></div>
+</section>
+
+</body>
+</html>
