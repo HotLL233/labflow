@@ -3,6 +3,8 @@
 /frontend/node_modules/
 /source/**/node_modules/
 /source/**/installer/
+/source/**/pdf-runtime/
+/source/**/postgres-runtime/
 /backend/
 /installer/
 /test-artifacts/
