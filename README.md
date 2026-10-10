@@ -2,6 +2,8 @@
 
 本包可用于在另一台 Windows 电脑继续开发、重建完整安装包或直接测试安装包。
 
+最新版安装包：[GitHub Release v2.3.45](https://github.com/HotLL233/labflow/releases/tag/v2.3.45)，本地正式包位于 `installers/`。Docker 镜像为 `ghcr.io/hotll233/labflow:2.3.45`。
+
 ## 开发续接与记忆惯例
 
 - 开始开发或更换设备后，必须先阅读仓库根目录的 `PROJECT_MEMORY.md`。
