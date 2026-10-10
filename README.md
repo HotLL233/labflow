@@ -1,8 +1,8 @@
-# LabFlow v2.3.45 交付包
+# LabFlow v2.3.46 交付包
 
 本包可用于在另一台 Windows 电脑继续开发、重建完整安装包或直接测试安装包。
 
-最新版安装包：[GitHub Release v2.3.45](https://github.com/HotLL233/labflow/releases/tag/v2.3.45)，本地正式包位于 `installers/`。Docker 镜像为 `ghcr.io/hotll233/labflow:2.3.45`。
+最新版安装包：[GitHub Release v2.3.46](https://github.com/HotLL233/labflow/releases/tag/v2.3.46)，本地正式包位于 `installers/`。Docker 镜像为 `ghcr.io/hotll233/labflow:2.3.46`。
 
 ## 开发续接与记忆惯例
 
@@ -11,7 +11,7 @@
 - 不再新增或维护按日期记忆、`历史记忆_*.md`、`开发交接_*.md`、`续接提示词_*.md` 或 `HANDOFF.md`；旧版本目录中的同类文件只作历史归档，不得作为当前规则来源或复制到新版本。
 - 版本 `更新说明.md` 和专项文档仍按用途维护，但不得复制一套长期记忆。规则冲突时以当前用户要求、当前源码与工作流、`PROJECT_MEMORY.md` 的顺序为准。
 
-1. 源码目录：`source/LabFlow-PostgreSQL-v2.3.45/`。
+1. 源码目录：`source/LabFlow-PostgreSQL-v2.3.46/`。
 2. Gitee 源码仓库：`https://gitee.com/HotLL233/labflow`（自 v2.3.18 起暂停向 Gitee 推送，仅保留历史仓库）。
 3. Docker 部署使用 `docker-compose.deploy.yml`，推荐执行 `scripts/pull-labflow-image.ps1`（Windows）或 `scripts/pull-labflow-image.sh`（Ubuntu）。
 4. 脚本按 `LABFLOW_IMAGE_PRIORITY` 依次尝试已配置的镜像地址，成功后再启动 Compose；Gitee 镜像地址未配置时跳过，目前发布仅使用 GHCR。

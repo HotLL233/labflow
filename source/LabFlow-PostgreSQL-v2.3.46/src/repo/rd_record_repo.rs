@@ -1,0 +1,2200 @@
+use crate::db::DbPool;
+use crate::error::{AppError, Result};
+use crate::models::rd_record::{
+    RdFilterOption, RdFilterOptions, RdRecordResponse, RdWorkloadEntries, RdWorkloadEntry,
+    WorkloadRecorder,
+};
+use crate::models::rd_record_column::RdOptionDetailRule;
+use crate::models::record::{RecordCreate, RecordUpdate};
+use crate::repo::{audit_repo, trace_repo, trash_repo};
+use std::collections::{BTreeMap, HashMap};
+
+const SELECT_RECORD:&str="SELECT wr.id,wr.business_no,wr.project_id,wr.method_id,
+ COALESCE(NULLIF(wr.project_name_snapshot,''),p.name),COALESCE(NULLIF(wr.lab_name_snapshot,''),pg.name,'未知'),
+ wr.user_name,wr.quantity,wr.recorded_at,wr.last_activity_at,wr.batch_no,wr.notes,wr.created_at,wr.deleted_at,wr.status,wr.sampler,wr.sampled_at,
+ COALESCE(NULLIF(wr.method_name_snapshot,''),NULLIF(m.full_name,''),NULLIF(m.name,'')),
+ (SELECT string_agg(DISTINCT mt.name, ',') FROM method_type_links mtl JOIN method_types mt ON mt.id=mtl.method_type_id WHERE mtl.method_id=wr.method_id),
+ COALESCE(NULLIF(wr.instrument_code_snapshot,''),i.code,''),COALESCE(NULLIF(wr.instrument_type_snapshot,''),i.instrument_type,''),
+ wr.division_id,wr.group_id,NULLIF(COALESCE(NULLIF(wr.high_item_snapshot,''),wr.high_item),''),COALESCE(wr.coefficient_snapshot,1.0),
+ wr.detected_by,wr.detected_at,wr.subject_user_id,wr.created_by_user_id,wr.extra_fields,
+ COALESCE(wr.return_reason,''),COALESCE(wr.returned_by,''),wr.returned_at,wr.return_confirmed_at,COALESCE(wr.return_confirmed_by,''),
+ wr.voided_at,COALESCE(wr.voided_by,''),COALESCE(wr.void_reason,''),
+ wr.project_division_id,wr.execution_division_id,wr.execution_group_id,
+ COALESCE((SELECT SUM(workload.quantity) FROM work_records workload WHERE workload.source_type='rd_sample' AND workload.source_record_id=wr.id AND workload.deleted_at IS NULL),0) >= wr.quantity, (COALESCE((SELECT SUM(workload.quantity) FROM work_records workload WHERE workload.source_type='rd_sample' AND workload.source_record_id=wr.id AND workload.deleted_at IS NULL),0))::BIGINT
+ FROM rd_work_records wr JOIN projects p ON p.id=wr.project_id LEFT JOIN methods m ON m.id=wr.method_id LEFT JOIN instruments i ON i.id=m.instrument_id LEFT JOIN project_groups pg ON pg.id=wr.group_id";
+
+fn map_record(row: &postgres_compat::Row<'_>) -> postgres_compat::Result<RdRecordResponse> {
+    let raw_extra_fields: Option<String> = row.get(29)?;
+    Ok(RdRecordResponse {
+        id: row.get(0)?,
+        business_no: row.get::<_, String>(1).unwrap_or_default(),
+        project_id: row.get(2)?,
+        method_id: row.get(3)?,
+        project_name: row.get(4)?,
+        group_name: row.get(5)?,
+        user_name: row.get(6)?,
+        quantity: row.get(7)?,
+        recorded_at: row.get(8)?,
+        last_activity_at: row.get(9)?,
+        batch_no: row.get(10)?,
+        notes: row.get(11)?,
+        created_at: row.get(12)?,
+        deleted_at: row.get(13)?,
+        status: row.get(14)?,
+        sampler: row.get(15)?,
+        sampled_at: row.get(16)?,
+        method_name: row.get(17)?,
+        method_type: row.get(18)?,
+        instrument_code: row.get(19)?,
+        instrument_type: row.get(20)?,
+        division_id: row.get(21)?,
+        group_id: row.get(22)?,
+        high_item: row.get(23)?,
+        coefficient_snapshot: row.get::<_, f64>(24).unwrap_or(1.0),
+        detected_by: row.get(25)?,
+        detected_at: row.get(26)?,
+        subject_user_id: row.get(27)?,
+        created_by_user_id: row.get(28)?,
+        extra_fields: raw_extra_fields.and_then(|value| serde_json::from_str(&value).ok()),
+        // List queries append the immutable submission rank; detail queries
+        // do not, so keep a neutral value for non-list responses.
+        sequence_no: row.get(43).unwrap_or(0),
+        return_reason: row.get::<_, String>(30).unwrap_or_default(),
+        returned_by: row.get::<_, String>(31).unwrap_or_default(),
+        returned_at: row.get(32)?,
+        return_confirmed_at: row.get(33)?,
+        return_confirmed_by: row.get::<_, String>(34).unwrap_or_default(),
+        voided_at: row.get(35)?,
+        voided_by: row.get::<_, String>(36).unwrap_or_default(),
+        void_reason: row.get::<_, String>(37).unwrap_or_default(),
+        project_division_id: row.get(38)?,
+        execution_division_id: row.get(39)?,
+        execution_group_id: row.get(40)?,
+        workload_recorded: row.get(41)?,
+        recorded_quantity: row.get(42)?,
+        workload_recorders: Vec::new(),
+        workload_unknown_recorder_entries: 0,
+        workload_unknown_recorder_quantity: 0,
+    })
+}
+
+fn get_by_id_on_conn(conn: &postgres_compat::Connection, id: i64) -> Result<RdRecordResponse> {
+    let record = conn
+        .query_row(
+            &format!("{} WHERE wr.id=?1", SELECT_RECORD),
+            [id],
+            map_record,
+        )
+        .map_err(|e| match e {
+            postgres_compat::Error::QueryReturnedNoRows => AppError::NotFound("记录不存在".into()),
+            _ => e.into(),
+        })?;
+    let mut records = vec![record];
+    load_workload_recorders(conn, &mut records)?;
+    Ok(records.remove(0))
+}
+
+fn load_workload_recorders(
+    conn: &postgres_compat::Connection,
+    records: &mut [RdRecordResponse],
+) -> Result<()> {
+    if records.is_empty() {
+        return Ok(());
+    }
+    let ids = records
+        .iter()
+        .map(|record| record.id.to_string())
+        .collect::<Vec<_>>()
+        .join(",");
+    let mut positions: HashMap<i64, usize> = records
+        .iter()
+        .enumerate()
+        .map(|(position, record)| (record.id, position))
+        .collect();
+    let mut statement = conn.prepare(&format!(
+        "SELECT w.source_record_id,w.created_by_user_id,
+         COALESCE((array_agg(NULLIF(w.created_by_username_snapshot,'') ORDER BY w.id DESC)
+             FILTER (WHERE NULLIF(w.created_by_username_snapshot,'') IS NOT NULL))[1],MAX(u.username),'账号已移除'),
+         SUM(w.quantity)::BIGINT,COUNT(*)
+         FROM work_records w LEFT JOIN users u ON u.id=w.created_by_user_id
+         WHERE w.source_type='rd_sample' AND w.deleted_at IS NULL AND w.source_record_id IN ({ids})
+         GROUP BY w.source_record_id,w.created_by_user_id ORDER BY MIN(w.id)"))?;
+    let rows = statement.query_map([], |row| {
+        Ok((
+            row.get::<_, i64>(0)?,
+            row.get::<_, Option<i64>>(1)?,
+            row.get::<_, String>(2)?,
+            row.get::<_, i64>(3)?,
+            row.get::<_, i64>(4)?,
+        ))
+    })?;
+    for row in rows {
+        let (source, user_id, username, quantity, entry_count) = row?;
+        if let Some(position) = positions.get_mut(&source) {
+            let record = &mut records[*position];
+            if let Some(user_id) = user_id {
+                record.workload_recorders.push(WorkloadRecorder {
+                    user_id,
+                    username,
+                    quantity,
+                    entry_count,
+                });
+            } else {
+                record.workload_unknown_recorder_entries += entry_count;
+                record.workload_unknown_recorder_quantity += quantity;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// The RD entry page requires the explicit project -> type -> method selection.
+/// Keep this validation at the API boundary so a direct request cannot bypass it.
+pub(crate) fn validate_submission_selection(
+    conn: &postgres_compat::Connection,
+    project_id: i64,
+    method_id: i64,
+    detection_type: &str,
+) -> Result<()> {
+    let valid_selection: i64 = conn.query_row(
+        "SELECT COUNT(*)
+         FROM project_method_links pml
+         JOIN methods m ON m.id=pml.method_id
+         JOIN instruments i ON i.id=m.instrument_id
+         JOIN method_type_links mtl ON mtl.method_id=m.id
+         JOIN method_types mt ON mt.id=mtl.method_type_id
+         WHERE pml.project_id=?1 AND m.id=?2 AND mt.name=?3
+           AND m.is_active=1 AND i.is_active=1",
+        postgres_compat::params![project_id, method_id, detection_type],
+        |row| row.get(0),
+    )?;
+    if valid_selection == 0 {
+        return Err(AppError::Validation(
+            "所选方法未关联当前项目，或不属于所选检测类型".into(),
+        ));
+    }
+    Ok(())
+}
+pub fn get_by_id(pool: &DbPool, id: i64) -> Result<RdRecordResponse> {
+    let conn = pool.get()?;
+    get_by_id_on_conn(&conn, id)
+}
+fn snap(r: &RdRecordResponse) -> serde_json::Value {
+    serde_json::json!({"business_no":r.business_no,"project_id":r.project_id,"project_name":r.project_name,"method_id":r.method_id,"method_name":r.method_name,"instrument_code":r.instrument_code,"instrument_type":r.instrument_type,"lab_name":r.group_name,"sender":r.user_name,"subject_user_id":r.subject_user_id,"created_by_user_id":r.created_by_user_id,"quantity":r.quantity,"recorded_at":r.recorded_at,"last_activity_at":r.last_activity_at,"batch_no":r.batch_no,"notes":r.notes,"extra_fields":r.extra_fields,"status":r.status,"return_reason":r.return_reason,"returned_by":r.returned_by,"returned_at":r.returned_at,"return_confirmed_at":r.return_confirmed_at,"return_confirmed_by":r.return_confirmed_by,"voided_at":r.voided_at,"voided_by":r.voided_by,"void_reason":r.void_reason,"sampler":r.sampler,"sampled_at":r.sampled_at,"high_item":r.high_item,"coefficient_snapshot":r.coefficient_snapshot,"deleted_at":r.deleted_at})
+}
+fn log(
+    conn: &postgres_compat::Connection,
+    action: &str,
+    r: &RdRecordResponse,
+    operator: &str,
+    detail: &str,
+    from: Option<&str>,
+    to: Option<&str>,
+    before: Option<&serde_json::Value>,
+    after: Option<&serde_json::Value>,
+) -> Result<()> {
+    audit_repo::log_structured_on_conn(
+        conn,
+        action,
+        "rd_work_records",
+        Some(r.id),
+        operator,
+        detail,
+        "rd",
+        &r.business_no,
+        before,
+        after,
+        "record",
+    )?;
+    trace_repo::log_event_on_conn(
+        conn,
+        "rd",
+        "rd_work_records",
+        r.id,
+        &r.business_no,
+        action,
+        from,
+        to,
+        operator,
+        detail,
+        before,
+        after,
+    )
+}
+
+fn date_bound(value: &str, end: bool) -> Result<(String, bool)> {
+    let value = value.trim();
+    if value.starts_with("0000-") {
+        return Err(AppError::Validation("日期年份必须大于0".into()));
+    }
+    if value.len() == 10 {
+        let date = chrono::NaiveDate::parse_from_str(value, "%Y-%m-%d")
+            .ok()
+            .filter(|date| date.format("%Y-%m-%d").to_string() == value)
+            .ok_or_else(|| AppError::Validation("日期无效，请使用 YYYY-MM-DD".into()))?;
+        let date = if end {
+            date.succ_opt()
+                .ok_or_else(|| AppError::Validation("结束日期超出范围".into()))?
+        } else {
+            date
+        };
+        return Ok((format!("{date}T00:00:00"), end));
+    }
+    let mut normalized = value.replace(' ', "T");
+    // Native datetime-local inputs omit seconds when the selected time is a whole minute.
+    if normalized.len() == 16 {
+        normalized.push_str(":00");
+    }
+    let date = chrono::NaiveDateTime::parse_from_str(&normalized, "%Y-%m-%dT%H:%M:%S%.f")
+        .ok()
+        .filter(|date| {
+            normalized.get(..19) == Some(date.format("%Y-%m-%dT%H:%M:%S").to_string().as_str())
+        })
+        .ok_or_else(|| AppError::Validation("时间无效，请使用完整日期时间".into()))?;
+    Ok((date.format("%Y-%m-%dT%H:%M:%S%.f").to_string(), false))
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct RdListQuery {
+    pub project_id: Option<i64>,
+    pub group_id: Option<i64>,
+    pub analysis_scope: bool,
+    pub related_user_id: Option<i64>,
+    pub user_name: Option<String>,
+    pub division_id: Option<i64>,
+    pub allowed_division_ids: Option<Vec<i64>>,
+    pub start: Option<String>,
+    pub end: Option<String>,
+    pub include_deleted: bool,
+    pub column_filters: BTreeMap<String, Vec<String>>,
+    pub operation_states: Vec<String>,
+    pub recorder_ids: Vec<Option<i64>>,
+    pub record_id: Option<i64>,
+}
+
+const RECORD_JOINS: &str = "FROM authorized_rd wr JOIN projects p ON p.id=wr.project_id LEFT JOIN methods m ON m.id=wr.method_id LEFT JOIN instruments i ON i.id=m.instrument_id LEFT JOIN project_groups pg ON pg.id=wr.group_id";
+const WORKLOAD_QUANTITY: &str = "COALESCE((SELECT SUM(w.quantity) FROM work_records w WHERE w.source_type='rd_sample' AND w.source_record_id=wr.id AND w.deleted_at IS NULL),0)";
+const OPERATION_STATES: &[(&str, &str)] = &[
+    ("pending_sample", "待取样"),
+    ("sampled_unrecorded", "已取样未录入"),
+    ("partial", "部分录入"),
+    ("recorded", "全部录入"),
+    ("return_pending_edit", "退回待修改"),
+    ("returned", "已退回"),
+    ("return_confirmed", "已退回已确认"),
+    ("voided", "已作废"),
+    ("detected", "已完成检测"),
+];
+
+fn operation_predicate(state: &str) -> Result<String> {
+    Ok(match state {
+        "pending_sample" => "COALESCE(wr.status,'待取样')='待取样'".into(),
+        "sampled_unrecorded" => format!("wr.status='已取样' AND {WORKLOAD_QUANTITY}=0"),
+        "partial" => format!("{WORKLOAD_QUANTITY}>0 AND {WORKLOAD_QUANTITY}<wr.quantity"),
+        "recorded" => format!("{WORKLOAD_QUANTITY}>=wr.quantity"),
+        "return_pending_edit" => "wr.status='退回待修改'".into(),
+        "returned" => "wr.status='已退回'".into(),
+        "return_confirmed" => "wr.status='已退回已确认'".into(),
+        "voided" => "wr.status='已作废'".into(),
+        "detected" => "NULLIF(wr.detected_at,'') IS NOT NULL".into(),
+        _ => return Err(AppError::Validation("未知的操作状态筛选".into())),
+    })
+}
+
+type QueryParams = Vec<Box<dyn postgres_compat::types::ToSql>>;
+
+fn field_expression(
+    field: &str,
+    columns: &[crate::models::rd_record_column::RdRecordColumn],
+    params: &mut QueryParams,
+) -> Result<String> {
+    let expression = match field {
+        "seq_no" => "CAST(wr.sequence_no AS TEXT)",
+        "business_no" => "COALESCE(wr.business_no,'')",
+        "user_name" => "COALESCE(wr.user_name,'')",
+        "division_id" => "COALESCE(CAST(wr.division_id AS TEXT),'')",
+        "lab_name" => "COALESCE(pg.name,NULLIF(wr.lab_name_snapshot,''),'未知')",
+        "project_name" => "COALESCE(NULLIF(wr.project_name_snapshot,''),p.name,'')",
+        "method_name" => "COALESCE(NULLIF(wr.method_name_snapshot,''),NULLIF(m.full_name,''),NULLIF(m.name,''),'')",
+        "detection_type" => "COALESCE((SELECT string_agg(DISTINCT mt.name, ',' ORDER BY mt.name) FROM method_type_links mtl JOIN method_types mt ON mt.id=mtl.method_type_id WHERE mtl.method_id=wr.method_id),'')",
+        "quantity" => "CAST(wr.quantity AS TEXT)",
+        "batch_no" => "COALESCE(wr.batch_no,'')",
+        "instrument_code" => "COALESCE(NULLIF(wr.instrument_code_snapshot,''),i.code,'')",
+        "instrument_type" => "COALESCE(NULLIF(wr.instrument_type_snapshot,''),i.instrument_type,'')",
+        "submitted_at" | "recorded_at" => "COALESCE(wr.recorded_at,'')",
+        "created_at" => "COALESCE(wr.created_at,'')",
+        "sampling_person" => "COALESCE(wr.sampler,'')",
+        "sampling_time" => "COALESCE(wr.sampled_at,'')",
+        "status" => "COALESCE(wr.status,'待取样')",
+        "notes" => "COALESCE(wr.notes,'')",
+        "high_item" => "COALESCE(NULLIF(wr.high_item_snapshot,''),wr.high_item,'')",
+        _ => {
+            let column = columns.iter().find(|column| column.name == field && column.is_active && column.show_in_list && !column.is_predefined)
+                .ok_or_else(|| AppError::Validation("不可筛选的记录字段".into()))?;
+            return option_expression(field, column, None, params);
+        }
+    };
+    if field == "notes" {
+        if let Some(column) = columns.iter().find(|column| column.name == field) {
+            return option_expression(field, column, Some(expression), params);
+        }
+    }
+    Ok(expression.to_string())
+}
+
+fn option_expression(
+    field: &str,
+    column: &crate::models::rd_record_column::RdRecordColumn,
+    base: Option<&str>,
+    params: &mut QueryParams,
+) -> Result<String> {
+    let mut rules = serde_json::from_str::<Vec<RdOptionDetailRule>>(&column.option_detail_rules)
+        .unwrap_or_default();
+    if rules.is_empty() && column.data_type == "select_other" {
+        rules.push(RdOptionDetailRule {
+            trigger_value: "其他".into(),
+            label: "补充说明".into(),
+            placeholder: String::new(),
+            required: false,
+        });
+    }
+    let key_index = params.len() + 1;
+    params.push(Box::new(field.to_string()));
+    let rule_index = params.len() + 1;
+    params.push(Box::new(
+        serde_json::to_string(&rules).map_err(|error| AppError::Internal(error.to_string()))?,
+    ));
+    Ok(format!("labflow_rd_extra_text_or_empty(wr.extra_fields,CAST(?{key_index} AS TEXT),{},CAST(?{rule_index} AS TEXT))",base.unwrap_or("NULL")))
+}
+
+fn filter_sql(
+    pool: &DbPool,
+    query: &RdListQuery,
+    exclude_field: Option<&str>,
+) -> Result<(String, String, QueryParams)> {
+    let start = query
+        .start
+        .as_deref()
+        .map(|value| date_bound(value, false))
+        .transpose()?;
+    let end = query
+        .end
+        .as_deref()
+        .map(|value| date_bound(value, true))
+        .transpose()?;
+    if let (Some((start, _)), Some((end, exclusive))) = (&start, &end) {
+        if start > end || (*exclusive && start == end) {
+            return Err(AppError::Validation("开始时间不能晚于结束时间".into()));
+        }
+    }
+    let department = if query.analysis_scope {
+        "COALESCE(wr.execution_division_id,(SELECT division_id FROM project_groups WHERE id=wr.group_id),wr.division_id)"
+    } else {
+        "COALESCE(wr.execution_division_id,wr.division_id,(SELECT division_id FROM project_groups WHERE id=wr.group_id))"
+    };
+    let mut base: Vec<String> = Vec::new();
+    let mut params: QueryParams = Vec::new();
+    if !query.include_deleted {
+        base.push("wr.deleted_at IS NULL".into());
+    }
+    for (field, value) in [
+        ("wr.id", query.record_id),
+        ("wr.project_id", query.project_id),
+        ("wr.group_id", query.group_id),
+        (department, query.division_id),
+    ] {
+        if let Some(value) = value {
+            base.push(format!("{field}={value}"));
+        }
+    }
+    if let Some(ids) = &query.allowed_division_ids {
+        base.push(if ids.is_empty() {
+            "1=0".into()
+        } else {
+            format!(
+                "{department} IN ({})",
+                ids.iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(",")
+            )
+        });
+    }
+    if let Some(value) = query.related_user_id {
+        base.push(format!(
+            "(wr.subject_user_id={value} OR wr.created_by_user_id={value})"
+        ));
+    }
+    if let Some(value) = &query.user_name {
+        base.push(format!("wr.user_name=?{}", params.len() + 1));
+        params.push(Box::new(value.clone()));
+    }
+    for (bound, is_end) in [(start, false), (end, true)] {
+        if let Some((value, exclusive)) = bound {
+            let operator = if !is_end {
+                ">="
+            } else if exclusive {
+                "<"
+            } else {
+                "<="
+            };
+            base.push(format!("labflow_rd_timestamp_or_null(wr.recorded_at){operator}CAST(CAST(?{} AS TEXT) AS timestamp)", params.len()+1));
+            params.push(Box::new(value));
+        }
+    }
+    let cte = format!("WITH authorized_rd AS (SELECT wr.*,ROW_NUMBER() OVER (ORDER BY wr.recorded_at ASC,wr.id ASC) AS sequence_no FROM rd_work_records wr {})", where_clause(&base));
+    let columns = super::rd_record_column_repo::list_all(pool)?;
+    let mut filters: Vec<String> = Vec::new();
+    if query.column_filters.len() > 64
+        || query.column_filters.values().map(Vec::len).sum::<usize>() > 500
+    {
+        return Err(AppError::Validation("列筛选条件过多".into()));
+    }
+    for (field, values) in &query.column_filters {
+        // Validate even a candidate's excluded/empty condition, never accept SQL identifiers from requests.
+        let mut check_params = Vec::new();
+        field_expression(field, &columns, &mut check_params)?;
+        if exclude_field == Some(field.as_str()) || values.is_empty() {
+            continue;
+        }
+        let expression = field_expression(field, &columns, &mut params)?;
+        let mut choices = Vec::new();
+        for value in values {
+            if value.len() > 8192 {
+                return Err(AppError::Validation("筛选值过长".into()));
+            }
+            choices.push(format!("{expression}=?{}", params.len() + 1));
+            params.push(Box::new(value.clone()));
+        }
+        filters.push(format!("({})", choices.join(" OR ")));
+    }
+    let operations = query
+        .operation_states
+        .iter()
+        .map(|state| operation_predicate(state))
+        .collect::<Result<Vec<_>>>()?;
+    if exclude_field != Some("_operation") && !operations.is_empty() {
+        filters.push(format!(
+            "({})",
+            operations
+                .iter()
+                .map(|value| format!("({value})"))
+                .collect::<Vec<_>>()
+                .join(" OR ")
+        ));
+    }
+    if query.recorder_ids.len() > 100 {
+        return Err(AppError::Validation("录入人筛选条件过多".into()));
+    }
+    if exclude_field != Some("_recorder") && !query.recorder_ids.is_empty() {
+        let mut choices = Vec::new();
+        for user_id in &query.recorder_ids {
+            choices.push(match user_id {
+                Some(id) if *id > 0 => format!("w.created_by_user_id={id}"),
+                Some(_) => return Err(AppError::Validation("录入账号编号无效".into())),
+                None => "w.created_by_user_id IS NULL".into(),
+            });
+        }
+        filters.push(format!("EXISTS(SELECT 1 FROM work_records w WHERE w.source_type='rd_sample' AND w.source_record_id=wr.id AND w.deleted_at IS NULL AND ({}))", choices.join(" OR ")));
+    }
+    Ok((cte, where_clause(&filters), params))
+}
+
+fn where_clause(clauses: &[String]) -> String {
+    if clauses.is_empty() {
+        String::new()
+    } else {
+        format!("WHERE {}", clauses.join(" AND "))
+    }
+}
+
+pub fn list_query(
+    pool: &DbPool,
+    query: &RdListQuery,
+    page: i64,
+    page_size: i64,
+    sort_by: Option<&str>,
+    sort_dir: Option<&str>,
+) -> Result<(Vec<RdRecordResponse>, i64)> {
+    let (cte, filters, params) = filter_sql(pool, query, None)?;
+    let columns = super::rd_record_column_repo::list_all(pool)?;
+    let conn = pool.get()?;
+    let mut sort_params = Vec::new();
+    // Only established system sorting is supported; configurable text sorting remains unchanged.
+    let field = match sort_by.unwrap_or("submitted_at") {
+        "submitted_at" | "recorded_at" | "seq_no" | "created_at" | "status" | "business_no"
+        | "batch_no" | "user_name" | "division_id" | "lab_name" | "project_name"
+        | "method_name" | "detection_type" | "instrument_code" | "high_item" | "quantity" => {
+            sort_by.unwrap_or("submitted_at")
+        }
+        _ => "submitted_at",
+    };
+    let sort_expression = match field {
+        "seq_no" => "wr.recorded_at".to_string(),
+        "quantity" => "wr.quantity".to_string(),
+        "division_id" => "COALESCE(wr.division_id,0)".to_string(),
+        _ => field_expression(field, &columns, &mut sort_params)?,
+    };
+    let direction = if sort_dir.unwrap_or("desc").eq_ignore_ascii_case("desc") {
+        "DESC"
+    } else {
+        "ASC"
+    };
+    let select = SELECT_RECORD.replacen(
+        " FROM rd_work_records wr",
+        ",wr.sequence_no FROM authorized_rd wr",
+        1,
+    );
+    let sql = format!("{cte} {select} {filters} ORDER BY {sort_expression} {direction},wr.id {direction} LIMIT {} OFFSET {}", page_size.clamp(1,500),(page.max(1)-1)*page_size.clamp(1,500));
+    let mut statement = conn.prepare(&sql)?;
+    let mut items = statement
+        .query_map(
+            postgres_compat::params_from_iter(params.iter().map(|value| value.as_ref())),
+            map_record,
+        )?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    let total = conn.query_row(
+        &format!("{cte} SELECT COUNT(*) {RECORD_JOINS} {filters}"),
+        postgres_compat::params_from_iter(params.iter().map(|value| value.as_ref())),
+        |row| row.get(0),
+    )?;
+    load_workload_recorders(&conn, &mut items)?;
+    Ok((items, total))
+}
+
+pub fn filter_options(
+    pool: &DbPool,
+    query: &RdListQuery,
+    field: &str,
+    search: Option<&str>,
+    limit: i64,
+) -> Result<RdFilterOptions> {
+    let (cte, filters, mut params) = filter_sql(pool, query, Some(field))?;
+    let columns = super::rd_record_column_repo::list_all(pool)?;
+    let option_sql = if field == "_operation" {
+        OPERATION_STATES.iter().map(|(state,label)| operation_predicate(state).map(|predicate| format!("SELECT '{state}' AS value,'{label}' AS label,COUNT(*) AS count {RECORD_JOINS} {}", where_clause(&[filters.trim_start_matches("WHERE ").to_string(),predicate].into_iter().filter(|part| !part.is_empty()).collect::<Vec<_>>())))).collect::<Result<Vec<_>>>()?.join(" UNION ALL ")
+    } else if field == "_recorder" {
+        format!("SELECT COALESCE(CAST(w.created_by_user_id AS TEXT),'unknown') AS value,
+          CASE WHEN w.created_by_user_id IS NULL THEN '历史账号未关联' ELSE COALESCE((array_agg(NULLIF(w.created_by_username_snapshot,'') ORDER BY w.id DESC) FILTER(WHERE NULLIF(w.created_by_username_snapshot,'') IS NOT NULL))[1],MAX(u.username),'账号已移除') END AS label,
+          COUNT(DISTINCT wr.id) AS count {RECORD_JOINS} JOIN work_records w ON w.source_type='rd_sample' AND w.source_record_id=wr.id AND w.deleted_at IS NULL LEFT JOIN users u ON u.id=w.created_by_user_id {filters} GROUP BY w.created_by_user_id")
+    } else {
+        let expression = field_expression(field, &columns, &mut params)?;
+        let label = if field == "division_id" {
+            "COALESCE((SELECT name FROM divisions WHERE id=wr.division_id),'未填写')".to_string()
+        } else {
+            format!("COALESCE(NULLIF({expression},''),'未填写')")
+        };
+        format!("SELECT {expression} AS value,{label} AS label,COUNT(*) AS count {RECORD_JOINS} {filters} GROUP BY {expression},{label}")
+    };
+    // The total is the same filtered record range, before a candidate's own condition and option text search.
+    // Extra field expression adds one key parameter used only by the candidate query.
+    let (total_cte, total_filters, total_params) = filter_sql(pool, query, Some(field))?;
+    let conn = pool.get()?;
+    let total = conn.query_row(
+        &format!("{total_cte} SELECT COUNT(*) {RECORD_JOINS} {total_filters}"),
+        postgres_compat::params_from_iter(total_params.iter().map(|value| value.as_ref())),
+        |row| row.get(0),
+    )?;
+    let search_filter = if let Some(search) = search.filter(|value| !value.is_empty()) {
+        if search.len() > 512 {
+            return Err(AppError::Validation("候选搜索文字过长".into()));
+        }
+        let index = params.len() + 1;
+        params.push(Box::new(search.to_string()));
+        format!("AND strpos(lower(label),lower(CAST(?{index} AS TEXT)))>0")
+    } else {
+        String::new()
+    };
+    let limit = limit.clamp(1, 500);
+    let mut statement=conn.prepare(&format!("{cte} SELECT value,label,count FROM ({option_sql}) candidates WHERE count>0 {search_filter} ORDER BY label,value LIMIT {}",limit+1))?;
+    let mut options = statement
+        .query_map(
+            postgres_compat::params_from_iter(params.iter().map(|value| value.as_ref())),
+            |row| {
+                Ok(RdFilterOption {
+                    value: row.get(0)?,
+                    label: row.get(1)?,
+                    count: row.get(2)?,
+                })
+            },
+        )?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    let truncated = options.len() > limit as usize;
+    options.truncate(limit as usize);
+    Ok(RdFilterOptions {
+        field: field.to_string(),
+        options,
+        total,
+        truncated,
+    })
+}
+
+pub fn workload_entries(
+    pool: &DbPool,
+    source_id: i64,
+    subject_user_id: Option<i64>,
+    creator_user_id: Option<i64>,
+    allowed_division_ids: Option<&[i64]>,
+) -> Result<RdWorkloadEntries> {
+    let conn = pool.get()?;
+    let mut clauses = vec![format!(
+        "w.source_type='rd_sample' AND w.source_record_id={source_id} AND w.deleted_at IS NULL"
+    )];
+    if let Some(id) = subject_user_id {
+        clauses.push(format!("w.subject_user_id={id}"));
+    }
+    if let Some(id) = creator_user_id {
+        clauses.push(format!("w.created_by_user_id={id}"));
+    }
+    if let Some(ids) = allowed_division_ids {
+        clauses.push(if ids.is_empty() {
+            "1=0".to_string()
+        } else {
+            format!(
+                "{} IN ({})",
+                crate::service::authz_service::work_record_authorization_division_sql("w"),
+                ids.iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(",")
+            )
+        });
+    }
+    let mut statement=conn.prepare(&format!("SELECT w.id,w.business_no,w.created_by_user_id,COALESCE(NULLIF(w.created_by_username_snapshot,''),u.username,''),w.subject_user_id,w.user_name,w.quantity::BIGINT,w.multiplier,w.created_at,w.recorded_at FROM work_records w LEFT JOIN users u ON u.id=w.created_by_user_id {} ORDER BY w.created_at,w.id",where_clause(&clauses)))?;
+    let items = statement
+        .query_map([], |row| {
+            Ok(RdWorkloadEntry {
+                id: row.get(0)?,
+                business_no: row.get(1)?,
+                recorder_user_id: row.get(2)?,
+                recorder_username: row.get(3)?,
+                subject_user_id: row.get(4)?,
+                user_name: row.get(5)?,
+                quantity: row.get(6)?,
+                multiplier: row.get(7)?,
+                created_at: row.get(8)?,
+                recorded_at: row.get(9)?,
+            })
+        })?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    let (recorded_quantity,all_count):(i64,i64)=conn.query_row("SELECT COALESCE(SUM(quantity),0)::BIGINT,COUNT(*) FROM work_records WHERE source_type='rd_sample' AND source_record_id=?1 AND deleted_at IS NULL",[source_id],|row| Ok((row.get(0)?,row.get(1)?)))?;
+    let total = items.len() as i64;
+    let visible_quantity = items.iter().map(|entry| entry.quantity).sum();
+    Ok(RdWorkloadEntries {
+        items,
+        total,
+        visible_quantity,
+        recorded_quantity,
+        has_hidden_entries: all_count > total,
+    })
+}
+
+pub fn list(
+    pool: &DbPool,
+    project_id: Option<i64>,
+    group_id: Option<i64>,
+    analysis_scope: bool,
+    related_user_id: Option<i64>,
+    user_name: Option<&str>,
+    division_id: Option<i64>,
+    allowed_division_ids: Option<&[i64]>,
+    start: Option<&str>,
+    end: Option<&str>,
+    page: i64,
+    page_size: i64,
+    include_deleted: bool,
+    sort_by: Option<&str>,
+    sort_dir: Option<&str>,
+) -> Result<(Vec<RdRecordResponse>, i64)> {
+    let start = start.map(|value| date_bound(value, false)).transpose()?;
+    let end = end.map(|value| date_bound(value, true)).transpose()?;
+    if let (Some((start, _)), Some((end, exclusive))) = (&start, &end) {
+        if start > end || (*exclusive && start == end) {
+            return Err(AppError::Validation("开始时间不能晚于结束时间".into()));
+        }
+    }
+    let conn = pool.get()?;
+    // Historical imports accepted arbitrary non-empty time strings. Keep them
+    // visible without a date filter and never cast an invalid value in a range.
+    let timestamp = "labflow_rd_timestamp_or_null(wr.recorded_at)";
+    // Analysis reads follow the same execution scope as sampling actions.
+    let department = if analysis_scope {
+        "COALESCE(wr.execution_division_id,(SELECT division_id FROM project_groups WHERE id=wr.group_id),wr.division_id)"
+    } else {
+        "COALESCE(wr.execution_division_id,wr.division_id,(SELECT division_id FROM project_groups WHERE id=wr.group_id))"
+    };
+    let mut clauses = Vec::new();
+    let mut params: Vec<Box<dyn postgres_compat::types::ToSql>> = Vec::new();
+    if !include_deleted {
+        clauses.push("wr.deleted_at IS NULL".into());
+    }
+    if let Some(v) = project_id {
+        clauses.push(format!("wr.project_id={v}"));
+    }
+    if let Some(v) = group_id {
+        clauses.push(format!("wr.group_id={v}"));
+    }
+    if let Some(v) = division_id {
+        clauses.push(format!("{department}={v}"));
+    }
+    if let Some(ids) = allowed_division_ids {
+        if ids.is_empty() {
+            clauses.push("1=0".into());
+        } else {
+            let values = ids
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(",");
+            clauses.push(format!("{department} IN ({values})"));
+        }
+    }
+    if let Some(v) = related_user_id {
+        clauses.push(format!(
+            "(wr.subject_user_id={v} OR wr.created_by_user_id={v})"
+        ));
+    }
+    if let Some(v) = user_name {
+        let i = params.len() + 1;
+        clauses.push(format!("wr.user_name=?{i}"));
+        params.push(Box::new(v.to_string()));
+    }
+    if let Some((v, _)) = start {
+        let i = params.len() + 1;
+        clauses.push(format!(
+            "{timestamp}>=CAST(CAST(?{i} AS TEXT) AS timestamp)"
+        ));
+        params.push(Box::new(v));
+    }
+    if let Some((v, exclusive)) = end {
+        let i = params.len() + 1;
+        let operator = if exclusive { "<" } else { "<=" };
+        clauses.push(format!(
+            "{timestamp}{operator}CAST(CAST(?{i} AS TEXT) AS timestamp)"
+        ));
+        params.push(Box::new(v));
+    }
+    let wc = if clauses.is_empty() {
+        String::new()
+    } else {
+        format!("WHERE {}", clauses.join(" AND "))
+    };
+    // Sorting is deliberately request-scoped. The client sends the current
+    // user's table preference; no shared/default business data is rewritten.
+    let sort_expression = match sort_by.unwrap_or("submitted_at") {
+        "submitted_at" | "recorded_at" | "seq_no" => "wr.recorded_at",
+        "created_at" => "wr.created_at",
+        "status" => "COALESCE(wr.status,'')",
+        "business_no" => "COALESCE(wr.business_no,'')",
+        "batch_no" => "COALESCE(wr.batch_no,'')",
+        "user_name" => "COALESCE(wr.user_name,'')",
+        "division_id" => "COALESCE(wr.division_id,0)",
+        "lab_name" => "COALESCE(NULLIF(wr.lab_name_snapshot,''),pg.name,'')",
+        "project_name" => "COALESCE(NULLIF(wr.project_name_snapshot,''),p.name,'')",
+        "method_name" => "COALESCE(NULLIF(wr.method_name_snapshot,''),NULLIF(m.full_name,''),NULLIF(m.name,''),'')",
+        "detection_type" => "COALESCE((SELECT string_agg(DISTINCT mt.name, ',') FROM method_type_links mtl JOIN method_types mt ON mt.id=mtl.method_type_id WHERE mtl.method_id=wr.method_id),'')",
+        "instrument_code" => "COALESCE(NULLIF(wr.instrument_code_snapshot,''),i.code,'')",
+        "high_item" => "COALESCE(NULLIF(wr.high_item_snapshot,''),wr.high_item,'')",
+        "quantity" => "COALESCE(wr.quantity,0)",
+        _ => "wr.recorded_at",
+    };
+    let descending = sort_dir.unwrap_or("desc").eq_ignore_ascii_case("desc");
+    let direction = if descending { "DESC" } else { "ASC" };
+    let select_with_sequence = SELECT_RECORD.replacen(
+        " FROM rd_work_records wr",
+        ", ROW_NUMBER() OVER (ORDER BY wr.recorded_at ASC, wr.id ASC) AS sequence_no FROM rd_work_records wr",
+        1,
+    );
+    let sql = format!(
+        "{} {} ORDER BY {} {}, wr.id {} LIMIT {} OFFSET {}",
+        select_with_sequence,
+        wc,
+        sort_expression,
+        direction,
+        direction,
+        page_size,
+        (page - 1) * page_size
+    );
+    let mut stmt = conn.prepare(&sql)?;
+    let items = stmt
+        .query_map(
+            postgres_compat::params_from_iter(params.iter().map(|p| p.as_ref())),
+            map_record,
+        )?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    let count = conn.query_row(
+        &format!(
+            "SELECT COUNT(*) FROM rd_work_records wr JOIN projects p ON p.id=wr.project_id {}",
+            wc
+        ),
+        postgres_compat::params_from_iter(params.iter().map(|p| p.as_ref())),
+        |r| r.get(0),
+    )?;
+    Ok((items, count))
+}
+
+pub fn create(
+    pool: &DbPool,
+    body: &RecordCreate,
+    batch_no: Option<String>,
+    notes: Option<String>,
+    operator_user_id: i64,
+    operator: &str,
+) -> Result<RdRecordResponse> {
+    let mut conn = pool.get()?;
+    let tx = conn.transaction()?;
+    super::record_repo::validate_record_bindings(
+        &tx,
+        body.project_id,
+        body.method_id,
+        body.group_id,
+    )?;
+    let extra_fields = body
+        .extra_fields
+        .as_ref()
+        .map(serde_json::to_string)
+        .transpose()
+        .map_err(|e| AppError::Validation(format!("自定义字段格式错误: {e}")))?;
+    // Resolve this before binding SQL parameters. PostgreSQL cannot infer the intended
+    // BIGINT type safely from COALESCE parameters in this INSERT ... SELECT expression.
+    let subject_user_id = body.sender_user_id.unwrap_or(operator_user_id);
+    let inserted=tx.execute("INSERT INTO rd_work_records(project_id,method_id,user_name,quantity,recorded_at,last_activity_at,group_id,division_id,project_division_id,project_division_name_snapshot,execution_division_id,execution_division_name_snapshot,execution_group_id,execution_group_name_snapshot,batch_no,notes,extra_fields,status,project_name_snapshot,lab_name_snapshot,method_name_snapshot,high_item_snapshot,coefficient_snapshot,subject_user_id,created_by_user_id,created_by_username_snapshot,instrument_id_snapshot,instrument_code_snapshot,instrument_type_snapshot) SELECT ?1,?2,?3,?4,?5,?5,?6,?7,p.project_division_id,COALESCE(p.project_division_name_snapshot,''),COALESCE(?7,pg.division_id),COALESCE(d.name,''),?6,COALESCE(pg.name,''),?8,?9,COALESCE(?10,'{}'),'待取样',p.name,COALESCE(pg.name,''),COALESCE((SELECT COALESCE(NULLIF(full_name,''),name) FROM methods WHERE id=?2),''),COALESCE(p.high_item,''),COALESCE(p.coefficient,1.0),?11,?12,?13,(SELECT instrument_id FROM methods WHERE id=?2),COALESCE((SELECT i.code FROM methods m JOIN instruments i ON i.id=m.instrument_id WHERE m.id=?2),''),COALESCE((SELECT i.instrument_type FROM methods m JOIN instruments i ON i.id=m.instrument_id WHERE m.id=?2),'') FROM projects p LEFT JOIN project_groups pg ON pg.id=?6 LEFT JOIN divisions d ON d.id=COALESCE(?7,pg.division_id) WHERE p.id=?1",postgres_compat::params![body.project_id,body.method_id,&body.user_name,body.quantity,&body.recorded_at,body.group_id,body.division_id,batch_no,notes,extra_fields,subject_user_id,operator_user_id,operator])?;
+    if inserted == 0 {
+        return Err(AppError::Validation("项目不存在".into()));
+    }
+    let id = tx.last_insert_rowid();
+    let business = trace_repo::make_business_no("RD", &body.recorded_at, id);
+    tx.execute(
+        "UPDATE rd_work_records SET business_no=?1 WHERE id=?2",
+        postgres_compat::params![business, id],
+    )?;
+    let r = get_by_id_on_conn(&tx, id)?;
+    let after = snap(&r);
+    let detail = format!(
+        "创建研发送样记录 {}：项目「{}」，数量 {}",
+        r.business_no, r.project_name, r.quantity
+    );
+    log(
+        &tx,
+        "create",
+        &r,
+        operator,
+        &detail,
+        None,
+        Some("待取样"),
+        None,
+        Some(&after),
+    )?;
+    tx.commit()?;
+    get_by_id_on_conn(&conn, id)
+}
+
+pub fn update(
+    pool: &DbPool,
+    id: i64,
+    body: &RecordUpdate,
+    operator: &str,
+) -> Result<RdRecordResponse> {
+    let mut conn = pool.get()?;
+    let tx = conn.transaction()?;
+    let old = get_by_id_on_conn(&tx, id)?;
+    if old.deleted_at.is_some() {
+        return Err(AppError::Validation("记录已被删除，无法编辑".into()));
+    }
+    if old.sampled_at.is_some() {
+        return Err(AppError::Forbidden("该记录已取样，不可修改".into()));
+    }
+    if old.status == "已退回" || old.status == "已退回已确认" {
+        return Err(AppError::Forbidden(
+            "该记录已退回，请先确认退回原因后再修改".into(),
+        ));
+    }
+    if old.status == "已作废" {
+        return Err(AppError::Forbidden("已作废记录不可再次编辑".into()));
+    }
+    if body.multiplier.is_some() {
+        return Err(AppError::Validation("研发送样记录不使用单价倍率".into()));
+    }
+    let next_project_id = body.project_id.unwrap_or(old.project_id);
+    let next_method_id = body.method_id.or(old.method_id);
+    let next_group_id = body.group_id.or(old.group_id);
+    super::record_repo::validate_record_bindings(
+        &tx,
+        next_project_id,
+        next_method_id,
+        next_group_id,
+    )?;
+    let before = snap(&old);
+    let mut changes = Vec::new();
+    if let Some(v) = &body.user_name {
+        if v != &old.user_name {
+            changes.push(format!("送样人 {} → {}", old.user_name, v));
+            tx.execute(
+                "UPDATE rd_work_records SET user_name=?1 WHERE id=?2",
+                postgres_compat::params![v, id],
+            )?;
+        }
+    }
+    if let Some(sender_user_id) = body.sender_user_id {
+        if Some(sender_user_id) != old.subject_user_id {
+            changes.push("实际送样人已修改".into());
+            tx.execute(
+                "UPDATE rd_work_records SET subject_user_id=?1 WHERE id=?2",
+                postgres_compat::params![sender_user_id, id],
+            )?;
+        }
+    }
+    if let Some(v) = body.quantity {
+        if v < 0 {
+            return Err(AppError::Validation("数量不能小于 0".into()));
+        }
+        if v == 0 && old.status != "退回待修改" {
+            return Err(AppError::Validation(
+                "仅驳回后的待修改记录可将数量设置为 0 作废".into(),
+            ));
+        }
+        if v != old.quantity {
+            changes.push(format!("数量 {} → {}", old.quantity, v));
+            tx.execute(
+                "UPDATE rd_work_records SET quantity=?1 WHERE id=?2",
+                postgres_compat::params![v, id],
+            )?;
+        }
+    }
+    if let Some(v) = &body.batch_no {
+        if Some(v.as_str()) != old.batch_no.as_deref() {
+            changes.push("批号已修改".into());
+            tx.execute(
+                "UPDATE rd_work_records SET batch_no=?1 WHERE id=?2",
+                postgres_compat::params![v, id],
+            )?;
+        }
+    }
+    if let Some(v) = &body.notes {
+        if Some(v.as_str()) != old.notes.as_deref() {
+            changes.push("备注已修改".into());
+            tx.execute(
+                "UPDATE rd_work_records SET notes=?1 WHERE id=?2",
+                postgres_compat::params![v, id],
+            )?;
+        }
+    }
+    if let Some(v) = &body.extra_fields {
+        let encoded = serde_json::to_string(v)
+            .map_err(|e| AppError::Validation(format!("自定义字段格式错误: {e}")))?;
+        changes.push("自定义字段已修改".into());
+        tx.execute(
+            "UPDATE rd_work_records SET extra_fields=?1 WHERE id=?2",
+            postgres_compat::params![encoded, id],
+        )?;
+    }
+    if let Some(v) = body.project_id {
+        if v != old.project_id {
+            changes.push(format!("项目ID {} → {}", old.project_id, v));
+            tx.execute("UPDATE rd_work_records SET project_id=?1,project_name_snapshot=(SELECT name FROM projects WHERE id=?1),project_division_id=(SELECT project_division_id FROM projects WHERE id=?1),project_division_name_snapshot=COALESCE((SELECT project_division_name_snapshot FROM projects WHERE id=?1),''),high_item_snapshot=COALESCE((SELECT high_item FROM projects WHERE id=?1),''),coefficient_snapshot=COALESCE((SELECT coefficient FROM projects WHERE id=?1),1.0) WHERE id=?2",postgres_compat::params![v,id])?;
+        }
+    }
+    if let Some(v) = body.method_id {
+        if Some(v) != old.method_id {
+            changes.push("方法已修改".into());
+            tx.execute("UPDATE rd_work_records SET method_id=?1,method_name_snapshot=COALESCE((SELECT COALESCE(NULLIF(full_name,''),name) FROM methods WHERE id=?1),''),instrument_id_snapshot=(SELECT instrument_id FROM methods WHERE id=?1),instrument_code_snapshot=COALESCE((SELECT i.code FROM methods m JOIN instruments i ON i.id=m.instrument_id WHERE m.id=?1),''),instrument_type_snapshot=COALESCE((SELECT i.instrument_type FROM methods m JOIN instruments i ON i.id=m.instrument_id WHERE m.id=?1),'') WHERE id=?2",postgres_compat::params![v,id])?;
+        }
+    }
+    if let Some(v) = body.group_id {
+        changes.push("实验室已修改".into());
+        tx.execute("UPDATE rd_work_records SET group_id=?1,division_id=COALESCE((SELECT division_id FROM project_groups WHERE id=?1),division_id),lab_name_snapshot=COALESCE((SELECT name FROM project_groups WHERE id=?1),''),execution_group_id=?1,execution_group_name_snapshot=COALESCE((SELECT name FROM project_groups WHERE id=?1),''),execution_division_id=COALESCE((SELECT division_id FROM project_groups WHERE id=?1),division_id),execution_division_name_snapshot=COALESCE((SELECT d.name FROM divisions d WHERE d.id=COALESCE((SELECT division_id FROM project_groups WHERE id=?1),division_id)), '') WHERE id=?2",postgres_compat::params![v,id])?;
+    }
+    if let Some(v) = body.division_id {
+        changes.push("部门已修改".into());
+        tx.execute(
+            "UPDATE rd_work_records SET division_id=?1,execution_division_id=COALESCE(?1,(SELECT division_id FROM project_groups WHERE id=group_id)),execution_division_name_snapshot=COALESCE((SELECT d.name FROM divisions d WHERE d.id=COALESCE(?1,(SELECT division_id FROM project_groups WHERE id=group_id))), '') WHERE id=?2",
+            postgres_compat::params![v, id],
+        )?;
+    }
+    if let Some(v) = &body.high_item {
+        changes.push("高项已修改".into());
+        tx.execute("UPDATE rd_work_records SET high_item=?1,high_item_snapshot=COALESCE(?1,'') WHERE id=?2",postgres_compat::params![if v.trim().is_empty(){None}else{Some(v.trim())},id])?;
+    }
+    if changes.is_empty() {
+        return Err(AppError::Validation("没有需要更新的字段".into()));
+    }
+    let void_return_draft = old.status == "退回待修改" && body.quantity == Some(0);
+    if void_return_draft {
+        changes.push("驳回后数量调整为 0，记录已作废".into());
+        tx.execute(
+            "UPDATE rd_work_records SET status='已作废',voided_at=to_char(CURRENT_TIMESTAMP,'YYYY-MM-DD\"T\"HH24:MI:SS'),voided_by=?1,void_reason='驳回后数量调整为 0',last_activity_at=to_char(CURRENT_TIMESTAMP,'YYYY-MM-DD\"T\"HH24:MI:SS'),updated_at=datetime('now','localtime') WHERE id=?2",
+            postgres_compat::params![operator, id],
+        )?;
+    } else if old.status == "退回待修改" {
+        changes.push("退回修改后重新提交".into());
+        tx.execute(
+            "UPDATE rd_work_records SET status='待取样',recorded_at=to_char(CURRENT_TIMESTAMP,'YYYY-MM-DD\"T\"HH24:MI:SS'),last_activity_at=to_char(CURRENT_TIMESTAMP,'YYYY-MM-DD\"T\"HH24:MI:SS'),updated_at=datetime('now','localtime') WHERE id=?1",
+            [id],
+        )?;
+    } else {
+        tx.execute(
+            "UPDATE rd_work_records SET updated_at=datetime('now','localtime') WHERE id=?1",
+            [id],
+        )?;
+    }
+    let r = get_by_id_on_conn(&tx, id)?;
+    let after = snap(&r);
+    let detail = format!("修改 {}：{}", r.business_no, changes.join("，"));
+    log(
+        &tx,
+        if void_return_draft { "void" } else { "update" },
+        &r,
+        operator,
+        &detail,
+        if old.status == "退回待修改" {
+            Some(&old.status)
+        } else {
+            None
+        },
+        if old.status == "退回待修改" {
+            Some(&r.status)
+        } else {
+            None
+        },
+        Some(&before),
+        Some(&after),
+    )?;
+    tx.commit()?;
+    get_by_id_on_conn(&conn, id)
+}
+
+pub fn soft_delete(pool: &DbPool, id: i64, operator: &str, reason: &str) -> Result<()> {
+    let mut conn = pool.get()?;
+    let tx = conn.transaction()?;
+    let old = get_by_id_on_conn(&tx, id)?;
+    if old.deleted_at.is_some() {
+        return Err(AppError::Validation("记录已被删除".into()));
+    }
+    let before = snap(&old);
+    tx.execute("UPDATE rd_work_records SET deleted_at=datetime('now','localtime'),updated_at=datetime('now','localtime') WHERE id=?1",[id])?;
+    let r = get_by_id_on_conn(&tx, id)?;
+    let after = snap(&r);
+    trash_repo::move_to_trash_on_conn(
+        &tx,
+        "研发送样记录",
+        "rd_work_records",
+        id,
+        "records",
+        "rd",
+        &r.business_no,
+        &r.business_no,
+        &before,
+        reason,
+        operator,
+        r.subject_user_id.or(r.created_by_user_id),
+        r.group_id,
+        "",
+        true,
+    )?;
+    log(
+        &tx,
+        "delete",
+        &r,
+        operator,
+        &format!("删除研发送样记录 {}", r.business_no),
+        None,
+        None,
+        Some(&before),
+        Some(&after),
+    )?;
+    tx.commit()?;
+    Ok(())
+}
+pub fn restore(pool: &DbPool, id: i64, operator: &str) -> Result<RdRecordResponse> {
+    let mut conn = pool.get()?;
+    let tx = conn.transaction()?;
+    let old = get_by_id_on_conn(&tx, id)?;
+    if old.deleted_at.is_none() {
+        return Err(AppError::Validation("记录未被删除，无需恢复".into()));
+    }
+    let before = snap(&old);
+    tx.execute("UPDATE rd_work_records SET deleted_at=NULL,updated_at=datetime('now','localtime') WHERE id=?1",[id])?;
+    trash_repo::mark_restored_on_conn(&tx, "rd_work_records", id, operator)?;
+    let r = get_by_id_on_conn(&tx, id)?;
+    let after = snap(&r);
+    log(
+        &tx,
+        "restore",
+        &r,
+        operator,
+        &format!("恢复研发送样记录 {}", r.business_no),
+        None,
+        None,
+        Some(&before),
+        Some(&after),
+    )?;
+    tx.commit()?;
+    get_by_id_on_conn(&conn, id)
+}
+pub fn delete_by_user(
+    pool: &DbPool,
+    user_name: &str,
+    start: Option<&str>,
+    end: Option<&str>,
+    operator: &str,
+    reason: &str,
+) -> Result<i64> {
+    let mut conn = pool.get()?;
+    let tx = conn.transaction()?;
+    let mut sql =
+        "SELECT id FROM rd_work_records WHERE user_name=?1 AND deleted_at IS NULL".to_string();
+    let mut params: Vec<Box<dyn postgres_compat::types::ToSql>> =
+        vec![Box::new(user_name.to_string())];
+    if let Some(v) = start {
+        let i = params.len() + 1;
+        sql.push_str(&format!(" AND recorded_at>=?{i}"));
+        params.push(Box::new(v.to_string()));
+    }
+    if let Some(v) = end {
+        let i = params.len() + 1;
+        sql.push_str(&format!(" AND recorded_at<=?{i}"));
+        params.push(Box::new(format!("{v}T23:59:59")));
+    }
+    let ids: Vec<i64> = {
+        let mut stmt = tx.prepare(&sql)?;
+        let rows = stmt.query_map(
+            postgres_compat::params_from_iter(params.iter().map(|p| p.as_ref())),
+            |r| r.get(0),
+        )?;
+        rows.collect::<std::result::Result<Vec<_>, _>>()?
+    };
+    for id in &ids {
+        let old = get_by_id_on_conn(&tx, *id)?;
+        let before = snap(&old);
+        tx.execute(
+            "UPDATE rd_work_records SET deleted_at=datetime('now','localtime') WHERE id=?1",
+            [*id],
+        )?;
+        let r = get_by_id_on_conn(&tx, *id)?;
+        let after = snap(&r);
+        trash_repo::move_to_trash_on_conn(
+            &tx,
+            "研发送样记录",
+            "rd_work_records",
+            *id,
+            "records",
+            "rd",
+            &r.business_no,
+            &r.business_no,
+            &before,
+            reason,
+            operator,
+            r.subject_user_id.or(r.created_by_user_id),
+            r.group_id,
+            "",
+            true,
+        )?;
+        log(
+            &tx,
+            "delete",
+            &r,
+            operator,
+            "批量删除研发送样记录",
+            None,
+            None,
+            Some(&before),
+            Some(&after),
+        )?;
+    }
+    tx.commit()?;
+    Ok(ids.len() as i64)
+}
+
+pub fn soft_delete_range(
+    pool: &DbPool,
+    start: &str,
+    end: &str,
+    operator: &str,
+    reason: &str,
+) -> Result<i64> {
+    let mut conn = pool.get()?;
+    let tx = conn.transaction()?;
+    let ids: Vec<i64> = {
+        let mut stmt = tx.prepare(
+            "SELECT id FROM rd_work_records
+             WHERE deleted_at IS NULL AND recorded_at>=?1 AND recorded_at<=?2
+             ORDER BY id",
+        )?;
+        let rows = stmt.query_map(postgres_compat::params![start, end], |row| row.get(0))?;
+        rows.collect::<std::result::Result<Vec<_>, _>>()?
+    };
+    for id in &ids {
+        let before_record = get_by_id_on_conn(&tx, *id)?;
+        let before = snap(&before_record);
+        tx.execute(
+            "UPDATE rd_work_records SET deleted_at=datetime('now','localtime'),updated_at=datetime('now','localtime') WHERE id=?1",
+            [*id],
+        )?;
+        let after_record = get_by_id_on_conn(&tx, *id)?;
+        let after = snap(&after_record);
+        trash_repo::move_to_trash_on_conn(
+            &tx,
+            "研发送样记录",
+            "rd_work_records",
+            *id,
+            "records",
+            "rd",
+            &after_record.business_no,
+            &after_record.business_no,
+            &before,
+            reason,
+            operator,
+            after_record
+                .subject_user_id
+                .or(after_record.created_by_user_id),
+            after_record.group_id,
+            "",
+            true,
+        )?;
+        log(
+            &tx,
+            "delete",
+            &after_record,
+            operator,
+            &format!("数据治理批量移入回收站：{}", after_record.business_no),
+            None,
+            None,
+            Some(&before),
+            Some(&after),
+        )?;
+    }
+    tx.commit()?;
+    Ok(ids.len() as i64)
+}
+
+pub fn sample(pool: &DbPool, id: i64, sampler: &str, operator: &str) -> Result<RdRecordResponse> {
+    let mut conn = pool.get()?;
+    let tx = conn.transaction()?;
+    let old = get_by_id_on_conn(&tx, id)?;
+    if old.deleted_at.is_some() {
+        return Err(AppError::Validation("记录已被删除".into()));
+    }
+    if old.sampled_at.is_some() {
+        return Err(AppError::Validation("记录已取样".into()));
+    }
+    if old.status != "待取样" {
+        return Err(AppError::Validation("仅待取样记录可以取样".into()));
+    }
+    let before = snap(&old);
+    tx.execute("UPDATE rd_work_records SET sampler=?1,sampled_at=datetime('now','localtime'),status='已取样',last_activity_at=to_char(CURRENT_TIMESTAMP,'YYYY-MM-DD\"T\"HH24:MI:SS'),updated_at=datetime('now','localtime') WHERE id=?2",postgres_compat::params![sampler,id])?;
+    let r = get_by_id_on_conn(&tx, id)?;
+    let after = snap(&r);
+    log(
+        &tx,
+        "sample",
+        &r,
+        operator,
+        &format!(
+            "研发送样记录 {} 已取样（取样归属：{}）",
+            r.business_no, sampler
+        ),
+        Some(&old.status),
+        Some(&r.status),
+        Some(&before),
+        Some(&after),
+    )?;
+    tx.commit()?;
+    get_by_id_on_conn(&conn, id)
+}
+
+pub fn withdraw_sample(
+    pool: &DbPool,
+    id: i64,
+    reason: &str,
+    operator: &str,
+) -> Result<RdRecordResponse> {
+    let reason = reason.trim();
+    if reason.is_empty() {
+        return Err(AppError::Validation("请填写撤回取样原因".into()));
+    }
+    let mut conn = pool.get()?;
+    let tx = conn.transaction()?;
+    let old = get_by_id_on_conn(&tx, id)?;
+    if old.deleted_at.is_some() {
+        return Err(AppError::Validation("记录已被删除".into()));
+    }
+    if old.status != "已取样" || old.sampled_at.is_none() {
+        return Err(AppError::Validation("仅已取样记录可以撤回取样".into()));
+    }
+    if old.detected_at.is_some()
+        || old
+            .detected_by
+            .as_deref()
+            .is_some_and(|value| !value.trim().is_empty())
+    {
+        return Err(AppError::Validation(
+            "记录已进入检测完成流程，不能直接撤回取样".into(),
+        ));
+    }
+    let before = snap(&old);
+    let original_sampler = old.sampler.as_deref().unwrap_or("未记录取样人");
+    tx.execute(
+        "UPDATE rd_work_records
+         SET sampler=NULL,sampled_at=NULL,status='待取样',
+             last_activity_at=to_char(CURRENT_TIMESTAMP,'YYYY-MM-DD\"T\"HH24:MI:SS'),
+             updated_at=datetime('now','localtime')
+         WHERE id=?1",
+        [id],
+    )?;
+    let record = get_by_id_on_conn(&tx, id)?;
+    let after = snap(&record);
+    log(
+        &tx,
+        "sample_withdraw",
+        &record,
+        operator,
+        &format!(
+            "研发送样记录 {} 已撤回取样（原取样人：{}）：{}",
+            record.business_no, original_sampler, reason
+        ),
+        Some(&old.status),
+        Some(&record.status),
+        Some(&before),
+        Some(&after),
+    )?;
+    tx.commit()?;
+    get_by_id_on_conn(&conn, id)
+}
+
+pub fn return_record(
+    pool: &DbPool,
+    id: i64,
+    reason: &str,
+    returned_by: &str,
+) -> Result<RdRecordResponse> {
+    let reason = reason.trim();
+    if reason.is_empty() {
+        return Err(AppError::Validation("请填写退回原因".into()));
+    }
+    let mut conn = pool.get()?;
+    let tx = conn.transaction()?;
+    let old = get_by_id_on_conn(&tx, id)?;
+    if old.deleted_at.is_some() {
+        return Err(AppError::Validation("记录已被删除".into()));
+    }
+    if old.sampled_at.is_some() || old.status == "已取样" {
+        return Err(AppError::Validation("已取样记录不能退回".into()));
+    }
+    if old.status == "已退回"
+        || old.status == "已退回已确认"
+        || old.status == "退回待修改"
+        || old.status == "已作废"
+    {
+        return Err(AppError::Validation("该记录不允许再次退回".into()));
+    }
+    let before = snap(&old);
+    tx.execute(
+        "UPDATE rd_work_records
+         SET status='已退回',return_reason=?1,returned_by=?2,
+              returned_at=datetime('now','localtime'),last_activity_at=to_char(CURRENT_TIMESTAMP,'YYYY-MM-DD\"T\"HH24:MI:SS'),updated_at=datetime('now','localtime')
+         WHERE id=?3",
+        postgres_compat::params![reason, returned_by, id],
+    )?;
+    let record = get_by_id_on_conn(&tx, id)?;
+    let after = snap(&record);
+    log(
+        &tx,
+        "return",
+        &record,
+        returned_by,
+        &format!("研发送样记录 {} 已退回：{}", record.business_no, reason),
+        Some(&old.status),
+        Some(&record.status),
+        Some(&before),
+        Some(&after),
+    )?;
+    tx.commit()?;
+    get_by_id_on_conn(&conn, id)
+}
+
+pub fn confirm_return(pool: &DbPool, id: i64, confirmed_by: &str) -> Result<RdRecordResponse> {
+    let mut conn = pool.get()?;
+    let tx = conn.transaction()?;
+    let old = get_by_id_on_conn(&tx, id)?;
+    if old.deleted_at.is_some() {
+        return Err(AppError::Validation("记录已被删除".into()));
+    }
+    if old.status != "已退回" {
+        return Err(AppError::Validation("仅已退回记录可以确认修改".into()));
+    }
+    let before = snap(&old);
+    tx.execute(
+        "UPDATE rd_work_records
+         SET status='已退回已确认',return_confirmed_by=?1,
+              return_confirmed_at=datetime('now','localtime'),last_activity_at=to_char(CURRENT_TIMESTAMP,'YYYY-MM-DD\"T\"HH24:MI:SS'),updated_at=datetime('now','localtime')
+         WHERE id=?2",
+        postgres_compat::params![confirmed_by, id],
+    )?;
+    let record = get_by_id_on_conn(&tx, id)?;
+    let after = snap(&record);
+    log(
+        &tx,
+        "return_confirm",
+        &record,
+        confirmed_by,
+        &format!(
+            "研发送样记录 {} 已确认退回，原记录保留不再编辑",
+            record.business_no
+        ),
+        Some(&old.status),
+        Some(&record.status),
+        Some(&before),
+        Some(&after),
+    )?;
+
+    // Keep the returned record immutable for traceability. The sender edits a
+    // separate copy, which becomes a normal pending-sampling record only after save.
+    tx.execute(
+        "INSERT INTO rd_work_records(
+            project_id,method_id,user_name,quantity,recorded_at,last_activity_at,group_id,division_id,project_division_id,project_division_name_snapshot,execution_division_id,execution_division_name_snapshot,execution_group_id,execution_group_name_snapshot,batch_no,notes,
+            extra_fields,status,project_name_snapshot,lab_name_snapshot,method_name_snapshot,
+            high_item_snapshot,coefficient_snapshot,subject_user_id,created_by_user_id,
+            created_by_username_snapshot,instrument_id_snapshot,instrument_code_snapshot,
+            instrument_type_snapshot
+         )
+          SELECT project_id,method_id,user_name,quantity,to_char(CURRENT_TIMESTAMP,'YYYY-MM-DD\"T\"HH24:MI:SS'),to_char(CURRENT_TIMESTAMP,'YYYY-MM-DD\"T\"HH24:MI:SS'),group_id,division_id,project_division_id,project_division_name_snapshot,execution_division_id,execution_division_name_snapshot,execution_group_id,execution_group_name_snapshot,batch_no,notes,
+            extra_fields,'退回待修改',project_name_snapshot,lab_name_snapshot,method_name_snapshot,
+            high_item_snapshot,coefficient_snapshot,subject_user_id,created_by_user_id,
+            created_by_username_snapshot,instrument_id_snapshot,instrument_code_snapshot,
+            instrument_type_snapshot
+         FROM rd_work_records WHERE id=?1",
+        [id],
+    )?;
+    let draft_id = tx.last_insert_rowid();
+    let mut draft = get_by_id_on_conn(&tx, draft_id)?;
+    let draft_business_no = trace_repo::make_business_no("RD", &draft.recorded_at, draft_id);
+    tx.execute(
+        "UPDATE rd_work_records SET business_no=?1 WHERE id=?2",
+        postgres_compat::params![draft_business_no, draft_id],
+    )?;
+    draft = get_by_id_on_conn(&tx, draft_id)?;
+    let draft_after = snap(&draft);
+    log(
+        &tx,
+        "return_resubmit_draft",
+        &draft,
+        confirmed_by,
+        &format!(
+            "由退回记录 {} 复制创建，修改保存后重新提交",
+            record.business_no
+        ),
+        None,
+        Some(&draft.status),
+        None,
+        Some(&draft_after),
+    )?;
+    tx.commit()?;
+    get_by_id_on_conn(&conn, draft_id)
+}
+pub fn is_sampled(pool: &DbPool, id: i64) -> Result<bool> {
+    Ok(get_by_id(pool, id)?.sampled_at.is_some())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rd_full_range_column_filters_recorders_candidates_and_details() {
+        let pool = crate::db::init_pool("postgres-test");
+        crate::db::test_migrations::run(&pool.get().unwrap()).unwrap();
+        let conn = pool.get().unwrap();
+        conn.execute("INSERT INTO divisions(name) VALUES('rd46-allowed')", [])
+            .unwrap();
+        let division = conn.last_insert_rowid();
+        conn.execute("INSERT INTO divisions(name) VALUES('rd46-denied')", [])
+            .unwrap();
+        let denied = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO project_groups(name,division_id) VALUES('rd46-lab',?1)",
+            [division],
+        )
+        .unwrap();
+        let group = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO projects(name,group_id) VALUES('rd46-project',?1)",
+            [group],
+        )
+        .unwrap();
+        let project = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO users(username,password) VALUES('rd46-operator-a','test')",
+            [],
+        )
+        .unwrap();
+        let first_user = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO users(username,password) VALUES('rd46-operator-b','test')",
+            [],
+        )
+        .unwrap();
+        let second_user = conn.last_insert_rowid();
+        conn.execute("INSERT INTO rd_record_columns(name,label,data_type,is_predefined,is_active,show_in_list) VALUES('rd46_custom','自定义值','text',0,1,1)",[]).unwrap();
+        conn.execute("INSERT INTO rd_record_columns(name,label,data_type,is_predefined,is_active,show_in_list) VALUES('rd46_other','选项详情','select_other',0,1,1)",[]).unwrap();
+        let insert = |name: &str, status: &str, department: i64, extra: &str, day: i64| {
+            conn.execute("INSERT INTO rd_work_records(project_id,user_name,quantity,recorded_at,group_id,execution_division_id,division_id,status,sampler,extra_fields,business_no) VALUES(?1,?2,5,?3,?4,?5,?5,?6,'原取样人',?7,?8)",postgres_compat::params![project,name,format!("2096-10-{day:02}T10:00:00"),group,department,status,extra,format!("RD46-{}",uuid::Uuid::new_v4())]).unwrap();
+            conn.last_insert_rowid()
+        };
+        let complete = insert(
+            "sender-a",
+            "已取样",
+            division,
+            r#"{"rd46_custom":"A","rd46_other":"其他","rd46_other__detail":"第一批"}"#,
+            1,
+        );
+        let partial = insert(
+            "sender-b",
+            "已取样",
+            division,
+            r#"{"rd46_custom":"B","rd46_other":"其他：第二批"}"#,
+            2,
+        );
+        let pending = insert(
+            "sender-a",
+            "待取样",
+            division,
+            r#"{"rd46_custom":"A","rd46_other":"其他：保留","rd46_other__detail":""}"#,
+            3,
+        );
+        let forbidden = insert(
+            "sender-secret",
+            "已取样",
+            denied,
+            r#"{"rd46_custom":"SECRET"}"#,
+            4,
+        );
+        let dirty = insert("sender-dirty", "待取样", division, "not-json", 5);
+        let missing = insert(
+            "sender-missing",
+            "待取样",
+            division,
+            r#"{"rd46_custom":null}"#,
+            6,
+        );
+        let entry = |source: i64,
+                     creator: Option<i64>,
+                     subject: Option<i64>,
+                     quantity: i64,
+                     deleted: bool| {
+            conn.execute("INSERT INTO work_records(project_id,user_name,quantity,recorded_at,group_id,division_id,detection_division_id,subject_user_id,created_by_user_id,created_by_username_snapshot,source_type,source_record_id,deleted_at,business_no) VALUES(?1,'当前归属人',?2,'2096-10-02T12:00:00',?3,?4,?4,?5,?6,'同名快照','rd_sample',?7,?8,?9)",postgres_compat::params![project,quantity,group,division,subject,creator,source,if deleted {Some("2096-10-03")} else {None},format!("WK46-{}",uuid::Uuid::new_v4())]).unwrap();
+        };
+        entry(complete, Some(first_user), Some(first_user), 2, false);
+        entry(complete, Some(first_user), Some(second_user), 1, false);
+        entry(complete, Some(second_user), Some(second_user), 1, false);
+        entry(complete, None, None, 1, false);
+        entry(complete, Some(second_user), Some(second_user), 100, true);
+        entry(partial, Some(second_user), Some(second_user), 2, false);
+        entry(forbidden, Some(second_user), Some(second_user), 1, false);
+        drop(conn);
+        let mut query = RdListQuery {
+            group_id: Some(group),
+            analysis_scope: true,
+            allowed_division_ids: Some(vec![division]),
+            ..RdListQuery::default()
+        };
+        let (baseline, total) =
+            list_query(&pool, &query, 1, 50, Some("submitted_at"), Some("asc")).unwrap();
+        assert_eq!(total, 5);
+        let rec = baseline.iter().find(|row| row.id == complete).unwrap();
+        assert!(rec.workload_recorded);
+        assert_eq!(rec.recorded_quantity, 5);
+        assert_eq!(
+            rec.workload_recorders.len(),
+            2,
+            "same-name snapshots cannot merge distinct IDs"
+        );
+        assert_eq!(rec.workload_recorders[0].user_id, first_user);
+        assert_eq!(rec.workload_recorders[0].quantity, 3);
+        assert_eq!(rec.workload_recorders[0].entry_count, 2);
+        assert_eq!(rec.workload_recorders[0].username, "同名快照");
+        assert_eq!(rec.workload_unknown_recorder_entries, 1);
+        assert_eq!(rec.workload_unknown_recorder_quantity, 1);
+        let formatted = filter_options(&pool, &query, "rd46_other", None, 200).unwrap();
+        assert!(formatted
+            .options
+            .iter()
+            .any(|option| option.value == "其他（第一批）"));
+        assert!(formatted
+            .options
+            .iter()
+            .any(|option| option.value == "其他（第二批）"));
+        assert!(formatted
+            .options
+            .iter()
+            .any(|option| option.value == "其他"));
+        query
+            .column_filters
+            .insert("rd46_other".into(), vec!["其他（第一批）".into()]);
+        assert_eq!(
+            list_query(&pool, &query, 1, 50, None, None).unwrap().0[0].id,
+            complete
+        );
+        query.column_filters.clear();
+        query
+            .column_filters
+            .insert("rd46_custom".into(), vec!["A".into(), "B".into()]);
+        let (page1, total) = list_query(&pool, &query, 1, 1, None, None).unwrap();
+        let (page2, total2) = list_query(&pool, &query, 2, 1, None, None).unwrap();
+        assert_eq!((total, total2), (3, 3));
+        assert_ne!(page1[0].id, page2[0].id);
+        query
+            .column_filters
+            .insert("user_name".into(), vec!["sender-a".into()]);
+        assert_eq!(
+            list_query(&pool, &query, 1, 50, None, None).unwrap().1,
+            2,
+            "cross-column AND"
+        );
+        query.column_filters.remove("user_name");
+        let options = filter_options(&pool, &query, "rd46_custom", None, 200).unwrap();
+        assert_eq!(options.total, 5, "own candidate condition is removed");
+        assert_eq!(
+            options
+                .options
+                .iter()
+                .find(|option| option.value == "A")
+                .unwrap()
+                .count,
+            2
+        );
+        assert_eq!(
+            options
+                .options
+                .iter()
+                .find(|option| option.value.is_empty())
+                .unwrap()
+                .count,
+            2,
+            "dirty JSON and null match empty without a cast failure"
+        );
+        assert!(!options
+            .options
+            .iter()
+            .any(|option| option.value == "SECRET"));
+        assert!(
+            filter_options(&pool, &query, "rd46_custom", None, 1)
+                .unwrap()
+                .truncated
+        );
+        assert_eq!(
+            filter_options(&pool, &query, "rd46_custom", Some("未填写"), 200)
+                .unwrap()
+                .options
+                .len(),
+            1
+        );
+        query.column_filters.clear();
+        query.operation_states = vec!["partial".into(), "pending_sample".into()];
+        assert_eq!(list_query(&pool, &query, 1, 50, None, None).unwrap().1, 4);
+        let operations = filter_options(&pool, &query, "_operation", None, 200).unwrap();
+        assert!(operations
+            .options
+            .iter()
+            .any(|option| option.value == "recorded" && option.count == 1));
+        query.operation_states.clear();
+        query.recorder_ids = vec![Some(first_user)];
+        assert_eq!(list_query(&pool, &query, 1, 50, None, None).unwrap().1, 1);
+        let authors = filter_options(&pool, &query, "_recorder", None, 200).unwrap();
+        assert_eq!(
+            authors
+                .options
+                .iter()
+                .find(|option| option.value == second_user.to_string())
+                .unwrap()
+                .count,
+            2,
+            "candidate counts source records, not batches"
+        );
+        assert!(authors
+            .options
+            .iter()
+            .any(|option| option.value == "unknown" && option.count == 1));
+        query.recorder_ids = vec![None];
+        assert_eq!(
+            list_query(&pool, &query, 1, 50, None, None).unwrap().0[0].id,
+            complete
+        );
+        query.recorder_ids.clear();
+        let sequence = baseline
+            .iter()
+            .find(|row| row.id == partial)
+            .unwrap()
+            .sequence_no;
+        query
+            .column_filters
+            .insert("seq_no".into(), vec![sequence.to_string()]);
+        let (rows, total) = list_query(&pool, &query, 1, 50, None, None).unwrap();
+        assert_eq!(total, 1);
+        assert_eq!(rows[0].id, partial);
+        assert_eq!(rows[0].sequence_no, sequence);
+        query.column_filters.clear();
+        query
+            .column_filters
+            .insert("rd46_custom".into(), vec!["' OR 1=1 --".into()]);
+        assert_eq!(list_query(&pool, &query, 1, 50, None, None).unwrap().1, 0);
+        query.column_filters.clear();
+        query
+            .column_filters
+            .insert("wr.user_name) OR 1=1 --".into(), vec!["A".into()]);
+        assert!(matches!(
+            list_query(&pool, &query, 1, 50, None, None),
+            Err(AppError::Validation(_))
+        ));
+        query.column_filters.clear();
+        query.allowed_division_ids = Some(vec![]);
+        assert_eq!(
+            filter_options(&pool, &query, "_recorder", None, 200)
+                .unwrap()
+                .total,
+            0
+        );
+        assert!(filter_options(&pool, &query, "rd46_custom", None, 200)
+            .unwrap()
+            .options
+            .is_empty());
+        let own =
+            workload_entries(&pool, complete, Some(first_user), None, Some(&[division])).unwrap();
+        assert_eq!(own.total, 1);
+        assert_eq!(own.visible_quantity, 2);
+        assert!(own.has_hidden_entries);
+        let public =
+            workload_entries(&pool, complete, None, Some(first_user), Some(&[division])).unwrap();
+        assert_eq!(public.total, 2);
+        assert_eq!(public.visible_quantity, 3);
+        let all = workload_entries(&pool, complete, None, None, Some(&[division])).unwrap();
+        assert_eq!(all.total, 4);
+        assert!(!all.has_hidden_entries);
+        assert_eq!(all.recorded_quantity, 5);
+        assert!(
+            workload_entries(&pool, complete, None, None, Some(&[denied]))
+                .unwrap()
+                .items
+                .is_empty()
+        );
+        let conn = pool.get().unwrap();
+        conn.execute("UPDATE work_records SET deleted_at='2096-10-05' WHERE source_record_id=?1 AND created_by_user_id=?2",postgres_compat::params![complete,first_user]).unwrap();
+        let changed = get_by_id(&pool, complete).unwrap();
+        assert_eq!(changed.recorded_quantity, 2);
+        assert!(!changed.workload_recorded);
+        assert_eq!(changed.workload_recorders.len(), 1);
+        assert_eq!(changed.workload_recorders[0].user_id, second_user);
+        assert_ne!(dirty, missing);
+        assert_ne!(pending, forbidden);
+    }
+
+    #[test]
+    fn rd_date_filters_validate_dates_and_keep_precise_timestamps() {
+        for value in ["2028-02-29T12:30", "2028-02-29 12:30"] {
+            assert_eq!(
+                date_bound(value, true).unwrap(),
+                ("2028-02-29T12:30:00".to_string(), false)
+            );
+        }
+        assert_eq!(
+            date_bound("2028-02-29", false).unwrap(),
+            ("2028-02-29T00:00:00".into(), false)
+        );
+        assert_eq!(
+            date_bound("2028-02-29", true).unwrap(),
+            ("2028-03-01T00:00:00".into(), true)
+        );
+        assert_eq!(
+            date_bound("2028-02-29 12:30:00.125", true).unwrap(),
+            ("2028-02-29T12:30:00.125".into(), false)
+        );
+        for invalid in [
+            "0000-01-01",
+            "0000-01-01T00:00:00",
+            "2027-02-29",
+            "2028-2-29",
+            "2028-02-29T",
+            "2028-02-29T12:30:00T23:59:59",
+            "2028-02-29T24:00:00",
+            "2028-02-29T24:30",
+            "2028-02-29T12:60",
+        ] {
+            assert!(date_bound(invalid, false).is_err(), "accepted {invalid}");
+        }
+    }
+
+    #[test]
+    fn rd_snapshot_and_sample_event_are_independent_from_work_records() {
+        let pool = crate::db::init_pool("postgres-test");
+        crate::db::test_migrations::run(&pool.get().unwrap()).unwrap();
+        let conn = pool.get().unwrap();
+        conn.execute(
+            "INSERT INTO users(username,password,is_active) VALUES('sender01','test-password',1)",
+            [],
+        )
+        .unwrap();
+        let sender_user_id = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO users(username,password,is_active) VALUES('public01','test-password',1)",
+            [],
+        )
+        .unwrap();
+        let public_user_id = conn.last_insert_rowid();
+        conn.execute("INSERT INTO project_groups(name) VALUES('RdLab01')", [])
+            .unwrap();
+        let group = conn.last_insert_rowid();
+        conn.execute("INSERT INTO projects(group_id,name,coefficient,high_item) VALUES(?1,'RdProject01',2.5,'HighItem01')",[group]).unwrap();
+        let project = conn.last_insert_rowid();
+        conn.execute("INSERT INTO instruments(code,name,instrument_type) VALUES('LC-RD01','RdLiquid01','液相')",[]).unwrap();
+        let instrument = conn.last_insert_rowid();
+        conn.execute("INSERT INTO methods(method_code,name,full_name,instrument_id) VALUES('M-RD-001','RdMethod01','RdMethod01 Full',?1)",[instrument]).unwrap();
+        let method = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO method_types(name,sort_order) VALUES('Type-RD',1)",
+            [],
+        )
+        .unwrap();
+        let method_type = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO method_type_links(method_id,method_type_id) VALUES(?1,?2)",
+            postgres_compat::params![method, method_type],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO project_lab_links(project_id,group_id) VALUES(?1,?2)",
+            postgres_compat::params![project, group],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO project_method_links(project_id,method_id) VALUES(?1,?2)",
+            postgres_compat::params![project, method],
+        )
+        .unwrap();
+        assert!(validate_submission_selection(&conn, project, method, "Type-RD").is_ok());
+        assert!(validate_submission_selection(&conn, project, method, "Other-Type").is_err());
+        drop(conn);
+        let record = create(
+            &pool,
+            &RecordCreate {
+                project_id: project,
+                method_id: Some(method),
+                user_name: "sender01".into(),
+                sender_user_id: Some(sender_user_id),
+                quantity: 2,
+                recorded_at: "2000-01-01T10:00:00".into(),
+                group_id: Some(group),
+                multiplier: None,
+                high_item: None,
+                division_id: None,
+                extra_fields: None,
+                source_type: None,
+                source_record_id: None,
+            },
+            Some("B001".into()),
+            None,
+            public_user_id,
+            "public01",
+        )
+        .unwrap();
+        assert!(record.business_no.starts_with("RD-20000101-"));
+        assert_eq!(record.user_name, "sender01");
+        assert_eq!(record.subject_user_id, Some(sender_user_id));
+        assert_eq!(record.created_by_user_id, Some(public_user_id));
+        assert_eq!(record.coefficient_snapshot, 2.5);
+        assert_eq!(record.high_item.as_deref(), Some("HighItem01"));
+        let later_unprocessed = create(
+            &pool,
+            &RecordCreate {
+                project_id: project,
+                method_id: Some(method),
+                user_name: "sender02".into(),
+                sender_user_id: Some(sender_user_id),
+                quantity: 1,
+                recorded_at: "2001-01-01T10:00:00".into(),
+                group_id: Some(group),
+                multiplier: None,
+                high_item: None,
+                division_id: None,
+                extra_fields: None,
+                source_type: None,
+                source_record_id: None,
+            },
+            None,
+            None,
+            sender_user_id,
+            "sender01",
+        )
+        .unwrap();
+        let older_pending = create(
+            &pool,
+            &RecordCreate {
+                project_id: project,
+                method_id: Some(method),
+                user_name: "sender03".into(),
+                sender_user_id: Some(sender_user_id),
+                quantity: 1,
+                recorded_at: "1999-01-01T10:00:00".into(),
+                group_id: Some(group),
+                multiplier: None,
+                high_item: None,
+                division_id: None,
+                extra_fields: None,
+                source_type: None,
+                source_record_id: None,
+            },
+            None,
+            None,
+            sender_user_id,
+            "sender01",
+        )
+        .unwrap();
+        let sampled = sample(&pool, older_pending.id, "sampler01", "sampler01").unwrap();
+        assert_eq!(sampled.status, "已取样");
+        assert_eq!(sampled.sampler.as_deref(), Some("sampler01"));
+        let withdrawn = withdraw_sample(
+            &pool,
+            older_pending.id,
+            "误点取样，重新核对样品",
+            "sampler01",
+        )
+        .unwrap();
+        assert_eq!(withdrawn.status, "待取样");
+        assert!(withdrawn.sampler.is_none());
+        assert!(withdrawn.sampled_at.is_none());
+        let trace =
+            crate::repo::trace_repo::list(&pool, "rd_work_records", older_pending.id).unwrap();
+        assert!(trace
+            .iter()
+            .any(|event| event.event_type == "sample_withdraw"));
+        sample(&pool, older_pending.id, "sampler01", "sampler01").unwrap();
+        let (after_sampling_older_record, _) = list(
+            &pool, None, None, false, None, None, None, None, None, None, 1, 20, false, None, None,
+        )
+        .unwrap();
+        let newer_position = after_sampling_older_record
+            .iter()
+            .position(|item| item.id == later_unprocessed.id)
+            .unwrap();
+        let sampled_older_position = after_sampling_older_record
+            .iter()
+            .position(|item| item.id == older_pending.id)
+            .unwrap();
+        assert_eq!(after_sampling_older_record[0].id, later_unprocessed.id);
+        assert_eq!(after_sampling_older_record[1].id, record.id);
+        assert_eq!(after_sampling_older_record[2].id, older_pending.id);
+        assert_eq!(after_sampling_older_record[0].sequence_no, 3);
+        assert_eq!(after_sampling_older_record[1].sequence_no, 2);
+        assert_eq!(after_sampling_older_record[2].sequence_no, 1);
+        assert!(sampled_older_position > newer_position);
+        let (ascending_records, _) = list(
+            &pool,
+            None,
+            None,
+            false,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            1,
+            20,
+            false,
+            Some("submitted_at"),
+            Some("asc"),
+        )
+        .unwrap();
+        assert_eq!(ascending_records[0].id, older_pending.id);
+        assert_eq!(ascending_records[2].id, later_unprocessed.id);
+        assert_eq!(ascending_records[0].sequence_no, 1);
+        assert_eq!(ascending_records[1].sequence_no, 2);
+        assert_eq!(ascending_records[2].sequence_no, 3);
+        pool.get().unwrap().execute("UPDATE projects SET name='Renamed',coefficient=9.0,high_item='ChangedHighItem' WHERE id=?1",[project]).unwrap();
+        let reread = get_by_id(&pool, record.id).unwrap();
+        assert_eq!(reread.project_name, "RdProject01");
+        assert_eq!(reread.coefficient_snapshot, 2.5);
+        assert_eq!(reread.high_item.as_deref(), Some("HighItem01"));
+        let returned = return_record(&pool, record.id, "批号缺失", "analyst01").unwrap();
+        assert_eq!(returned.status, "已退回");
+        assert_eq!(returned.return_reason, "批号缺失");
+        assert_eq!(returned.returned_by, "analyst01");
+        assert!(returned.last_activity_at > returned.recorded_at);
+        let (after_return, _) = list(
+            &pool, None, None, false, None, None, None, None, None, None, 1, 20, false, None, None,
+        )
+        .unwrap();
+        assert_eq!(after_return[0].id, later_unprocessed.id);
+        assert_eq!(after_return[1].id, record.id);
+        assert_eq!(after_return[2].id, older_pending.id);
+        assert!(after_return
+            .iter()
+            .any(|item| item.id == later_unprocessed.id));
+        let group_with_return = crate::repo::group_repo::get_by_id(&pool, group).unwrap();
+        assert_eq!(
+            group_with_return.returned_sender_names.as_deref(),
+            Some("sender01")
+        );
+        assert!(sample(&pool, record.id, "sampler01", "sampler01").is_err());
+        assert!(update(
+            &pool,
+            record.id,
+            &RecordUpdate {
+                user_name: Some("sender01-updated".into()),
+                sender_user_id: None,
+                quantity: Some(3),
+                recorded_at: None,
+                multiplier: None,
+                project_id: None,
+                method_id: None,
+                group_id: None,
+                division_id: None,
+                batch_no: None,
+                notes: None,
+                high_item: None,
+                extra_fields: None,
+                source_type: None,
+                source_record_id: None,
+            },
+            "sender01",
+        )
+        .is_err());
+        let draft = confirm_return(&pool, record.id, "sender01").unwrap();
+        assert_ne!(draft.id, record.id);
+        assert_eq!(draft.status, "退回待修改");
+        let confirmed_original = get_by_id(&pool, record.id).unwrap();
+        assert_eq!(confirmed_original.status, "已退回已确认");
+        assert_eq!(confirmed_original.return_confirmed_by, "sender01");
+        let group_after_confirmation = crate::repo::group_repo::get_by_id(&pool, group).unwrap();
+        assert_eq!(group_after_confirmation.returned_sender_names, None);
+        let resubmitted = update(
+            &pool,
+            draft.id,
+            &RecordUpdate {
+                user_name: Some("sender01-updated".into()),
+                sender_user_id: None,
+                quantity: Some(3),
+                recorded_at: None,
+                multiplier: None,
+                project_id: None,
+                method_id: None,
+                group_id: None,
+                division_id: None,
+                batch_no: None,
+                notes: None,
+                high_item: None,
+                extra_fields: None,
+                source_type: None,
+                source_record_id: None,
+            },
+            "sender01",
+        )
+        .unwrap();
+        assert_eq!(resubmitted.status, "待取样");
+        assert_eq!(resubmitted.quantity, 3);
+        assert_eq!(resubmitted.user_name, "sender01-updated");
+        assert_eq!(resubmitted.subject_user_id, Some(sender_user_id));
+        assert!(resubmitted.last_activity_at >= draft.last_activity_at);
+        let (after_confirmation, _) = list(
+            &pool, None, None, false, None, None, None, None, None, None, 1, 20, false, None, None,
+        )
+        .unwrap();
+        assert_eq!(after_confirmation[0].id, draft.id);
+        let sampled = sample(&pool, draft.id, "sampler01", "sampler01").unwrap();
+        assert_eq!(sampled.status, "已取样");
+        assert_eq!(sampled.sampler.as_deref(), Some("sampler01"));
+        let events = crate::repo::trace_repo::list(&pool, "rd_work_records", record.id).unwrap();
+        assert_eq!(
+            events
+                .iter()
+                .map(|event| event.event_type.as_str())
+                .collect::<Vec<_>>(),
+            vec!["create", "return", "return_confirm"]
+        );
+        let draft_events =
+            crate::repo::trace_repo::list(&pool, "rd_work_records", draft.id).unwrap();
+        assert_eq!(
+            draft_events
+                .iter()
+                .map(|event| event.event_type.as_str())
+                .collect::<Vec<_>>(),
+            vec!["return_resubmit_draft", "update", "sample"]
+        );
+        let work_events: i64 = pool
+            .get()
+            .unwrap()
+            .query_row(
+                "SELECT COUNT(*) FROM record_events WHERE table_name='work_records'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(work_events, 0);
+    }
+    #[test]
+    fn rd_list_and_detail_report_partial_workload_quantity_and_sequence() {
+        let pool = crate::db::init_pool("postgres-test");
+        let conn = pool.get().unwrap();
+        crate::db::test_migrations::run(&conn).unwrap();
+        conn.execute(
+            "INSERT INTO project_groups(name) VALUES('quantity_lab')",
+            [],
+        )
+        .unwrap();
+        let group = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO projects(name,group_id) VALUES('quantity_project',?1)",
+            [group],
+        )
+        .unwrap();
+        let project = conn.last_insert_rowid();
+        conn.execute("INSERT INTO rd_work_records(project_id,user_name,quantity,recorded_at,group_id) VALUES(?1,'sender',10,'2026-10-09T10:00:00',?2)",postgres_compat::params![project,group]).unwrap();
+        let record = conn.last_insert_rowid();
+        conn.execute("INSERT INTO work_records(project_id,user_name,quantity,recorded_at,source_type,source_record_id,business_no) VALUES(?1,'operator',3,'2026-10-09T10:01:00','rd_sample',?2,'TEST-RD-WORK-3')",postgres_compat::params![project,record]).unwrap();
+        let detail = get_by_id(&pool, record).unwrap();
+        let (rows, _) = list(
+            &pool,
+            Some(project),
+            None,
+            false,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            1,
+            20,
+            false,
+            None,
+            None,
+        )
+        .unwrap();
+        let listed = rows.iter().find(|row| row.id == record).unwrap();
+        assert_eq!(detail.recorded_quantity, 3);
+        assert_eq!(listed.recorded_quantity, 3);
+        assert!(!detail.workload_recorded);
+        assert!(!listed.workload_recorded);
+        assert_eq!(listed.sequence_no, 1);
+        conn.execute("INSERT INTO work_records(project_id,user_name,quantity,recorded_at,source_type,source_record_id,business_no) VALUES(?1,'operator',7,'2026-10-09T10:02:00','rd_sample',?2,'TEST-RD-WORK-7')",postgres_compat::params![project,record]).unwrap();
+        assert!(get_by_id(&pool, record).unwrap().workload_recorded);
+        let (rows, _) = list(
+            &pool,
+            Some(project),
+            None,
+            false,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            1,
+            20,
+            false,
+            None,
+            None,
+        )
+        .unwrap();
+        assert!(rows[0].workload_recorded);
+        assert_eq!(rows[0].sequence_no, 1);
+    }
+}
