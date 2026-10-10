@@ -2,9 +2,9 @@
 
 > 最后更新：2026-10-10
 >
-> 当前开发基线：`v2.3.44`（个人与授权范围工作量汇总）
+> 当前开发基线：`v2.3.45`（研发送样时间筛选与实验室送样记录）
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.44/`
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.45/`
 
 ## 1. 文件定位与强制维护规则
 
@@ -135,7 +135,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 步骤：
 
 1. 确保 `postgres-runtime/installer/vcredist_x64.exe` 存在；可从 `https://aka.ms/vs/17/release/vc_redist.x64.exe` 获取。新版本目录默认没有该文件，最省事的做法是从上一版目录复制（它同样是 CI 下载的同名文件）。
-2. 执行 `cargo build --release --locked`。把上一版 `target/release` 复制到新版本目录的 `target/release` 可复用依赖缓存，实测 v2.3.18 只需 57 秒（不复制则需重新编译全部依赖）。
+2. 使用根目录共享 `CARGO_TARGET_DIR` 编译缓存执行 `cargo build --release --locked`，新版本构建路径可用 junction 指向共享 target 和 build-resources 运行库；不得复制历史版本的构建产物。
 3. 调用 Inno Setup 编译 `build_server_installer.iss` 和 `build_hot_update_installer.iss`。
 4. 检查两个 EXE 的 `ProductVersion`、`FileVersion`、大小和 SHA-256。
 5. 注意 `Copy-Item` 在目标目录已存在时可能生成 `postgres-runtime/postgres-runtime` 嵌套副本；构建前检查并避免把重复运行时打包或提交。
@@ -539,9 +539,9 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 - 仓库交付与当前版本：`README.md`
 - 唯一长期记忆与开发惯例：`PROJECT_MEMORY.md`
-- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.44/更新说明.md`
-- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.44/README.md`
-- 上一版基线说明：`source/LabFlow-PostgreSQL-v2.3.43/更新说明.md`
+- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.45/更新说明.md`
+- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.45/README.md`
+- 上一版基线说明：`source/LabFlow-PostgreSQL-v2.3.44/更新说明.md`
 - 记录表交互规范：`docs/表格.md`
 - 通用编码原则：`skills/ponytail/SKILL.md`
 - 自动发布事实来源：当前 `.github/workflows/` 下的工作流文件
@@ -585,3 +585,15 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 发布结果：源码8466b9e6、标签v2.3.44已推origin；Windows CI38023319496、Docker tag38023319517/main38023317742全部success。CI安装包回写338e3c28已快进拉回，Release v2.3.44发布成功；未向Gitee推送。
 - 根完整包78,786,660字节，SHA-256 d55ac6c1db32128c00effcd7c5db3b396a2903bd430c53f61e5a95044d0f0a78；热更新28,290,782字节，SHA-256 4a11fc808adf9129fa94b522be5ce4867db0c7dcff1566883f292caa1e706dee。两包均为2.3.44.0，大小及摘要与Release资产一致。
 - GHCR 2.3.44/latest最终摘要均为sha256:524ff17b368c117cade799b380146f13963f9c8c28f197177b0e3216de32c26c，配置版本2.3.44、linux/amd64、入口/app/workload-tool、端口8000/tcp。已验证发布与配置，未在本机拉取运行容器；本轮隔离测试程序、Vite及测试PostgreSQL均已停止。
+
+## v2.3.45 送样时间与实验室记录规则（2026-10-10）
+
+- 批准方案：`docs/ui-lab-rd-records/LabFlow-实验室送样记录与时间筛选UI方案.html`；新源码从 v44 的跟踪文件隔离，不复制构建、依赖、运行数据和旧交接记忆。
+- 研发列表新增服务器日期筛选，默认全部时间/全部状态；按 `recorded_at` 送样时间查询，日期上界为次日00:00排他，完整时间保持精确时刻。安全日期函数兼容PG14+，无法归类的存量日期全量查看保留、时间范围查询排除，不改写原值。
+- 实验室记录路由为 `/entry/:groupId?tab=records`，原默认路由仍进入工作量。沿用原页面、手机卡片和管理员全局配置，固定实验室不可通过查询参数解除。
+- 新权限 `records:rd:view-work-lab` 纳入角色管理，只控制查看；必须叠加分析门户可见实验室和逐条执行部门授权，禁止读取回收站。原取样/退回/编辑/工作量权限不变。
+- 新视图执行部门取 `execution_division_id → 实验室部门 → division_id`，与取样动作一致；无 analysis 参数的旧研发 Own/Lab/All 和部门优先序保持原状。
+- 迁移 `2.3.45-work-lab-rd-records` 只运行一次，补齐分析系统角色及分析系统模板来源角色；不按单独工作量权限给任意角色授权、不授予全局查看或操作，撤销后重启不补回。
+- 同实验室页签保留表单和记录筛选，公共账号 `subject_user_id` 仍作工作量/取样身份，不用于筛送样人。未提交数量/倍率在返回、切账号及关页时提示，未新增跨实验室草稿缓存。
+- 验证：169项后端测试（166常规、3隔离备份恢复）与13项前端测试通过，fmt/check/Release及前端生产构建通过。真实Release HTTP103项检查覆盖窄权限、无权限、空部门范围、公共账号、日期/实验室/分页、取样及工作量归属实际录入人、已录入状态和重复录入拒绝；新库初始化与v44隔离测试库升级启动正常。
+- 浏览器验证320/390/768/1280原记录布局与列配置无回退，日期范围/草稿/页签/公共账号/只读/竞态通过。真实Release浏览器7组场景通过，长实验室名称不再撑宽手机门户。本地完整包与热更新包均为2.3.45.0；远端发布继续执行。不操作生产数据库与安装。
