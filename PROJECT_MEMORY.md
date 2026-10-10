@@ -554,3 +554,6 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 此版本不新增迁移、不复制旧构建产物；前端重新生成 backend/static，Windows 完整/热更新与 GHCR 按标签发布。
 - 本版验证：前端9项测试、类型/生产构建、Rust fmt/check/Release及1项全局设置权限测试通过。真实组件模拟API浏览器回归涵盖320/390/768手机和1280桌面，自定义列宽、操作列位置、字段隐藏及长文；未在生产环境覆盖安装。
 - 管理员发布与普通用户旧个人视图的浏览器流程已通过；样式抽屉提升至 modal 层级，避免手机顶部栏遮挡关闭按钮，真实点击关闭验证通过。
+- 发布结果：源码提交 e24f7d6f、标签 v2.3.42 已推送 origin；Windows CI 38009386665、Docker tag 38009386717/main 38009382684 全部 success，CI安装包回写提交 4c333785 已拉回。
+- 根 installers/LabFlow-v2.3.42.exe（78,732,105 字节）SHA-256：b10c529e298a83be6fb60967306bef81f7630a66f330a60f1b3e7d8ce5f01203；HotUpdate（28,237,204 字节）：381e86ea11c480da110de66acf92e0dc8b248d124b9e9254f91834c4bfaab968。与 Release v2.3.42 资产 digest 完全一致，产品版本均为2.3.42.0。
+- GHCR 2.3.42 与 latest 最终摘要相同：sha256:0d6d8199705bbd5c51059e75fd6520e4736b6c81dd57bd92f66e7a8cd3d98700。新版本目录 installer/ 保留独立本地构建版及checksums.sha256，根 installers/ 为CI发布版。未操作生产数据或覆盖现场安装，Vite测试服务已停止。
