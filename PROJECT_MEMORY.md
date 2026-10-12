@@ -2,11 +2,9 @@
 
 > 最后更新：2026-10-12
 >
-> 当前正式版本：`v2.3.49`（记录操作按钮及前后状态配色）；开发、本地构建与GitHub/GHCR发布完成，实际验证范围和未验收项见本版记录。
+> 当前正式版本：`v2.3.50`（取样工作量日期时间）；开发、本地构建及 GitHub/GHCR 发布与资产核验完成，实际验证范围和未验收项见本版记录。
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.49/`
-
-> 开发版本：`v2.3.50`，源码目录 `source/LabFlow-PostgreSQL-v2.3.50/`；工作量日期时间功能、定向验证、前后端生产构建及本地完整/热更新包完成，GitHub/GHCR 发布待核对，正式版本仍为 `v2.3.49`。
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.50/`
 
 ## 1. 文件定位与强制维护规则
 
@@ -543,9 +541,9 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 - 仓库交付与当前版本：`README.md`
 - 唯一长期记忆与开发惯例：`PROJECT_MEMORY.md`
-- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.49/更新说明.md`
-- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.49/README.md`
-- 上一版基线说明：`source/LabFlow-PostgreSQL-v2.3.46/更新说明.md`
+- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.50/更新说明.md`
+- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.50/README.md`
+- 上一版基线说明：`source/LabFlow-PostgreSQL-v2.3.49/更新说明.md`
 - 记录表交互规范：`docs/表格.md`
 - 通用编码原则：`skills/ponytail/SKILL.md`
 - 自动发布事实来源：当前 `.github/workflows/` 下的工作流文件
@@ -674,15 +672,18 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 根正式完整包LabFlow-v2.3.49.exe：78,860,258字节，SHA-256 a13d636f0bc77586f294bc49015f2e07de719afcaa46924c72d0e9b10e50271e；热更新包LabFlow-v2.3.49-HotUpdate.exe：28,355,127字节，SHA-256 64b84f2200db82685d10fe41b15eb9807c528fe61e5d653e7ba539fcc92222b4。两包产品/文件版本均为2.3.49.0，与Release大小和摘要、CI回写Git blob全部一致；本版installer/仍保留本地独立构建包。
 - 提交范围为本版432个文件与根README/共享记忆；运行库、依赖、缓存、测试夹具和版本目录安装包均未入库，旧版本及历史安装包未修改。新增/修改代码相对v48无新增空白错误；整新目录入库的156处尾空白均在原v48中存在（包含旧文档Markdown换行和位置偏移），不为发版改写无关历史内容。
 
-## v2.3.50 取样工作量日期时间（2026-10-12，验证完成待发布）
+## v2.3.50 取样工作量日期时间（2026-10-12，正式发布）
 
 - 从正式 v2.3.49 的 432 个跟踪文件隔离复制 428 个源码文件，排除 4 个旧 `backend/static` 文件；9 处版本元数据统一为 2.3.50，Windows 数字版本 2.3.50.0。仅用本地 junction 复用依赖、运行库和根编译缓存，不复制历史产物、运行数据或旧记忆，不修改旧版本和历史安装包。共享 `target/release/static` 仍指旧版，未替换；实际服务验证须装配本版前端资源。
 - 研发送样、样品信息登记共用 `SampleWorkloadDialog` 增加工作量日期时间，原生 datetime-local 支持秒。每次打开以本机北京时间初始化，由 `/api/server-time` 的 unix_ms 校准；请求失败保留初始化值并提示核对。手动编辑及提交后不覆盖，关闭/重开隔离旧请求；SI 显式 payload 与 RD 提交均带所选值。两类确认 API 保存 `recorded_at`，个人、授权范围、类型汇总及导出继续按该字段归集。`created_at` 继续代表真实提交时间，源记录送样/取样时间和工作量归属不变；跨日期分次录入仍共用同一来源数量上限。
 - 两确认 DTO 的 recorded_at 可选，省略/null 统一 UTC 当前转 +08:00 北京时间；本地分钟/秒格式标准化 `YYYY-MM-DDTHH:mm:ss`，显式空、非法年/闰日/时刻、闰秒及 Z/offset 后缀拒绝。没有新增未来日期限制。沿用 HTTP200+业务 code1001，不为局部功能更换既有错误契约。无需新增迁移，不修改已发布迁移标识、不回填旧记录日期、不重算历史工作量；前版全局按钮配色、手机布局、管理员配置及业务权限保留。
-- 根 README 明确 v2.3.49 正式 / v2.3.50 开发中；新版 README、安装包说明和同一份累计更新说明同步，最新版说明置顶，不新建交接或第二份共享记忆。
+- 根 README、共享记忆与本版 README/安装包说明/累计更新说明统一为 v2.3.50 正式版及源码目录；最新版更新说明置顶，历史完整保留，不新建交接或第二份共享记忆。安装包内说明保留标签构建时的状态，最终发布结果以根共享记忆和 Release 为准，不因文档收尾重复打包。
 - 本版实际检查：Rust fmt/check（console）及默认非console Release、前端类型/生产构建通过；35项前端回归、6项React/MUI组件渲染与两payload接线检查、4项日期/DTO单测、1项管理员配置权限单测通过。4项实际专用DB回归逐项 ran=1/passed=1/failed=0/ignored=0，覆盖来源数量编辑/并发容量、跨月人员授权和类型钻取；证据 `test-artifacts/v2.3.50/db-regression-summary.json`。没有重跑全部后端测试，不计入旧版结果。
 - 本轮全新 PG5550/labflow50_http 与 HTTP58550 装配新Release和最终前端index-DUuWInEu.js，349项集成断言全部通过：主HTTP288、原生PowerShell ZIP/XML Excel18、重启43。两入口8/9月分钟/秒历史录入、实际操作账号归属、真实created_at/源取样时间保持、跨日期容量、18种无效输入组合、未授权/跨部门无写入、旧client省略/null默认北京当前均通过；个人、全局、授权部门、类型/方法/仪器、旧人员报表和原统计同源对账。Excel page_size=1仍导出每月全部2条；8月数量5/工作量10、9月数量6/工作量12。重启保留8条成功记录与所选日期，迁移73条未重跑。
 - 集成证据 `test-artifacts/v2.3.50/integration-summary.json` 及 http-result/xlsx-result/restart-result/cleanup-result.json。实际二进制SHA-256 `07d01295a46995e10485ff88db584c09a07fe16ebd6790dac57866b0f70ef619`，JS SHA-256 `09cb70693cfa5385a13b71752143f1a2192ffcc5d8ff622db5888563ef191907`，HTTP资源与本轮静态相同。纯测试fixture和本机测试口令不入Git；只核验路径后停止本轮app24488/30736，专用PG25844按新pgdata正常fast关闭，host会话结束，5550/58550均无监听，共享release/static链接未动。
-- 前后端生产构建、定向验证及本地完整/热更新包独立构建已完成，GitHub/GHCR发布待核对，正式版本仍为v2.3.49。未验收真实手机/桌面浏览器、生产覆盖安装、大表性能或实际容器启动；既有方法预估与项目系数统计差异未修改，不重算历史数据。
-- 本地完整包78,851,284字节、SHA-256 `34023d2498021b17032c962efad8fcbc2192d3a1173399036ea1a0c211f616fd`；热更新包28,346,096字节、SHA-256 `13a5663b2a73c5f01fc1bdf2f41172acd5bb6ca1a6dc68c7eaf42cf70445a07c`。两包产品/文件版本均为2.3.50.0，保存在本版installer/及local-packages-sha256.json，不覆盖CI或历史安装包；本地完整包更新说明保留打包时的待发布状态，不为后续发布文档重复打包。
+- 前后端生产构建、定向验证、本地完整/热更新包及GitHub/GHCR正式发布与资产核验完成。未验收真实手机/桌面浏览器、生产覆盖安装、大表性能或实际容器启动；既有方法预估与项目系数统计差异未修改，不重算历史数据。
+- 本地完整包78,851,284字节、SHA-256 `34023d2498021b17032c962efad8fcbc2192d3a1173399036ea1a0c211f616fd`；热更新包28,346,096字节、SHA-256 `13a5663b2a73c5f01fc1bdf2f41172acd5bb6ca1a6dc68c7eaf42cf70445a07c`。两包产品/文件版本均为2.3.50.0，保存在本版installer/及local-packages-sha256.json，不以CI正式包覆盖，也不修改历史安装包。
 - 暂存范围经主代理核对为434个新版文件加根README/本共享记忆（436项），相对v49为20个已有及2个新增非static变动。没有新增空白诊断；整新目录156条尾空白由基线继承，不为此次功能改写历史文本。依赖、运行库、缓存、测试fixture和版本installer不入Git。
+- 发布源码及注释标签v2.3.50指向 `ba372a29b7d1dd4eb581cc2cce4a67a2657a5e86`；Windows工作流38225458575、Docker main/tag工作流38225449393/38225458649均成功。正式非预发布 [GitHub Release v2.3.50](https://github.com/HotLL233/labflow/releases/tag/v2.3.50)（ID410402780）已发布，CI回写 `6b3e791e61531c19abae584d9d77d413d9d023c9` 已快进拉回，仅推GitHub、未推Gitee。
+- 根installers/正式完整包78,817,374字节、SHA-256 `9f1b046feec783610dbb6bcf756cd398fd5442e289cdbb5274d64315cadad62d`；正式热更新包28,317,538字节、SHA-256 `4706912a971760e0b85bdfc23fcc9b528b3ecd8acc90ab2db219926995671cf1`。产品/文件版本2.3.50.0、大小、SHA-256与Release资产及CI Git blob全部一致，证据 `test-artifacts/v2.3.50/ci-packages-sha256.json` 和 github-release-assets.json；本版installer/仍为独立本地留档。
+- GHCR2.3.50/latest摘要一致：`sha256:4f750a7b537e51b55bbeac30faefbb59646d4d496d76df091cbb7fff6c6e568d`。匿名核验linux/amd64、版本label2.3.50、User labflow、入口/app/workload-tool、8000/tcp及index/manifest/config哈希全部通过，证据 `test-artifacts/v2.3.50/ghcr-final.json`；未实际启动容器。
