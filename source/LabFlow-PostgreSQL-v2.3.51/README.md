@@ -10,6 +10,8 @@
 
 大表验证：专用测试库新建bm51隔离schema，研发送样/样品各5万条跨730日及日期边界，1121项SQL断言、20组查询测量通过；原模板/public记录与迁移数量和哈希不变。暖查询中位数：研发送样近30天列表237.099ms、计数234.252ms，全量列表208.806ms、计数33.492ms；样品近30天列表2.436ms、计数2.513ms。研发日期安全解析与编号窗口仍有成本，不能宣称日期筛选必然更快；数据仅为数据库执行，不含权限链、网络、JSON与浏览器，不报旧版提速百分比。普通分页来源SUM每页仅50次，操作筛选/候选仍按当前范围聚合。
 
+交付完成：源码提交 `c0a8c204` 与注释标签 `v2.3.51` 已推送GitHub；Windows工作流38344345783、Docker主分支38344340402/标签38344345795全部成功。[GitHub Release v2.3.51](https://github.com/HotLL233/labflow/releases/tag/v2.3.51)正式发布，两CI包已回写根 `installers/`，回写提交 `8002038b` 已快进拉回，版本和大小/SHA-256与Release及Git blob一致；本版 `installer/` 保留独立本地构建包。GHCR `2.3.51`/`latest` 摘要相同，为 `sha256:58a987d2a2966f2f995e7a4cb57fb87acb8756ef8df1b00b1de2d83072418f75`，linux/amd64、版本及manifest/config哈希核对通过；未启动容器。仅推GitHub，Gitee继续暂停。
+
 本轮旧版对照和新版隔离HTTP服务的装配/启动均被自动审批拒绝，仅返回 blocked by policy；未绕过执行。未完成新版HTTP首次启动、重启、真实浏览器/手机、局域网端到端耗时、生产覆盖安装或实际容器启动验收。独立测试数据库及源码回归不等于这些验收，既有方法预估与项目系数统计差异保留。
 
 ## 主要功能
@@ -51,7 +53,7 @@ cargo run --features console
 
 ## Docker on Ubuntu
 
-本版镜像由标签发布工作流构建，发布与摘要核验结果以根 `PROJECT_MEMORY.md` 和本版 Release 为准；不将历史版本结果计为本版验收。
+本版 `ghcr.io/hotll233/labflow:2.3.51` 与本轮 `latest` 已发布且摘要一致，镜像元数据、manifest/config实际字节哈希核验通过；未实际启动发布容器。
 
 Docker 版包含应用和 PostgreSQL 两个容器。`docker-compose-ghcr.yml` 同时保留 Gitee 镜像变量和 GHCR 镜像变量；使用拉取脚本时，会按照 `LABFLOW_IMAGE_PRIORITY` 的顺序先尝试网络更好的仓库，失败后自动切换到下一个仓库。
 

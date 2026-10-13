@@ -2,9 +2,9 @@
 
 > 最后更新：2026-10-13
 >
-> 当前正式版本：`v2.3.50`（取样工作量日期时间）；开发、本地构建及 GitHub/GHCR 发布与资产核验完成，实际验证范围和未验收项见本版记录。
+> 当前正式版本：`v2.3.51`（近30天按需加载与记录性能优化）；开发验证、本地构建及 GitHub/GHCR 发布与资产核验完成，实际验证范围和未验收项见本版记录。
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.50/`（正式版）；`source/LabFlow-PostgreSQL-v2.3.51/` 为本轮隔离开发版。
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.51/`（正式版）。
 
 ## 1. 文件定位与强制维护规则
 
@@ -541,9 +541,9 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 - 仓库交付与当前版本：`README.md`
 - 唯一长期记忆与开发惯例：`PROJECT_MEMORY.md`
-- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.50/更新说明.md`
-- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.50/README.md`
-- 上一版基线说明：`source/LabFlow-PostgreSQL-v2.3.49/更新说明.md`
+- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.51/更新说明.md`
+- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.51/README.md`
+- 上一版基线说明：`source/LabFlow-PostgreSQL-v2.3.50/更新说明.md`
 - 记录表交互规范：`docs/表格.md`
 - 通用编码原则：`skills/ponytail/SKILL.md`
 - 自动发布事实来源：当前 `.github/workflows/` 下的工作流文件
@@ -688,7 +688,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 根installers/正式完整包78,817,374字节、SHA-256 `9f1b046feec783610dbb6bcf756cd398fd5442e289cdbb5274d64315cadad62d`；正式热更新包28,317,538字节、SHA-256 `4706912a971760e0b85bdfc23fcc9b528b3ecd8acc90ab2db219926995671cf1`。产品/文件版本2.3.50.0、大小、SHA-256与Release资产及CI Git blob全部一致，证据 `test-artifacts/v2.3.50/ci-packages-sha256.json` 和 github-release-assets.json；本版installer/仍为独立本地留档。
 - GHCR2.3.50/latest摘要一致：`sha256:4f750a7b537e51b55bbeac30faefbb59646d4d496d76df091cbb7fff6c6e568d`。匿名核验linux/amd64、版本label2.3.50、User labflow、入口/app/workload-tool、8000/tcp及index/manifest/config哈希全部通过，证据 `test-artifacts/v2.3.50/ghcr-final.json`；未实际启动容器。
 
-## v2.3.51 近30天按需加载与记录性能优化（2026-10-13，开发验证中）
+## v2.3.51 近30天按需加载与记录性能优化（2026-10-13，正式发布）
 
 - 记录页默认按北京时间加载今天及前29天，研发送样按送样时间 recorded_at，样品信息登记按 submitted_at 查询。点击“全部历史”或应用自定义日期后才请求对应范围，原本的今日记录与统计日期口径不扩大。取样等操作以服务端成功响应更新单行，再后台校正当前筛选、排序、计数和分页；旧请求不得覆盖新查询。手机只挂载当前布局，详情首次展开才创建，保留全部自定义列、按钮、配色、摘要、字号和边框配置。
 - 减少重复初始请求与同键配置在途请求；时钟单独更新；实验室工作量面板首次访问才挂载且访问后保留草稿。统计切表复用相同条件的公共聚合，成功编辑/删除及返回页面仍刷新；预览分页仅限制渲染，完整汇总与导出保持。数据库复用真实 PreparedStatement，归还连接不再探活，用户/角色关联整批读取，会话每请求即时校验，不缓存权限。记录查询、取样和工作量确认的完整同步调用链移入阻塞线程；取样事务锁源记录并保留审计，默认列表来源工作量每行单次聚合，操作筛选仍需范围聚合，实验室访问检查不再读取全部门户卡片。静态资源提供预压缩 gzip 和哈希文件缓存，HTML重新验证，主题请求设超时。
@@ -704,3 +704,9 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 - 本轮本地完整与热更新包独立构建完成，两包产品/文件数字版本均2.3.51.0（Windows字符串资源含填充空格，核验须Trim）。本地留档：LabFlow-v2.3.51-HotUpdate.exe 28931103字节，SHA-256 `91798ae27ec77c99c9c596c747f658cd360b998cfb191f8c51a768680b538055`；LabFlow-v2.3.51.exe 79432627字节，SHA-256 `401754eb15f1b84b5aa214346e907b5a9c66c9458ed57e4905e2b1a8d7cee4cf`。路径为本版installer/及local-packages-sha256.json，CI包不得覆盖本地独立包。
 - 暂存范围：本版444项文件加根README/本共享记忆，共446项；相对v50有46个非static文件改变或新增。未纳入依赖、运行库、缓存、夹具与版本目录安装包，旧版本及历史安装包无变动；相对基线无新增空白问题，整目录156条尾空白来自原版。
+
+- 交付完成：源码提交 `c0a8c204` 与注释标签 `v2.3.51` 已推送GitHub；Windows工作流38344345783、Docker主分支38344340402/标签38344345795全部成功。[GitHub Release v2.3.51](https://github.com/HotLL233/labflow/releases/tag/v2.3.51)正式发布，两CI包已回写根 `installers/`，回写提交 `8002038b` 已快进拉回，版本和大小/SHA-256与Release及Git blob一致；本版 `installer/` 保留独立本地构建包。GHCR `2.3.51`/`latest` 摘要相同，为 `sha256:58a987d2a2966f2f995e7a4cb57fb87acb8756ef8df1b00b1de2d83072418f75`，linux/amd64、版本及manifest/config哈希核对通过；未启动容器。仅推GitHub，Gitee继续暂停。
+- 根正式CI包：`LabFlow-v2.3.51-HotUpdate.exe` 28929566字节，SHA-256 `44d83181ba10c28ac544013094c6f51882bb085e44a619682d5acc6d889398f7`，产品/文件数字版本2.3.51.0；`LabFlow-v2.3.51.exe` 79437101字节，SHA-256 `41ec06f3a267a7b245dd30a217b1be990dd382fe342b87e93e586e9e7246921f`，产品/文件数字版本2.3.51.0。证据 `test-artifacts/v2.3.51/ci-packages-sha256.json`、github-release-assets.json与github-runs.json。
+- 实际本地最终Release SHA-256 `573477b325ec49a1d4a92a55dd688e808a1b03626d800515f1667e778aff9f06`；最终前端index-Bh4wutca.js与gzip逐字节解压一致，Git静态blob哈希匹配，Windows/Linux checkout不改变新版static字节。未装配或启动新HTTP程序，不能称为HTTP静态验收。
+- 专用PG5551已核实精确数据目录后正常fast关闭，5551/58551无监听；没有新版HTTP实例启动，现场8000仍为原PID12964。共享target/release/static仍指v48，未替换；未操作生产配置、数据、附件或现场安装。验证范围与清理证据 `test-artifacts/v2.3.51/verification-summary.json`、cleanup-result.json。
+- 本轮最后仅五份交付文档以[skip ci]提交收尾，源码与标签构建已经全部通过，不因文档状态更新重打包；安装包内更新说明是标签时快照，最终发布事实以根共享记忆/Release为准。
