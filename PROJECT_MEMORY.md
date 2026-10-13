@@ -2,9 +2,9 @@
 
 > 最后更新：2026-10-13
 >
-> 当前正式版本：`v2.3.52`（研发时间查询布局与返回按钮边框）；开发验证、本地构建及GitHub/GHCR发布与资产核验完成，验证范围及未验收项见本版记录。
+> 当前正式版本：`v2.3.53`（样品登记标准计量关联）；开发验证、本地构建及GitHub/GHCR发布与资产核验完成，验证范围及未验收项见本版记录。
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.53/`（开发验证中），正式发布基线为v2.3.52。
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.53/`（正式版），隔离基线为v2.3.52。
 
 ## 1. 文件定位与强制维护规则
 
@@ -277,7 +277,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 ## 10. 版本与决策历史
 
-### v2.3.53（开发验证中）
+### v2.3.53（2026-10-13，正式发布）
 
 样品登记保留原文，取样工作量弹窗独立选择标准部门、实验室、项目、仪器与方法。稳定项目ID优先于旧名称；全部有效关联方法可选，映射、登记内容与检测类型仅影响推荐排序，不再截断200条或用文字匹配排除方法。仪器用于筛选关联方法，支持搜索与明确自定义；自定义只存工作量快照，不自动创建主数据。无法关联时可保存按当前账号和来源记录隔离的本机待关联草稿，草稿不计入统计。
 
@@ -289,9 +289,13 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 验证：最终独立PostgreSQL后端204项通过、0失败，3项需专门备份环境的测试按原设置跳过；兼容层10项、前端64项通过。真实handler回归覆盖205方法、映射排序、标准/自定义确认、普通账号归属及跨实验室权限、通用方法部门范围、管理员配置边界、历史归档/缺部门补录、稳定ID改名、迁移幂等、状态和容量复核、追溯持久化及自定义导出。Rust fmt/check（console）、默认非console Release与前端类型检查/生产构建通过，gzip逐字节和九处版本核验通过。旧版本结果不计入本版。
 
-本地构建完成：完整包与热更新包已在本版 installer/ 生成，产品/文件版本均为2.3.53.0，SHA-256已核验。本版源码、GitHub Release与GHCR 2.3.53/latest正在发布，尚待CI完成及正式产物核验；仅推GitHub，Gitee继续暂停。
+交付完成：源码提交 `72011188` 与注释标签 `v2.3.53` 已推送GitHub；Windows工作流38357748207、Docker主分支38357742899/标签38357748098全部成功。[GitHub Release v2.3.53](https://github.com/HotLL233/labflow/releases/tag/v2.3.53)正式发布，两CI包已回写根 `installers/`，回写提交 `a84cdaa3` 已快进拉回，版本、大小及SHA-256与Release/Git blob一致。本版 `installer/` 保留独立本地构建包。GHCR `2.3.53`/`latest` 摘要相同，为 `sha256:920a5ccd7dc2e091248b53a769b219377c3f4dbf6cc5cf2ec748541f687ca231`，linux/amd64、版本及index/manifest/config字节哈希核验通过；未实际启动容器。仅推GitHub，Gitee继续暂停。
 
 未操作生产数据库、现场安装或已运行服务；尚未完成真实手机/桌面浏览器交互、现场覆盖安装或实际容器启动验收。安装包内说明保留标签构建时快照，最终交付状态见根PROJECT_MEMORY.md与GitHub Release。
+
+- GitHub Release ID 411374962，源码完整SHA `72011188d15794581880cac65b3e670613ec4601`；正式CI两包：`LabFlow-v2.3.53.exe` 79493914字节，产品/文件数字版本2.3.53.0，SHA-256 `aba13f84aac58ebbd355416c9392972bde1829f65a7284ffb0159d007a61323f`；`LabFlow-v2.3.53-HotUpdate.exe` 28986814字节，产品/文件数字版本2.3.53.0，SHA-256 `26c7915a64aa79a2bc9842f3ba91dd09091d7414db94291f9de6ad007f18d3d9`。证据test-artifacts/v2.3.53/github-runs.json、github-release-assets.json与ci-packages-sha256.json。
+- 本地Release SHA-256 `2f9900a935672d6a1782b382d9187bb1b98b5abea7cb69396608d75f6ea07af0`；最终前端index-cV7VQEHG.js及两个gzip解压逐字节核验通过，九处版本核验通过；.gitattributes保持static -text。独立测试数据库已正常停止，5553无监听；根target/release/static仍指v48，不替换现场运行目录。
+- GHCR版本/latest同摘要，index、linux/amd64 manifest及config的实际字节哈希与描述符一致，版本label2.3.53、User labflow、入口/app/workload-tool、8000/tcp正确；证据test-artifacts/v2.3.53/ghcr-final.json，未下载镜像层或启动容器。五份交付文档最终以[skip ci]提交收尾，安装包内说明保留标签时快照，不因发布结果更新而重复打包。
 
 ### v2.3.41（历史开发基线）
 
@@ -551,7 +555,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - Gitee 仓库历史体积超配额，后续推送可能再次被拒绝（根因见 11.1，仅改当前树无效）。
 - 前端存在 Vite 大 chunk 警告，但不是当前构建失败；没有明确需求时不要顺手做拆包重构。
 - Rust 代码存在既有未使用函数等警告；局部功能开发不要扩大为无关清理。
-- 样品信息工作量链路尚未完整应用 `common_method_division_scopes`，若调整必须先明确产品口径。
+- v2.3.53对跨来源实验室计量候选及提交应用 `common_method_division_scopes`；原来源受限历史补录兼容保留，不能据此授权其他目标。
 - LibreOffice 当前由安装器检测而非自动安装；若要自动安装，需要显式调用脚本的 `-Install` 分支并评估网络、静默安装和失败回退。
 - 发布前必须检查误生成的嵌套运行时目录、忽略目录和暂存文件，防止大文件或本地数据进入提交。
 
@@ -559,9 +563,9 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 - 仓库交付与当前版本：`README.md`
 - 唯一长期记忆与开发惯例：`PROJECT_MEMORY.md`
-- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.52/更新说明.md`
-- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.52/README.md`
-- 上一版基线说明：`source/LabFlow-PostgreSQL-v2.3.51/更新说明.md`
+- 当前版本说明：`source/LabFlow-PostgreSQL-v2.3.53/更新说明.md`
+- 当前源码说明：`source/LabFlow-PostgreSQL-v2.3.53/README.md`
+- 上一版基线说明：`source/LabFlow-PostgreSQL-v2.3.52/更新说明.md`
 - 记录表交互规范：`docs/表格.md`
 - 通用编码原则：`skills/ponytail/SKILL.md`
 - 自动发布事实来源：当前 `.github/workflows/` 下的工作流文件
