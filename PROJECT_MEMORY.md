@@ -2,9 +2,9 @@
 
 > 最后更新：2026-10-13
 >
-> 当前开发版本：`v2.3.52`（研发时间查询布局与返回按钮边框）；正式基线v2.3.51，v52构建与发布进行中，实际状态见本版记录。
+> 当前正式版本：`v2.3.52`（研发时间查询布局与返回按钮边框）；开发验证、本地构建及GitHub/GHCR发布与资产核验完成，验证范围及未验收项见本版记录。
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.52/`（开发版）。
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.52/`（正式版）。
 
 ## 1. 文件定位与强制维护规则
 
@@ -711,14 +711,18 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 专用PG5551已核实精确数据目录后正常fast关闭，5551/58551无监听；没有新版HTTP实例启动，现场8000仍为原PID12964。共享target/release/static仍指v48，未替换；未操作生产配置、数据、附件或现场安装。验证范围与清理证据 `test-artifacts/v2.3.51/verification-summary.json`、cleanup-result.json。
 - 本轮最后仅五份交付文档以[skip ci]提交收尾，源码与标签构建已经全部通过，不因文档状态更新重打包；安装包内更新说明是标签时快照，最终发布事实以根共享记忆/Release为准。
 
-## v2.3.52 研发时间查询布局与返回按钮边框（2026-10-13，开发中）
+## v2.3.52 研发时间查询布局与返回按钮边框（2026-10-13，正式发布）
 
 - 研发送样记录的时间快捷查询、自定义时间及按列筛选按钮移到实验室筛选所在行；记录计数放在该行末尾，手机及窄屏自动换行。已选条件继续显示在下一行，独立研发记录与实验室内嵌记录共用同一布局。
 - 程序内返回上一页、返回门户及返回汇总的控件均有边框：24处原无边框控件通过主题中的明确class补充1px当前文字色边框，4处已有outlined边框保留；9个纯箭头返回按钮补充可访问名称。保留既有尺寸、颜色、圆角、点击导航、公共账号分支与未提交草稿确认。
 - 保留近30天默认加载、历史按需查询、全部时间与列筛选、分页、角色权限、工作量归属和统计口径；全部列显隐、宽度、操作按钮顺序/位置/尺寸/配色、手机摘要、字号和内外边框配置继续沿用。本版没有后端业务代码或数据库迁移变更，不重算历史数据。
 - 从正式v2.3.51的444个Git跟踪文件复制438个，排除6个旧前端静态产物；9处版本元数据统一为2.3.52，Windows数字版本2.3.52.0。旧版本和历史安装包保留，依赖、运行库与编译缓存使用本地junction；前端、服务器及两种安装包重新构建，共享target/release/static不替换。
 - 验证：62项前端回归、类型检查与生产构建通过；Rust fmt/check（console）及默认非console Release构建通过。前端gzip解压与原文件逐字节一致。后端207个源码与配置文件逐字节与v51一致；九处版本元数据和两包数字版本核验通过。此次只改布局及样式，没有重跑数据库或HTTP集成测试，旧版本测试数量不计入本版。
-- 交付进度：本地完整包与热更新包已独立构建并核对版本及SHA-256，留在本版installer/。GitHub源码与标签、Release两包及GHCR镜像待本次推送后由既有工作流发布并核验；仅推GitHub，Gitee继续暂停。
+- 交付完成：源码提交 `5f22c264` 与注释标签 `v2.3.52` 已推送GitHub；Windows工作流38348692617、Docker主分支38348687868/标签38348692489全部成功。[GitHub Release v2.3.52](https://github.com/HotLL233/labflow/releases/tag/v2.3.52)正式发布，两CI包已回写根 `installers/`，回写提交 `0d857e61` 已快进拉回，版本、大小及SHA-256与Release/Git blob一致。本版 `installer/` 保留独立本地构建包。GHCR `2.3.52`/`latest` 摘要相同，为 `sha256:3b4d09f38144e042af66b6b46d2bbcff0abd07d864dcb36c810a41a1887d5eb2`，linux/amd64、版本及index/manifest/config字节哈希核验通过；未实际启动容器。仅推GitHub，Gitee继续暂停。
 - 本轮未进行真实浏览器/手机交互、现场覆盖安装或实际容器启动验收；未操作生产数据库、现场配置、附件或已运行服务。安装包内更新说明保留标签构建时快照，最终发布结果见根PROJECT_MEMORY.md与GitHub Release。
 - 本地独立包：`LabFlow-v2.3.52-HotUpdate.exe` 28936267字节，产品/文件版本2.3.52.0，SHA-256 `45e98148ba856deaeff6ffcd5e923929a43fa90243d04a53650619f1bda5df6c`；`LabFlow-v2.3.52.exe` 79443366字节，产品/文件版本2.3.52.0，SHA-256 `1c7d74c762f5ed3555a5c0ea5d4bb8ba809ebf4ec6159ee65b6d2cb8a2978c8a`。证据位于test-artifacts/v2.3.52/local-packages-sha256.json；CI正式包不得覆盖本版installer/。
 - 暂存范围核对为444个新版文件加根README与本共享记忆，共446项；相对v51有27个非static文件变动，没有新增非CR行尾空白问题，旧文本尾空白不因本次布局调整而改写。运行数据、缓存、依赖、运行库junction、测试夹具和版本installer不入Git。
+- GitHub Release ID 411299311，源码完整SHA `5f22c2646b1d71d0c173ef2cadd5d0591eeb50bf`；正式CI两包：`LabFlow-v2.3.52.exe` 79430856字节，产品/文件数字版本2.3.52.0，SHA-256 `8d2e8dc354f531545133a6dc190f9e75ec06378b4ddd457274bea06d617c295c`；`LabFlow-v2.3.52-HotUpdate.exe` 28935533字节，产品/文件数字版本2.3.52.0，SHA-256 `4438327596f7191c3dd69fa67c5b5db90ddbc4a027023075e33bd9e47d5279d2`。证据test-artifacts/v2.3.52/github-runs.json、github-release-assets.json与ci-packages-sha256.json。
+- 本地Release SHA-256 `3ea539644d6c03ac60b3013b866ddd22a9407482ab5ff8f0e9aa6da278a625bd`；最终前端index-Aq-lYxbG.js与两个gzip解压逐字节核验通过，6个static Git blob与构建文件字节一致；.gitattributes保持static -text。后端207文件与v51一致、九处元数据及共享junction核验结果见verification.json，62项回归与构建日志见本版ignored测试目录。
+- GHCR版本/latest同摘要，index、linux/amd64 manifest及config的实际字节哈希与描述符一致，版本label2.3.52、User labflow、入口/app/workload-tool、8000/tcp正确，证据test-artifacts/v2.3.52/ghcr-final.json；未下载镜像层或启动容器。
+- 本轮没有启动新HTTP实例或数据库；没有操作现场服务/生产数据，根target/release/static仍指v48。此次布局/样式修改不作为现场安装、真实手机/桌面浏览器或局域网端到端验收。五份交付文档最终以[skip ci]提交收尾，源码及标签构建已通过，安装包内说明保留标签时快照，不因发布结果更新而重复打包。

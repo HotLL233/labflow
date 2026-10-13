@@ -2,7 +2,7 @@
 
 本包可用于在另一台Windows电脑继续开发、重建完整安装包或直接测试安装包。
 
-当前开发版本为 `v2.3.52`，从正式v2.3.51隔离。
+当前正式版本为 `v2.3.52`，源码隔离自v2.3.51；开发验证、本地构建及GitHub/GHCR发布与资产核验完成。
 
 研发送样记录的时间快捷查询、自定义时间及按列筛选按钮移到实验室筛选所在行；记录计数放在该行末尾，手机及窄屏自动换行。已选条件继续显示在下一行，独立研发记录与实验室内嵌记录共用同一布局。
 
@@ -12,7 +12,7 @@
 
 验证：62项前端回归、类型检查与生产构建通过；Rust fmt/check（console）及默认非console Release构建通过。前端gzip解压与原文件逐字节一致。后端207个源码与配置文件逐字节与v51一致；九处版本元数据和两包数字版本核验通过。此次只改布局及样式，没有重跑数据库或HTTP集成测试，旧版本测试数量不计入本版。
 
-交付进度：本地完整包与热更新包已独立构建并核对版本及SHA-256，留在本版installer/。GitHub源码与标签、Release两包及GHCR镜像待本次推送后由既有工作流发布并核验；仅推GitHub，Gitee继续暂停。
+交付完成：源码提交 `5f22c264` 与注释标签 `v2.3.52` 已推送GitHub；Windows工作流38348692617、Docker主分支38348687868/标签38348692489全部成功。[GitHub Release v2.3.52](https://github.com/HotLL233/labflow/releases/tag/v2.3.52)正式发布，两CI包已回写根 `installers/`，回写提交 `0d857e61` 已快进拉回，版本、大小及SHA-256与Release/Git blob一致。本版 `installer/` 保留独立本地构建包。GHCR `2.3.52`/`latest` 摘要相同，为 `sha256:3b4d09f38144e042af66b6b46d2bbcff0abd07d864dcb36c810a41a1887d5eb2`，linux/amd64、版本及index/manifest/config字节哈希核验通过；未实际启动容器。仅推GitHub，Gitee继续暂停。
 
 本轮未进行真实浏览器/手机交互、现场覆盖安装或实际容器启动验收；未操作生产数据库、现场配置、附件或已运行服务。安装包内更新说明保留标签构建时快照，最终发布结果见根PROJECT_MEMORY.md与GitHub Release。
 
@@ -23,7 +23,7 @@
 - 不再新增或维护按日期记忆、`历史记忆_*.md`、`开发交接_*.md`、`续接提示词_*.md` 或 `HANDOFF.md`；旧版本目录中的同类文件只作历史归档，不得作为当前规则来源或复制到新版本。
 - 版本 `更新说明.md` 和专项文档仍按用途维护，但不得复制一套长期记忆。规则冲突时以当前用户要求、当前源码与工作流、`PROJECT_MEMORY.md` 的顺序为准。
 
-1. 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.3.52/`。行为、验证与交付状态见本版 `更新说明.md` 与根 `PROJECT_MEMORY.md`。
+1. 当前正式源码目录：`source/LabFlow-PostgreSQL-v2.3.52/`。行为、验证与交付状态见本版 `更新说明.md` 与根 `PROJECT_MEMORY.md`。
 2. Gitee 源码仓库：`https://gitee.com/HotLL233/labflow`（自 v2.3.18 起暂停向 Gitee 推送，仅保留历史仓库）。
 3. Docker 部署使用 `docker-compose.deploy.yml`，推荐执行 `scripts/pull-labflow-image.ps1`（Windows）或 `scripts/pull-labflow-image.sh`（Ubuntu）。
 4. 脚本按 `LABFLOW_IMAGE_PRIORITY` 依次尝试已配置的镜像地址，成功后再启动 Compose；Gitee 镜像地址未配置时跳过，目前发布仅使用 GHCR。

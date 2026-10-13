@@ -8,7 +8,7 @@
 
 验证：62项前端回归、类型检查与生产构建通过；Rust fmt/check（console）及默认非console Release构建通过。前端gzip解压与原文件逐字节一致。后端207个源码与配置文件逐字节与v51一致；九处版本元数据和两包数字版本核验通过。此次只改布局及样式，没有重跑数据库或HTTP集成测试，旧版本测试数量不计入本版。
 
-交付进度：本地完整包与热更新包已独立构建并核对版本及SHA-256，留在本版installer/。GitHub源码与标签、Release两包及GHCR镜像待本次推送后由既有工作流发布并核验；仅推GitHub，Gitee继续暂停。
+交付完成：源码提交 `5f22c264` 与注释标签 `v2.3.52` 已推送GitHub；Windows工作流38348692617、Docker主分支38348687868/标签38348692489全部成功。[GitHub Release v2.3.52](https://github.com/HotLL233/labflow/releases/tag/v2.3.52)正式发布，两CI包已回写根 `installers/`，回写提交 `0d857e61` 已快进拉回，版本、大小及SHA-256与Release/Git blob一致。本版 `installer/` 保留独立本地构建包。GHCR `2.3.52`/`latest` 摘要相同，为 `sha256:3b4d09f38144e042af66b6b46d2bbcff0abd07d864dcb36c810a41a1887d5eb2`，linux/amd64、版本及index/manifest/config字节哈希核验通过；未实际启动容器。仅推GitHub，Gitee继续暂停。
 
 本轮未进行真实浏览器/手机交互、现场覆盖安装或实际容器启动验收；未操作生产数据库、现场配置、附件或已运行服务。安装包内更新说明保留标签构建时快照，最终发布结果见根PROJECT_MEMORY.md与GitHub Release。
 
@@ -32,7 +32,7 @@
 
 ## Windows 安装
 
-完整包 `LabFlow-v2.3.52.exe` 与热更新包 `LabFlow-v2.3.52-HotUpdate.exe`，Windows数字版本 `2.3.52.0`。本版 `installer/` 保留独立本机构建包；CI正式包在发布后回写根 `installers/` 并上传 [GitHub Release v2.3.52](https://github.com/HotLL233/labflow/releases/tag/v2.3.52)。升级按原流程备份数据库和附件，保留已有配置及业务数据。安装包内更新说明是标签构建时快照，最终发布结果见根 `PROJECT_MEMORY.md`。
+完整包 `LabFlow-v2.3.52.exe` 与热更新包 `LabFlow-v2.3.52-HotUpdate.exe`，Windows数字版本 `2.3.52.0`。本版 `installer/` 保留独立本机构建包；CI正式包已回写根 `installers/` 并上传 [GitHub Release v2.3.52](https://github.com/HotLL233/labflow/releases/tag/v2.3.52)。升级按原流程备份数据库和附件，保留已有配置及业务数据。安装包内更新说明是标签构建时快照，最终发布结果见根 `PROJECT_MEMORY.md`。
 
 ## 本地开发
 
@@ -51,7 +51,7 @@ cargo run --features console
 
 ## Docker on Ubuntu
 
-本版镜像地址为 `ghcr.io/hotll233/labflow:2.3.52`，版本标签与latest按原GitHub Actions流程发布；最终核验结果见根PROJECT_MEMORY.md。
+本版 `ghcr.io/hotll233/labflow:2.3.52` 与latest已发布且摘要一致，镜像元数据及index/manifest/config实际字节哈希核验通过；未实际启动发布容器。
 
 Docker 版包含应用和 PostgreSQL 两个容器。`docker-compose-ghcr.yml` 同时保留 Gitee 镜像变量和 GHCR 镜像变量；使用拉取脚本时，会按照 `LABFLOW_IMAGE_PRIORITY` 的顺序先尝试网络更好的仓库，失败后自动切换到下一个仓库。
 
