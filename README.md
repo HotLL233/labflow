@@ -6,7 +6,7 @@
 
 验证完成：前端122项测试、类型检查、生产构建和2份gzip逐字节核验通过；实际组件SSR渲染16项检查通过（表头、手机卡片、通知定位），不等同真实浏览器像素或交互验收；Rust fmt/check与默认非console Release通过。后端业务源码与迁移与v2.3.61逐字节一致，本轮未重跑数据库集成或HTTP业务测试，不沿用上版结果充当本版验收；未操作生产数据或现场8000服务。
 
-本地完整包与热更新包已生成，产品／文件版本2.3.62.0、大小与SHA-256已核验。源码、安装包和GHCR正在按惯例发布，最终交付结果见根PROJECT_MEMORY.md和GitHub Release。
+交付完成：源码提交 `ec75abe8` 与注释标签 `v2.3.62` 已推送GitHub；Windows工作流38704065088、Docker主分支38704058787／标签38704065174均成功。[GitHub Release v2.3.62](https://github.com/HotLL233/labflow/releases/tag/v2.3.62)已发布，两CI包已回写根 `installers/`，回写提交 `a5c53061` 已快进拉回，产品／文件版本2.3.62.0、大小、SHA-256与Release／Git blob一致。版本目录 `installer/` 保留独立本地包。GHCR `2.3.62`／`latest` 同摘要 `sha256:4eac0cc7bbc07e16bae08fe756160def0bbd9e8b3afcbbe002d9c17e7196551c`，linux/amd64及index／manifest／config字节哈希与版本核验通过，未下载镜像层或启动容器。仅推GitHub，Gitee继续暂停。
 
 真实桌面／手机浏览器交互、现场覆盖安装和实际容器启动尚未验收；浏览器工具当前无可用浏览器。列筛选仍限定当前页，没有扩展为研发记录的全量列筛选能力。
 
