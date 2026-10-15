@@ -2,11 +2,11 @@
 
 > 最后更新：2026-10-15
 >
-> 当前正式版本：`v2.3.60`（历史系数跨页全选与分页优化）；开发验证、本地构建及GitHub/GHCR发布与资产核验完成，验证范围及未验收项见本版记录。
+> 当前正式版本：`v2.3.61`（人员变动权限与审批闭环修复）；开发验证、本地构建及GitHub/GHCR发布与资产核验完成，验证范围及未验收项见本版记录。
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.61/`（开发中），正式隔离基线为v2.3.60。
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.61/`（正式版），隔离基线为v2.3.60。
 >
-> 当前开发状态：v2.3.61开发验证完成，正在构建发布；生产数据与现场服务未操作，尚未正式发布。
+> 当前开发状态：v2.3.61已完成本轮开发和交付；未创建下一版本，现场验收范围见本版记录。
 
 ## 1. 文件定位与强制维护规则
 
@@ -893,7 +893,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 源码完整SHA `d8b3ee183babb7edc002558e9dfca0c5dba181d1`；Release ID 413404605。正式CI两包：`LabFlow-v2.3.60.exe` 79,529,021字节，SHA-256 `608e36b77f26f75786fedfde7ac61628d34576c913603240bcfeaa4c0edb4c9b`；`LabFlow-v2.3.60-HotUpdate.exe` 29,022,229字节，SHA-256 `bcdbc5e8e87c99131f1067c1f7ce52065c556968cee1e10e0e191e53c591ba90`。证据test-artifacts/v2.3.60/ci-packages-sha256.json、github-release-final.json、github-runs.json、ghcr-final.json。
 - 五份交付文档以[skip ci]收尾，不重复生成包或镜像；包内说明保留标签构建时状态，以根统一记忆与Release为最终交付状态。
 
-## v2.3.61 人员变动权限与审批闭环修复（2026-10-15，验证与交付中）
+## v2.3.61 人员变动权限与审批闭环修复（2026-10-15，正式发布）
 
 - 从正式v2.3.60隔离，453个源码文件，不复制旧产物或运行数据；9处版本同步2.3.61。
 - 修订7.4旧规则，落实普通实验室关联范围／分析全局只读；管理员和组长按范围维护、原因审计与导入预览，查看不自动授予敏感申请权限。
@@ -902,8 +902,10 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 验证完成：前端117项测试、类型检查、生产构建及gzip逐字节一致性通过；独立PostgreSQL后端最终全量256项通过、0失败，3项既有专用备份恢复测试按原配置跳过，兼容层10项通过。Rust fmt/check、默认非console Release及隔离Release HTTP265项检查通过（人员专项164项、工作量与统计回归101项），覆盖权限范围、稳定身份、自审批与并发拒绝、汇总维护与导入、恢复日志、真实模拟渠道失败与补发，以及既有取样／系数／工作量归属／统计／Excel。不操作生产数据库或现场8000服务，不发送真实业务通知。
 
-本版验证已完成；完整包、热更新包及GitHub/GHCR发布核验进行中，尚未标记正式发布。
+交付完成：源码提交 `0e87b42b` 与注释标签 `v2.3.61` 已推送GitHub；Windows工作流38693697542、Docker主分支38693692880／标签38693697488均成功。[GitHub Release v2.3.61](https://github.com/HotLL233/labflow/releases/tag/v2.3.61)已发布，两CI包已回写根 `installers/`，回写提交 `0cb94c9e` 已快进拉回，产品／文件版本2.3.61.0、大小、SHA-256与Release／Git blob一致。版本目录 `installer/` 保留独立本地包。GHCR `2.3.61`／`latest` 同摘要 `sha256:db7000802131067b3cfb148239949bcf3f0a91b1918f4f66c025f1ea7d688dcf`，linux/amd64及index／manifest／config字节哈希与版本核验通过，未下载镜像层或启动容器。仅推GitHub，Gitee继续暂停。
 - 真实桌面／手机交互、现场覆盖安装、生产大表性能和实际容器启动尚未验收。单个人员数据目录仅支持一个服务实例写入；历史身份或基线不可靠的申请须核对后处理，不猜测同步或自动改写历史数据。
 - 本地两包：`LabFlow-v2.3.61.exe` 79651069字节，SHA-256 `43caa2e5fced4e9d6c6e203bbcc0fff66f042dcf44857ad7b31fff0a1faba872`；`LabFlow-v2.3.61-HotUpdate.exe` 29140529字节，SHA-256 `6865373e643e8b39a3dc90f4bf0d3fca5f166f341f4e50e718913c6db1ac7e80`。产品／文件版本均2.3.61.0，独立留在本版installer/；Release SHA-256 `d1aa36cab0ad6e5100012a58241d2a2546b198b42f1fa8e06a4c65a4d6e5ba04`。
 - 已核对本轮PG精确数据目录并正常关闭，5561／58561／58661／58961无监听；未操作生产服务或生产数据，共享target/release/static仍指v2.3.48。证据位于test-artifacts/v2.3.61/。
 
+- 源码完整SHA `0e87b42b97aa533857e1b01d3fe97217b106d790`；Release ID 413497446。正式CI两包：`LabFlow-v2.3.61.exe` 79,637,541字节，SHA-256 `35bccbeab7aaac3a3d867b6f7400a3e016eeea3070cc3af9648c25647ae4f10e`；`LabFlow-v2.3.61-HotUpdate.exe` 29,116,918字节，SHA-256 `66929f71c8607f148f55c18dbc4c8d4ea28a42420ec6671515b97c99bca517f8`。证据test-artifacts/v2.3.61/ci-packages-sha256.json、github-release-final.json、github-runs.json、ghcr-final.json。
+- 五份交付文档以[skip ci]收尾，不重复生成包或镜像；包内说明保留标签构建时状态，以根统一记忆与Release为最终交付状态。
