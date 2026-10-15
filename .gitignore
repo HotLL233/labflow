@@ -1,4 +1,5 @@
 /target/
+/build-resources/local/
 /source/**/target/
 /frontend/node_modules/
 /source/**/node_modules/

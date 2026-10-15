@@ -28,6 +28,8 @@
 
 本包不含任何生产数据库、附件、备份、实际服务器配置、登录凭据或用户本机数据。
 
+本地共享构建资源集中于根 `build-resources/`，其中 `local/` 保存不入库的编译缓存和按锁文件隔离的依赖池。使用 PowerShell 7 执行 `./scripts/prepare-local-build.ps1 -WhatIf` 检查；首次缺少依赖时加 `-InstallDependencies` 准备环境。原有安装与发布路径保持兼容，目录说明见 [build-resources/README.md](build-resources/README.md)。
+
 打包口径（v2.3.13 起固化为发布规范）：
 
 - 安装包文件名沿用 `LabFlow-v<版本>.exe`（完整服务器版）与 `LabFlow-v<版本>-HotUpdate.exe`（热更新升级包）。

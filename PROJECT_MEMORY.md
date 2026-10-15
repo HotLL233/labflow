@@ -137,7 +137,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 步骤：
 
 1. 确保 `postgres-runtime/installer/vcredist_x64.exe` 存在；可从 `https://aka.ms/vs/17/release/vc_redist.x64.exe` 获取。新版本目录默认没有该文件，最省事的做法是从上一版目录复制（它同样是 CI 下载的同名文件）。
-2. 使用根目录共享 `CARGO_TARGET_DIR` 编译缓存执行 `cargo build --release --locked`，新版本构建路径可用 junction 指向共享 target 和 build-resources 运行库；不得复制历史版本的构建产物。
+2. 使用根目录共享 `CARGO_TARGET_DIR` 编译缓存执行 `cargo build --release --locked`；实体缓存位于 `build-resources/local/target`，根 `target/` 与新版 `target/` 为兼容 junction。新版依赖通过 `scripts/prepare-local-build.ps1` 准备，运行库继续使用根 `build-resources`；不得复制历史版本的构建产物。
 3. 调用 Inno Setup 编译 `build_server_installer.iss` 和 `build_hot_update_installer.iss`。
 4. 检查两个 EXE 的 `ProductVersion`、`FileVersion`、大小和 SHA-256。
 5. 注意 `Copy-Item` 在目标目录已存在时可能生成 `postgres-runtime/postgres-runtime` 嵌套副本；构建前检查并避免把重复运行时打包或提交。
@@ -158,12 +158,21 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - PowerShell 7 当前通过 Windows 应用执行别名调用；脚本不要硬编码 MSI 默认路径。
 - GitHub 网络不通时可对单次 Git 命令使用系统代理参数（`-c http.proxy=... -c https.proxy=...`），不修改全局 Git 配置。
 - 2026-09-20 实测：代理 `127.0.0.1:7897` 先报 `TLS connect error: ... unexpected eof`，随后即使端口仍可连通（`Test-NetConnection` 为 True）也返回 `http_code=000`，而此时直连 GitHub 已可用。排查顺序应为：先用 `git ls-remote origin` 直连试一次，失败再考虑代理，避免把可用的直连误判为断网。
+- 2026-10-15本轮维护时GitHub Git直连超时，已有本机代理 `127.0.0.1:7900` 单次Git参数连接成功；GitHub API可直连。代理地址只作为本机排障记录，不写入全局Git配置，换设备先探测。
 - 网络受限时可用 GitHub REST API 核对发布结果：`/repos/<owner>/<repo>/actions/runs`、`/commits?sha=main`、`/releases/latest`。
 - 本机 Inno Setup 6 路径：`C:\Program Files (x86)\Inno Setup 6\ISCC.exe`（2026-09-23 实测存在，且与 `windows-release.yml` 使用的路径一致）。早期记录的 `D:\APP\Inno Setup 6\ISCC.exe` 在本机已不存在，出包前必须先 `Test-Path` 探测，不要沿用旧路径。
 - 本机安装的 LabFlow 配置通常位于 `C:\ProgramData\WorkloadTool`，业务数据目录和连接凭据不得写入仓库。
 - 使用 `psql` 非交互查询时带 `-w`，设置控制台输出和 `PGCLIENTENCODING=UTF8`；PowerShell 命令参数中直接传中文 SQL 可能发生编码破坏，可改用 ASCII 条件、`type_key` 或 `chr(...)`。
 - 读取 UTF-8 配置可使用 `[System.IO.File]::ReadAllText(..., [Text.Encoding]::UTF8)`。
 - LibreOffice 安装器提示是既有行为：安装脚本未传 `-Install` 时只检测，不会自动安装；缺少 LibreOffice 不阻止 PDF 预览，Word 可走兼容预览或下载。
+
+### 6.1 本地共享资源与空间维护
+
+- 2026-10-15按用户要求集中共享资源到根 `build-resources/`：Git跟踪的PDF/PostgreSQL运行库保持原位；本地编译缓存、前端依赖池和旧版共享运行库放 `build-resources/local/` 并由Git忽略。只同步准备脚本、规则和清理报告，不把缓存或Windows绝对路径junction提交远端。
+- `scripts/prepare-local-build.ps1` 支持 `-WhatIf`；默认选择最高版本，必要时明确传 `-SourceDir`。前端依赖池以完整锁文件SHA-256隔离，池内保存原始package.json／lock；缺失时用 `-InstallDependencies` 在新池执行npm ci，不能在共享node_modules链接上直接执行npm ci。旧39／48共享池迁移保留既有消费者，不强行换为最新版依赖。
+- 保留全部安装包／离线镜像、各版backend/static、实际业务数据库／附件／备份和本机配置。37／38／39的独立构建目录仍按此前要求保留；其他编译缓存按需保留，优先清理incremental，而非每次完整cargo clean。
+- 清理测试数据库必须核对工作区内精确路径、无父级／内部目录链接、无postmaster.pid且pg_controldata为shut down；不停止生产服务，不整删test-artifacts，保留日志、验证摘要、校验清单及发布证据。测试集群删除后需重新初始化测试数据库。
+- 源码内backend/static是对应版本生产资源，不迁入共享缓存；共享target/release/static仍是特定旧版开发链接，不能从该目录直接启动最新版服务或据此打包前端。安装包始终读取当前版本backend/static。
 
 ## 7. 核心业务规则
 
