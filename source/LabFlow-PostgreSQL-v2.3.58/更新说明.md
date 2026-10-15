@@ -8,7 +8,7 @@
 
 验证完成：前端87项测试、类型检查、生产构建及2份gzip逐字节一致性通过；最终独立PostgreSQL后端全量227项通过、0失败、3项既有专用备份恢复测试跳过，兼容层10项通过。Rust fmt/check、默认非console Release及隔离Release HTTP55项通过，覆盖方法20／0、仅换方法、项目回退、历史快照、空业务编号兼容、金额倍率独立、分批累计上限、授权拒绝及统计／Excel响应。未操作生产数据库或现场8000服务，未发送真实通知。
 
-交付状态：本地完整／热更新包已生成，产品与文件数字版本2.3.58.0、大小和SHA-256已核验；GitHub/GHCR发布正在进行。
+交付完成：源码提交 `f753999d` 与注释标签 `v2.3.58` 已推送GitHub；Windows工作流38672946750、Docker主分支38672944468／标签38672946714均成功。[GitHub Release v2.3.58](https://github.com/HotLL233/labflow/releases/tag/v2.3.58)已发布，两CI包已回写根 `installers/`，回写提交 `dbe50aac` 已快进拉回，产品／文件版本2.3.58.0、大小、SHA-256与Release／Git blob一致。版本目录 `installer/` 保留独立本地包。GHCR `2.3.58`／`latest` 同摘要 `sha256:29743007ec4ac1b4caeb123bb9631ca87678df5859380e740ca853c8f9d5150a`，linux/amd64及index／manifest／config字节哈希与版本核验通过，未下载镜像层或启动容器。仅推GitHub，Gitee继续暂停。
 
 未操作生产数据库或现场8000服务，不发送真实通知。真实桌面／手机交互、覆盖安装及容器启动尚未验收；本版修复不自动纠正历史系数，旧记录需另行核对。
 
