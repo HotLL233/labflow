@@ -26,7 +26,7 @@
 
 本包不含任何生产数据库、附件、备份、实际服务器配置、登录凭据或用户本机数据。
 
-本地共享构建资源集中于根 `build-resources/`，其中 `local/` 保存不入库的编译缓存和按锁文件隔离的依赖池。使用 PowerShell 7 执行 `./scripts/prepare-local-build.ps1 -WhatIf` 检查；首次缺少依赖时加 `-InstallDependencies` 准备环境。原有安装与发布路径保持兼容，目录说明见 [build-resources/README.md](build-resources/README.md)。
+本地共享构建资源集中于根 `build-resources/`，其中 `local/target/` 为公共编译缓存，`local/version-cache/` 保留37／38／39等版的独立缓存，`local/static-snapshots/` 保存旧共享入口的静态资源，前端依赖按锁文件隔离。版本目录通过链接引用根资源。使用 PowerShell 7 执行 `./scripts/prepare-local-build.ps1 -WhatIf` 检查；首次缺少依赖时加 `-InstallDependencies` 准备环境。原有安装与发布路径保持兼容，目录说明见 [build-resources/README.md](build-resources/README.md)。
 
 打包口径（v2.3.13 起固化为发布规范）：
 

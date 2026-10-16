@@ -1,6 +1,6 @@
 # LabFlow 项目统一记忆
 
-> 最后更新：2026-10-15
+> 最后更新：2026-10-16
 >
 > 当前正式版本：`v2.3.62`（样品信息登记筛选样式统一）；开发验证、本地构建及GitHub/GHCR发布与资产核验完成，验证范围及未验收项见本版记录。
 >
@@ -170,9 +170,10 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 - 2026-10-15按用户要求集中共享资源到根 `build-resources/`：Git跟踪的PDF/PostgreSQL运行库保持原位；本地编译缓存、前端依赖池和旧版共享运行库放 `build-resources/local/` 并由Git忽略。只同步准备脚本、规则和清理报告，不把缓存或Windows绝对路径junction提交远端。
 - `scripts/prepare-local-build.ps1` 支持 `-WhatIf`；默认选择最高版本，必要时明确传 `-SourceDir`。前端依赖池以完整锁文件SHA-256隔离，池内保存原始package.json／lock；缺失时用 `-InstallDependencies` 在新池执行npm ci，不能在共享node_modules链接上直接执行npm ci。旧39／48共享池迁移保留既有消费者，不强行换为最新版依赖。
-- 保留全部安装包／离线镜像、各版backend/static、实际业务数据库／附件／备份和本机配置。37／38／39的独立构建目录仍按此前要求保留；其他编译缓存按需保留，优先清理incremental，而非每次完整cargo clean。
+- 保留全部安装包／离线镜像、各版backend/static、实际业务数据库／附件／备份和本机配置。37／38／39的独立构建缓存保留在根 `build-resources/local/version-cache/v<版本>/target/`，39的兼容层缓存为同级 `postgres-compat-target/`，版本原路径仅留junction；其他编译缓存按需保留，优先清理incremental，而非每次完整cargo clean。
 - 清理测试数据库必须核对工作区内精确路径、无父级／内部目录链接、无postmaster.pid且pg_controldata为shut down；不停止生产服务，不整删test-artifacts，保留日志、验证摘要、校验清单及发布证据。测试集群删除后需重新初始化测试数据库。
-- 源码内backend/static是对应版本生产资源，不迁入共享缓存；共享target/release/static仍是特定旧版开发链接，不能从该目录直接启动最新版服务或据此打包前端。安装包始终读取当前版本backend/static。
+- 源码内backend/static是对应版本生产资源，继续按版本构建与保留。共享target/release/static及48／49版验收入口的历史源文件另存根 `build-resources/local/static-snapshots/v2.3.48/`、`v2.3.49/`，原3个链接已改指根目录，不再依赖旧源码。共享Release入口仍保留其原历史前端版本；安装包始终读取当前版本backend/static。
+- 2026-10-16起，所有后续隔离版本排除target、postgres-compat/target及依赖/运行库链接后，使用根prepare-local-build脚本建立引用。根target始终使用local/target；版本target优先选已保存的version-cache/v<版本>/target，否则共享根target；兼容层优先选同版postgres-compat-target，否则用local/target/postgres-compat。已有实体缓存或其他目标链接拒绝覆盖，迁移先核验再建立兼容链接，不合并37／38／39缓存，也不把任何缓存实体或junction提交Git。Cargo可能因绝对路径变化重编译部分依赖。
 
 ## 7. 核心业务规则
 
@@ -931,3 +932,11 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 本地两包均产品／文件版本2.3.62.0，独立保留本版installer/，不被CI包覆盖：`LabFlow-v2.3.62.exe` 79658027字节，SHA-256 `ec1525a7c1bff417417954299ffa1a351a104928d38db2b3d22100d7fd9f72e9`；`LabFlow-v2.3.62-HotUpdate.exe` 29145769字节，SHA-256 `02dab28774ba114f3106ff643c961569a77841d002e19736f30cb375a4f31209`。Release SHA-256 `5bb1461056ccde2c68441c743a99ba49446064bc39fc0f8b6169d01d22e6951f`；证据test-artifacts/v2.3.62/。
 - 源码完整SHA `ec75abe8c565a2711a8c659ceb6e9151256dafd4`；Release ID 413575680。正式CI两包：`LabFlow-v2.3.62.exe` 79,635,622字节，SHA-256 `961e9a874a9d872d48df2b5bba219d2f00d3432fbf6fc08b7cbe8bc2e79ed773`；`LabFlow-v2.3.62-HotUpdate.exe` 29,122,515字节，SHA-256 `83dbb932e3a9b3f3d825bfa81cef4c31b9fe513c324e21d744128764dc8a66cd`。证据test-artifacts/v2.3.62/ci-packages-sha256.json、github-release-final.json、github-runs.json、ghcr-final.json。
 - 五份交付文档以[skip ci]收尾，不重复生成包或镜像；包内说明保留标签构建时状态，以根统一记忆与Release为最终交付状态。
+
+## 共享源文件与独立缓存集中维护（2026-10-16）
+
+- 按用户要求，将37／38／39及盘点发现的40／51／56／60版共9个实体Rust缓存目录迁入根 `build-resources/local/version-cache/`，旧版本的target路径建立兼容junction。37／38／39独立保留，不合并覆盖；39／40／51／56／60的兼容层缓存使用各版 `postgres-compat-target/`。后续新版本通过准备脚本默认引用根公共缓存，有已保留同版缓存时优先沿用。
+- 原共享Release静态链接与48／49版验收入口共3处，改指根 `local/static-snapshots/` 的对应历史快照；原版Git跟踪的backend/static保留，安装包仍按各版源码构建与读取自身前端。迁移不修改应用源码、版本号或产品发布资产，正式版仍为v2.3.62；本轮不构建新的安装包或镜像。
+- 准备脚本的临时fixture回归、v62实际WhatIf及连续两次幂等准备均通过。生产8000／54329监听和进程ID保持，健康检查200，根75个安装文件名称和大小不变；source内无遗留实体Rust target。完整迁移前后文件摘要与链接检查证据保留在ignored目录 `test-artifacts/maintenance-20261016-centralize/`。
+- 这里只集中共享资源，未清理历史源码、安装包、运行数据或测试证据；未来若使用sparse-checkout缩减源码，仍需先保护旧版installer及其他本机独有文件。缓存实体和Windows junction仅留本机，Git只同步准备脚本、测试和根文档，使用[skip ci]维护提交。
+- 最终独立核验：9个缓存与2份静态快照，共23,223文件、10,571,418,039字节，逐文件路径／长度／SHA-256零遗漏、零新增、零变化；103处链接全部有效且无目标指向任何source版本。证据postcentralize-verification.json及workspace-links-after-independent.json。

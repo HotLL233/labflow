@@ -28,6 +28,9 @@ function Assert-LocalPath([string]$Path, [switch]$AllowLink) {
 function Test-Junction([string]$Path, [string]$Target) {
     Assert-LocalPath $Path -AllowLink
     Assert-LocalPath $Target
+    if ((Test-Path -LiteralPath $Target) -and -not (Test-Path -LiteralPath $Target -PathType Container)) {
+        throw "Junction target must be a directory: $Target"
+    }
     $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
     if (-not $item) { return $false }
     if ($item.LinkType -ne 'Junction' -or
@@ -54,6 +57,20 @@ if ((Split-Path -Parent $source) -ne (Join-Path $repoRoot 'source') -or
 $resources = Join-Path $repoRoot 'build-resources'
 $local = Join-Path $resources 'local'
 $target = Join-Path $local 'target'
+$versionCache = Join-Path $local ('version-cache\' + ((Split-Path -Leaf $source) -replace '^LabFlow-PostgreSQL-', ''))
+$savedTarget = Join-Path $versionCache 'target'
+$savedCompatTarget = Join-Path $versionCache 'postgres-compat-target'
+Assert-LocalPath $savedTarget
+Assert-LocalPath $savedCompatTarget
+foreach ($path in @($savedTarget, $savedCompatTarget)) {
+    if ((Test-Path -LiteralPath $path) -and -not (Test-Path -LiteralPath $path -PathType Container)) {
+        throw "Saved build cache must be a directory: $path"
+    }
+}
+$sourceTarget = if (Test-Path -LiteralPath $savedTarget) { $savedTarget } else { $target }
+$compatSource = Join-Path $source 'postgres-compat'
+Assert-LocalPath $compatSource
+$compatTarget = if (Test-Path -LiteralPath $savedCompatTarget) { $savedCompatTarget } else { Join-Path $target 'postgres-compat' }
 $frontend = Join-Path $source 'frontend'
 $lockPath = Join-Path $frontend 'package-lock.json'
 Assert-LocalPath $lockPath
@@ -65,10 +82,14 @@ Assert-LocalPath $target
 Assert-LocalPath $pool
 $links = @(
     @{ Path = Join-Path $repoRoot 'target'; Target = $target },
-    @{ Path = Join-Path $source 'target'; Target = $target },
+    @{ Path = Join-Path $source 'target'; Target = $sourceTarget },
     @{ Path = Join-Path $source 'pdf-runtime'; Target = Join-Path $resources 'pdf-runtime' },
     @{ Path = Join-Path $source 'postgres-runtime'; Target = Join-Path $resources 'postgres-runtime' }
 )
+if (Test-Path -LiteralPath $compatSource) {
+    if (-not (Test-Path -LiteralPath $compatSource -PathType Container)) { throw "Compatibility source must be a directory: $compatSource" }
+    $links += @{ Path = Join-Path $compatSource 'target'; Target = $compatTarget }
+}
 foreach ($link in $links) { $link.Exists = Test-Junction $link.Path $link.Target }
 foreach ($name in @('pdf-runtime', 'postgres-runtime')) {
     if (-not (Test-Path -LiteralPath (Join-Path $resources $name) -PathType Container)) {
@@ -98,6 +119,7 @@ if (-not $existing -and -not $poolExists) { Get-Command npm -ErrorAction Stop | 
 if (-not $PSCmdlet.ShouldProcess($source, 'Prepare shared local build directories and junctions')) { return }
 
 New-Item -ItemType Directory -Path $target -Force | Out-Null
+if (Test-Path -LiteralPath $compatSource) { New-Item -ItemType Directory -Path $compatTarget -Force | Out-Null }
 foreach ($link in $links) {
     if (-not $link.Exists) { New-Item -ItemType Junction -Path $link.Path -Target $link.Target | Out-Null }
 }
@@ -121,4 +143,4 @@ if ($existing -and -not $existing.LinkType) {
 if (-not ($existing -and $existing.LinkType)) {
     New-Item -ItemType Junction -Path $sourceModules -Target $modules | Out-Null
 }
-[pscustomobject]@{ Source = $source; Target = $target; Dependencies = $modules }
+[pscustomobject]@{ Source = $source; Target = $target; SourceTarget = $sourceTarget; CompatTarget = $compatTarget; Dependencies = $modules }
