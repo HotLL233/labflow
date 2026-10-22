@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LabFlow · UI 设计参考稿（v2.3.62 评审方案）</title>
+<style>
+  :root {
+    /* ---- L1 品牌 ---- */
+    --brand: #2E7D32;
+    --brand-hover: #256B29;
+    --brand-soft: #EEF6EF;
+    --brand-line: #CFE3D2;
+    /* ---- L1 中性 ---- */
+    --ink: #16201A;
+    --ink-2: #4A5A50;
+    --ink-3: #6B7A70;
+    --line: #E2E8E3;
+    --line-2: #EDF1EE;
+    --line-table: #DDE4DE;
+    --bg: #F6F8F6;
+    --bg-2: #FBFCFB;
+    --surface: #FFFFFF;
+    /* ---- L2 语义 ---- */
+    --success: #15803D; --success-soft: #E9F5EC; --success-line: #CBE7D2;
+    --warning: #B45309; --warning-soft: #FDF3E7; --warning-line: #F0DCC0;
+    --danger: #C62828;  --danger-soft: #FDECEC;  --danger-line: #F3D2D2;
+    --info: #1D4ED8;    --info-soft: #EDF2FE;    --info-line: #D3DFF9;
+    /* ---- 圆角 ---- */
+    --r-sm: 2px;
+    --r-md: 8px;
+    --r-pill: 999px;
+    /* ---- 阴影 ---- */
+    --sh-1: 0 1px 2px rgba(16,32,20,.04), 0 1px 8px rgba(16,32,20,.04);
+    --sh-2: 0 2px 4px rgba(16,32,20,.05), 0 8px 24px rgba(16,32,20,.07);
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 1200px; margin: 0 auto; padding: 40px 28px 80px; }
+
+  /* ============ 文档头 ============ */
+  .doc-head { margin-bottom: 36px; }
+  .doc-eyebrow {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .1em;
+    color: var(--brand); background: var(--brand-soft); border: 1px solid var(--brand-line);
+    border-radius: var(--r-pill); padding: 3px 11px; margin-bottom: 14px;
+  }
+  .doc-head h1 { font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
+  .doc-head p { color: var(--ink-2); font-size: 14px; margin-top: 8px; max-width: 760px; }
+
+  /* ============ 章节 ============ */
+  .sec { margin-bottom: 48px; }
+  .sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .sec-num { font-size: 11px; font-weight: 700; color: var(--brand); letter-spacing: .08em; }
+  .sec-head h2 { font-size: 17px; font-weight: 700; }
+  .sec-desc { font-size: 13px; color: var(--ink-3); margin-bottom: 16px; }
+
+  /* ============ 设计基准 ============ */
+  .spec-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .spec { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px 18px; box-shadow: var(--sh-1); }
+  .spec h4 { font-size: 11px; font-weight: 700; letter-spacing: .07em; color: var(--ink-3); margin-bottom: 12px; }
+  .row-sw { display: flex; gap: 6px; margin-bottom: 10px; }
+  .sw-dot { flex: 1; height: 34px; border-radius: var(--r-sm); border: 1px solid rgba(0,0,0,.05); }
+  .spec-line { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-2); padding: 3px 0; }
+  .spec-line span:last-child { font-family: ui-monospace, Consolas, monospace; color: var(--ink-3); font-size: 11px; }
+  .type-scale { display: flex; flex-direction: column; gap: 7px; }
+  .ts-item { display: flex; align-items: baseline; justify-content: space-between; }
+  .ts-item b { font-weight: 700; color: var(--ink); }
+  .ts-item span { font-size: 11px; color: var(--ink-3); font-family: ui-monospace, Consolas, monospace; }
+
+  /* ============ 设备框 ============ */
+  .device { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; box-shadow: var(--sh-2); }
+  .device-bar {
+    display: flex; align-items: center; gap: 6px; padding: 9px 14px;
+    background: var(--bg-2); border-bottom: 1px solid var(--line);
+  }
+  .tl { width: 9px; height: 9px; border-radius: 50%; background: #DDE3DE; }
+  .device-url {
+    margin-left: 10px; flex: 1; background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--r-pill); font-size: 11px; color: var(--ink-3); padding: 3px 12px;
+    max-width: 320px; font-family: ui-monospace, Consolas, monospace;
+  }
+
+  /* ============ 应用外壳 ============ */
+  .app { background: var(--bg); }
+
+  /* 顶栏 */
+  .appbar {
+    display: flex; align-items: center; gap: 4px; padding: 0 24px; height: 56px;
+    background: rgba(255,255,255,.94); border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(8px);
+  }
+  .brandmark { display: flex; align-items: center; gap: 9px; margin-right: 20px; }
+  .brandmark .logomark {
+    width: 24px; height: 24px; border-radius: var(--r-sm); background: var(--brand);
+    display: flex; align-items: center; justify-content: center; color: #fff;
+    font-size: 12px; font-weight: 700; letter-spacing: -.02em;
+  }
+  .brandmark .logotext { font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: .02em; }
+  .brandmark .logotext em { font-style: normal; font-weight: 400; color: var(--ink-3); font-size: 12px; margin-left: 4px; letter-spacing: .04em; }
+  .nav { display: flex; align-items: center; gap: 2px; }
+  .nav a {
+    font-size: 13px; color: var(--ink-2); text-decoration: none; padding: 6px 12px;
+    border-radius: var(--r-sm); font-weight: 500;
+  }
+  .nav a.on { color: var(--brand); background: var(--brand-soft); font-weight: 600; }
+  .appbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .ico-btn {
+    width: 32px; height: 32px; border-radius: var(--r-sm); border: 1px solid transparent;
+    display: flex; align-items: center; justify-content: center; color: var(--ink-2);
+    font-size: 13px; position: relative; background: transparent;
+  }
+  .ico-btn.hoverable:hover { background: var(--bg); border-color: var(--line); }
+  .badge {
+    position: absolute; top: 3px; right: 3px; min-width: 14px; height: 14px;
+    border-radius: var(--r-pill); background: var(--danger); color: #fff;
+    font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    padding: 0 3px; border: 1.5px solid #fff;
+  }
+  .avatar {
+    width: 28px; height: 28px; border-radius: var(--r-pill); background: var(--brand-soft);
+    border: 1px solid var(--brand-line); color: var(--brand); font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* 主内容 */
+  .main { padding: 24px; }
+
+  /* 页头 */
+  .page-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
+  .page-head h3 { font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+  .page-head .sub { font-size: 12.5px; color: var(--ink-3); margin-top: 3px; }
+  .page-head .acts { margin-left: auto; display: flex; gap: 8px; }
+
+  /* 按钮 */
+  .btn {
+    font-family: var(--font); font-size: 13px; font-weight: 600; padding: 7px 14px;
+    border-radius: var(--r-sm); border: 1px solid transparent; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; line-height: 1.4;
+  }
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-primary:hover { background: var(--brand-hover); }
+  .btn-ghost { background: var(--surface); color: var(--ink-2); border-color: var(--line); }
+  .btn-ghost:hover { border-color: var(--brand-line); color: var(--brand); }
+  .btn-quiet { background: transparent; color: var(--brand); }
+  .btn-sm { font-size: 12px; padding: 4px 10px; }
+
+  /* 统计卡 */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 15px 17px; box-shadow: var(--sh-1);
+  }
+  .stat .lbl { font-size: 12px; color: var(--ink-3); display: flex; align-items: center; gap: 6px; }
+  .stat .val { font-size: 26px; font-weight: 700; letter-spacing: -.02em; margin-top: 5px; font-variant-numeric: tabular-nums; }
+  .stat .val small { font-size: 12px; font-weight: 400; color: var(--ink-3); margin-left: 5px; }
+  .stat.attn .val { color: var(--warning); }
+  .dot-s { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+  /* 两栏 */
+  .cols { display: grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start; }
+
+  /* 入口列表 */
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--sh-1); overflow: hidden; }
+  .panel-head {
+    display: flex; align-items: center; padding: 13px 17px; border-bottom: 1px solid var(--line-2);
+  }
+  .panel-head h5 { font-size: 13px; font-weight: 700; }
+  .panel-head .more { margin-left: auto; font-size: 12px; color: var(--ink-3); }
+  .entry-list { padding: 6px; }
+  .entry {
+    display: flex; align-items: center; gap: 12px; padding: 13px 12px;
+    border-radius: var(--r-sm); border: 1px solid transparent;
+  }
+  .entry:hover { background: var(--bg); border-color: var(--line-2); }
+  .entry .ic {
+    width: 34px; height: 34px; border-radius: var(--r-sm); background: var(--brand-soft);
+    border: 1px solid var(--brand-line); display: flex; align-items: center; justify-content: center;
+    color: var(--brand); flex-shrink: 0;
+  }
+  .entry .tt { font-size: 13.5px; font-weight: 600; }
+  .entry .st { font-size: 11.5px; color: var(--ink-3); margin-top: 1px; }
+  .entry .sp { flex: 1; }
+  .entry .cnt {
+    font-size: 11.5px; font-weight: 700; color: var(--brand); background: var(--brand-soft);
+    border: 1px solid var(--brand-line); border-radius: var(--r-pill); padding: 1px 8px;
+  }
+  .entry .cnt.warn { color: var(--warning); background: var(--warning-soft); border-color: var(--warning-line); }
+  .entry .arw { color: var(--ink-3); font-size: 13px; }
+
+  /* 时间线 */
+  .feed { padding: 8px 17px 14px; }
+  .feed-item { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line-2); }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brand-line); margin-top: 7px; flex-shrink: 0; }
+  .feed-item.crit .feed-dot { background: var(--warning); }
+  .feed-txt { font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+  .feed-txt b { font-weight: 600; color: var(--ink); }
+  .feed-time { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+
+  /* ============ 筛选栏 ============ */
+  .filters {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 10px 12px; margin-bottom: 12px; box-shadow: var(--sh-1);
+  }
+  .field {
+    display: flex; align-items: center; gap: 6px; font-size: 12.5px;
+    border: 1px solid var(--line); border-radius: var(--r-sm); padding: 5px 9px;
+    color: var(--ink-2); background: var(--surface); height: 30px;
+  }
+  .field.active { border-color: var(--brand-line); background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+  .field .k { color: var(--ink-3); font-size: 11.5px; }
+  .field.on-focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(46,125,50,.12); }
+  .filters .sp { flex: 1; }
+
+  /* ============ 表格 ============ */
+  .tbl-shell { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; box-shadow: var(--sh-1); }
+  table.data { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12.5px; }
+  table.data thead th {
+    height: 36px; text-align: left; font-size: 11.5px; font-weight: 700; color: var(--ink-2);
+    background: var(--bg-2); border-bottom: 1px solid var(--line-table);
+    padding: 0 10px; white-space: nowrap;
+  }
+  table.data tbody td {
+    height: 38px; padding: 0 10px; border-bottom: 1px solid var(--line-2);
+    color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  table.data tbody tr:hover td { background: #FCFDFC; }
+  table.data tbody tr:last-child td { border-bottom: none; }
+  td.num { font-variant-numeric: tabular-nums; }
+  td strong { font-weight: 600; color: var(--ink); }
+  .ck { width: 13px; height: 13px; border: 1.5px solid #C4CDC6; border-radius: 2px; display: inline-block; vertical-align: middle; }
+  .ck.on { background: var(--brand); border-color: var(--brand); position: relative; }
+  .ck.on::after { content: ""; position: absolute; left: 3px; top: 0px; width: 4px; height: 8px; border: solid #fff; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
+
+  /* Chip */
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600;
+    padding: 1.5px 7px; border-radius: var(--r-sm); border: 1px solid;
+  }
+  .chip::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+  .chip.ok { color: var(--success); background: var(--success-soft); border-color: var(--success-line); }
+  .chip.wait { color: var(--warning); background: var(--warning-soft); border-color: var(--warning-line); }
+  .chip.run { color: var(--info); background: var(--info-soft); border-color: var(--info-line); }
+  .chip.rej { color: var(--danger); background: var(--danger-soft); border-color: var(--danger-line); }
+  .chip.neu { color: var(--ink-2); background: var(--bg-2); border-color: var(--line); }
+  .chip.neu::before { display: none; }
+  .act-link { color: var(--brand); font-size: 12px; font-weight: 600; }
+  .act-sep { color: var(--line-table); margin: 0 6px; }
+  .act-more { color: var(--ink-3); font-size: 12px; }
+
+  /* 分页 */
+  .pager {
+    display: flex; align-items: center; gap: 12px; padding: 9px 14px;
+    border-top: 1px solid var(--line); background: var(--surface); font-size: 12px; color: var(--ink-3);
+  }
+  .pager .sp { flex: 1; }
+  .pg {
+    min-width: 24px; height: 24px; border-radius: var(--r-sm); border: 1px solid var(--line);
+    display: inline-flex; align-items: center; justify-content: center; font-size: 11.5px; color: var(--ink-2);
+    padding: 0 6px;
+  }
+  .pg.on { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 600; }
+
+  /* ============ 手机 ============ */
+  .phones { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+  .phone {
+    width: 320px; background: var(--surface); border: 1px solid var(--line); border-radius: 26px;
+    padding: 8px; box-shadow: var(--sh-2); flex-shrink: 0;
+  }
+  .phone-screen { border-radius: 20px; overflow: hidden; background: var(--bg); height: 630px; display: flex; flex-direction: column; }
+  .p-status {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px 4px; font-size: 10.5px; font-weight: 600; color: var(--ink); background: rgba(255,255,255,.94);
+  }
+  .p-appbar {
+    display: flex; align-items: center; gap: 8px; padding: 6px 14px 10px;
+    background: rgba(255,255,255,.94); border-bottom: 1px solid var(--line);
+  }
+  .p-appbar .logotext { font-size: 13px; font-weight: 700; }
+  .p-appbar .logotext em { font-style: normal; font-weight: 400; font-size: 10.5px; color: var(--ink-3); }
+  .p-appbar .sp { flex: 1; }
+  .p-body { flex: 1; overflow: hidden; padding: 12px 12px 0; }
+  .p-greet { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+  .p-greet span { display: block; font-size: 11px; font-weight: 400; color: var(--ink-3); margin-top: 1px; }
+  .p-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin: 10px 0; }
+  .p-stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 8px 9px; }
+  .p-stat .v { font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+  .p-stat .l { font-size: 10px; color: var(--ink-3); margin-top: 1px; }
+  .p-stat.w .v { color: var(--warning); }
+  .p-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 10px 11px; margin-bottom: 8px; box-shadow: var(--sh-1);
+  }
+  .p-card-top { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+  .p-card-top .tt { font-size: 12px; font-weight: 600; }
+  .p-card-top .sp { flex: 1; }
+  .p-card-row { display: flex; font-size: 10.5px; color: var(--ink-3); padding: 1.5px 0; }
+  .p-card-row .k { width: 62px; flex-shrink: 0; }
+  .p-card-row .v { color: var(--ink-2); }
+  .p-card-acts { display: flex; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-2); }
+  .p-card-acts .btn { font-size: 11px; padding: 4px 9px; }
+
+  /* 底栏 3+1 */
+  .p-tabbar {
+    display: flex; background: rgba(255,255,255,.97); border-top: 1px solid var(--line);
+    padding: 6px 0 10px;
+  }
+  .p-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; color: var(--ink-3); }
+  .p-tab .tic { width: 20px; height: 20px; border-radius: var(--r-sm); border: 1.5px solid currentColor; opacity: .8; }
+  .p-tab.on { color: var(--brand); font-weight: 700; }
+  .p-tab.on .tic { background: var(--brand-soft); border-color: var(--brand); opacity: 1; }
+  .p-tab .tic.plus { border-radius: 50%; }
+
+  /* 标注 */
+  .notes { margin-top: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .note {
+    background: var(--bg-2); border: 1px dashed var(--line-table); border-radius: var(--r-sm);
+    padding: 9px 11px; font-size: 11.5px; color: var(--ink-2); line-height: 1.55;
+  }
+  .note b { color: var(--ink); font-weight: 600; }
+
+  /* 组件区 */
+  .kit { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 12px; }
+  .kit-box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px 18px; box-shadow: var(--sh-1); }
+  .kit-box h4 { font-size: 11px; font-weight: 700; letter-spacing: .07em; color: var(--ink-3); margin-bottom: 12px; }
+  .kit-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .kit-row + .kit-row { margin-top: 10px; }
+  .inp {
+    font-family: var(--font); font-size: 13px; border: 1px solid var(--line); border-radius: var(--r-sm);
+    padding: 7px 10px; color: var(--ink); width: 100%; background: var(--surface);
+  }
+  .inp::placeholder { color: var(--ink-3); }
+  .inp.focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(46,125,50,.12); }
+  .inp.error { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(198,40,40,.10); }
+  .lbl-sm { font-size: 11.5px; color: var(--ink-2); margin-bottom: 5px; font-weight: 500; }
+  .hint-err { font-size: 11px; color: var(--danger); margin-top: 4px; }
+  .empty { text-align: center; padding: 24px 12px; }
+  .empty .eic { width: 34px; height: 34px; border-radius: var(--r-sm); background: var(--bg); border: 1px solid var(--line); margin: 0 auto 8px; }
+  .empty .et { font-size: 12.5px; font-weight: 600; }
+  .empty .es { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+
+  footer.doc-foot {
+    border-top: 1px solid var(--line); padding-top: 20px; font-size: 12px; color: var(--ink-3);
+  }
+  footer.doc-foot b { color: var(--ink-2); }
+
+  @media (max-width: 980px) {
+    .spec-grid { grid-template-columns: repeat(2,1fr); }
+    .cols { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(3,1fr); }
+    .notes { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .page { padding: 24px 14px 60px; }
+    .spec-grid, .stats { grid-template-columns: 1fr; }
+    .nav { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="doc-head">
+    <div class="doc-eyebrow">UI 设计参考稿 · 待确认</div>
+    <h1>LabFlow 界面设计参考</h1>
+    <p>依据 v2.3.62 评审方案绘制：单一品牌绿、3 档圆角、6 档字号、语义色独立。表格沿用现有 <b>38px 行高 / 36px 表头 / 1px 边框</b> 的实测规格，不推翻可配置样式引擎。本稿仅用于视觉方向确认，不含业务改动。</p>
+  </div>
+
+  <!-- ===== 01 设计基准 ===== -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2>设计基准</h2></div>
+    <p class="sec-desc">四组变量构成全部界面的地基，业务页面只引用语义层，不出现绝对色值。</p>
+    <div class="spec-grid">
+      <div class="spec">
+        <h4>品牌与语义色</h4>
+        <div class="row-sw">
+          <div class="sw-dot" style="background:#2E7D32" title="brand"></div>
+          <div class="sw-dot" style="background:#EEF6EF" title="brand-soft"></div>
+          <div class="sw-dot" style="background:#15803D" title="success"></div>
+          <div class="sw-dot" style="background:#B45309" title="warning"></div>
+          <div class="sw-dot" style="background:#C62828" title="danger"></div>
+          <div class="sw-dot" style="background:#1D4ED8" title="info"></div>
+        </div>
+        <div class="spec-line"><span>brand</span><span>#2E7D32 · 5.12:1</span></div>
+        <div class="spec-line"><span>success</span><span>#15803D</span></div>
+        <div class="spec-line"><span>warning</span><span>#B45309</span></div>
+        <div class="spec-line"><span>danger</span><span>#C62828</span></div>
+        <div class="spec-line"><span>info</span><span>#1D4ED8</span></div>
+      </div>
+      <div class="spec">
+        <h4>中性色</h4>
+        <div class="row-sw">
+          <div class="sw-dot" style="background:#16201A"></div>
+          <div class="sw-dot" style="background:#4A5A50"></div>
+          <div class="sw-dot" style="background:#6B7A70"></div>
+          <div class="sw-dot" style="background:#E2E8E3"></div>
+          <div class="sw-dot" style="background:#F6F8F6"></div>
+          <div class="sw-dot" style="background:#FFFFFF"></div>
+        </div>
+        <div class="spec-line"><span>正文 / 标题</span><span>#16201A</span></div>
+        <div class="spec-line"><span>次级文字</span><span>#4A5A50</span></div>
+        <div class="spec-line"><span>辅助文字</span><span>#6B7A70 · 4.6:1</span></div>
+        <div class="spec-line"><span>描边</span><span>#E2E8E3</span></div>
+      </div>
+      <div class="spec">
+        <h4>字号阶梯</h4>
+        <div class="type-scale">
+          <div class="ts-item"><b style="font-size:20px">工作台标题</b><span>20 / 28</span></div>
+          <div class="ts-item"><b style="font-size:16px">区块标题</b><span>16 / 24</span></div>
+          <div class="ts-item"><b style="font-size:14px">正文与表单</b><span>14 / 22</span></div>
+          <div class="ts-item"><b style="font-size:13px">表格正文</b><span>13 / 20</span></div>
+          <div class="ts-item"><b style="font-size:12px">辅助说明</b><span>12 / 18</span></div>
+        </div>
+      </div>
+      <div class="spec">
+        <h4>圆角与阴影</h4>
+        <div class="row-sw" style="gap:8px">
+          <div class="sw-dot" style="border-radius:2px;background:#EEF6EF;border-color:#CFE3D2"></div>
+          <div class="sw-dot" style="border-radius:8px;background:#EEF6EF;border-color:#CFE3D2"></div>
+          <div class="sw-dot" style="border-radius:999px;background:#EEF6EF;border-color:#CFE3D2"></div>
+        </div>
+        <div class="spec-line"><span>数据面</span><span>2px</span></div>
+        <div class="spec-line"><span>容器面</span><span>8px</span></div>
+        <div class="spec-line"><span>胶囊</span><span>999px</span></div>
+        <div class="spec-line"><span>阴影</span><span>2 级</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 02 桌面工作台 ===== -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2>桌面 · 工作台</h2></div>
+    <p class="sec-desc">从「三个彩色大卡」改为「带数量的入口列表 + 今日概览」。首屏直接回答"我现在该做什么"，颜色只表达状态。</p>
+    <div class="device">
+      <div class="device-bar">
+        <div class="tl"></div><div class="tl"></div><div class="tl"></div>
+        <div class="device-url">labflow.local / 工作台</div>
+      </div>
+      <div class="app">
+        <!-- 顶栏 -->
+        <div class="appbar">
+          <div class="brandmark">
+            <div class="logomark">知</div>
+            <div class="logotext">知微<em>LabFlow</em></div>
+          </div>
+          <nav class="nav">
+            <a class="on" href="#">工作台</a>
+            <a href="#">记录</a>
+            <a href="#">统计</a>
+            <a href="#">管理</a>
+          </nav>
+          <div class="appbar-right">
+            <div class="ico-btn hoverable">⌕</div>
+            <div class="ico-btn hoverable">◔<span class="badge">3</span></div>
+            <div class="avatar">李</div>
+          </div>
+        </div>
+
+        <div class="main">
+          <div class="page-head">
+            <div>
+              <h3>下午好，李敏</h3>
+              <div class="sub">2026 年 10 月 22 日 · 周四 · 你有 3 项待处理</div>
+            </div>
+            <div class="acts">
+              <button class="btn btn-ghost">导出今日汇总</button>
+              <button class="btn btn-primary">＋ 新建送样</button>
+            </div>
+          </div>
+
+          <!-- 概览 -->
+          <div class="stats">
+            <div class="stat attn">
+              <div class="lbl"><span class="dot-s" style="background:#B45309"></span>待我确认</div>
+              <div class="val">2<small>项</small></div>
+            </div>
+            <div class="stat">
+              <div class="lbl"><span class="dot-s" style="background:#1D4ED8"></span>检测进行中</div>
+              <div class="val">8<small>项</small></div>
+            </div>
+            <div class="stat">
+              <div class="lbl"><span class="dot-s" style="background:#15803D"></span>今日已完成</div>
+              <div class="val">12<small>项</small></div>
+            </div>
+          </div>
+
+          <div class="cols">
+            <!-- 入口 -->
+            <div class="panel">
+              <div class="panel-head">
+                <h5>业务入口</h5>
+                <span class="more">按权限显示</span>
+              </div>
+              <div class="entry-list">
+                <div class="entry">
+                  <div class="ic">⚗</div>
+                  <div>
+                    <div class="tt">研发送样</div>
+                    <div class="st">送样录入 · 记录查看 · 状态流转</div>
+                  </div>
+                  <div class="sp"></div>
+                  <div class="cnt warn">2 待确认</div>
+                  <div class="arw">›</div>
+                </div>
+                <div class="entry">
+                  <div class="ic">▤</div>
+                  <div>
+                    <div class="tt">分析检测</div>
+                    <div class="st">检测录入 · 工作量统计 · 报表</div>
+                  </div>
+                  <div class="sp"></div>
+                  <div class="cnt">8 进行中</div>
+                  <div class="arw">›</div>
+                </div>
+                <div class="entry">
+                  <div class="ic">◫</div>
+                  <div>
+                    <div class="tt">样品信息登记</div>
+                    <div class="st">ICP · 热分析 · 质谱等样品信息</div>
+                  </div>
+                  <div class="sp"></div>
+                  <div class="cnt">今日 4</div>
+                  <div class="arw">›</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 动态 -->
+            <div class="panel">
+              <div class="panel-head">
+                <h5>最近动态</h5>
+                <span class="more">全部 ›</span>
+              </div>
+              <div class="feed">
+                <div class="feed-item crit">
+                  <div class="feed-dot"></div>
+                  <div>
+                    <div class="feed-txt"><b>RD-2026-1021</b> 被退回，原因：样品编号重复</div>
+                    <div class="feed-time">12 分钟前</div>
+                  </div>
+                </div>
+                <div class="feed-item">
+                  <div class="feed-dot"></div>
+                  <div>
+                    <div class="feed-txt"><b>张伟</b> 完成 GC-2024 方法 6 个样品检测</div>
+                    <div class="feed-time">38 分钟前</div>
+                  </div>
+                </div>
+                <div class="feed-item">
+                  <div class="feed-dot"></div>
+                  <div>
+                    <div class="feed-txt">新增样品信息登记 <b>12</b> 条（热分析）</div>
+                    <div class="feed-time">1 小时前</div>
+                  </div>
+                </div>
+                <div class="feed-item">
+                  <div class="feed-dot"></div>
+                  <div>
+                    <div class="feed-txt"><b>ICP-7</b> 仪器今日检测量已达 18 件</div>
+                    <div class="feed-time">2 小时前</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="note"><b>顶栏</b>：入口从 5 个收到 4 个，通知与账号合并右侧；品牌「知微 LabFlow」单一标识。</div>
+      <div class="note"><b>概览卡</b>：数字 26px 加粗、等宽数字，三项对齐同一基线；仅"待我确认"用警示橙。</div>
+      <div class="note"><b>入口行</b>：34px 图标 + 名称 + 一句说明 + 数量徽标，替代原先三种饱和底色的大卡。</div>
+    </div>
+  </section>
+
+  <!-- ===== 03 桌面记录 ===== -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2>桌面 · 记录列表</h2></div>
+    <p class="sec-desc">核心界面。行高 38px、表头 36px、1px 描边与现有默认规格一致；状态用语义色 soft 底 Chip，操作收敛为「主操作 + 更多」。</p>
+    <div class="device">
+      <div class="device-bar">
+        <div class="tl"></div><div class="tl"></div><div class="tl"></div>
+        <div class="device-url">labflow.local / 记录 / 研发送样</div>
+      </div>
+      <div class="app">
+        <div class="appbar">
+          <div class="brandmark">
+            <div class="logomark">知</div>
+            <div class="logotext">知微<em>LabFlow</em></div>
+          </div>
+          <nav class="nav">
+            <a href="#">工作台</a>
+            <a class="on" href="#">记录</a>
+            <a href="#">统计</a>
+            <a href="#">管理</a>
+          </nav>
+          <div class="appbar-right">
+            <div class="ico-btn hoverable">⌕</div>
+            <div class="ico-btn hoverable">◔<span class="badge">3</span></div>
+            <div class="avatar">李</div>
+          </div>
+        </div>
+
+        <div class="main">
+          <div class="page-head" style="margin-bottom:14px">
+            <div>
+              <h3 style="font-size:18px">研发送样记录</h3>
+              <div class="sub">共 1,284 条 · 当前筛选 图表显示 <b style="color:var(--ink-2)">312</b> 条</div>
+            </div>
+            <div class="acts">
+              <button class="btn btn-ghost btn-sm">列设置</button>
+              <button class="btn btn-ghost btn-sm">导出</button>
+              <button class="btn btn-primary btn-sm">＋ 新建送样</button>
+            </div>
+          </div>
+
+          <!-- 筛选 -->
+          <div class="filters">
+            <div class="field"><span class="k">日期</span> 近 30 天 ▾</div>
+            <div class="field"><span class="k">实验室</span> 全部 ▾</div>
+            <div class="field active"><span class="k">状态</span> 检测中 ✕</div>
+            <div class="field on-focus">⌕ 搜索批号 / 项目<input style="border:none;outline:none;font-size:12.5px;width:70px;background:transparent" /></div>
+            <div class="sp"></div>
+            <button class="btn btn-ghost btn-sm">重置</button>
+          </div>
+
+          <!-- 表格 -->
+          <div class="tbl-shell">
+            <table class="data">
+              <colgroup>
+                <col style="width:34px"><col style="width:38px"><col style="width:112px"><col style="width:104px">
+                <col style="width:88px"><col style="width:150px"><col style="width:78px"><col style="width:66px">
+                <col style="width:96px"><col style="width:118px"><col>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th><span class="ck"></span></th>
+                  <th>#</th>
+                  <th>样品批号</th>
+                  <th>业务编号</th>
+                  <th>实验室</th>
+                  <th>研发项目</th>
+                  <th>状态</th>
+                  <th class="num">样品数</th>
+                  <th>送样人</th>
+                  <th>送样时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="ck"></span></td>
+                  <td class="num">1</td>
+                  <td><strong>YP-2610-0412</strong></td>
+                  <td class="num">RD-2026-1021</td>
+                  <td>有机合成</td>
+                  <td>新型催化剂开发</td>
+                  <td><span class="chip run">检测中</span></td>
+                  <td class="num">6</td>
+                  <td>王芳</td>
+                  <td class="num">10-22 09:12</td>
+                  <td><span class="act-link">查看</span><span class="act-sep">|</span><span class="act-more">更多 ⋯</span></td>
+                </tr>
+                <tr>
+                  <td><span class="ck"></span></td>
+                  <td class="num">2</td>
+                  <td><strong>YP-2610-0411</strong></td>
+                  <td class="num">RD-2026-1020</td>
+                  <td>热分析</td>
+                  <td>耐高温涂层评估</td>
+                  <td><span class="chip wait">待确认</span></td>
+                  <td class="num">3</td>
+                  <td>张伟</td>
+                  <td class="num">10-22 08:47</td>
+                  <td><span class="act-link">确认</span><span class="act-sep">|</span><span class="act-more">更多 ⋯</span></td>
+                </tr>
+                <tr>
+                  <td><span class="ck"></span></td>
+                  <td class="num">3</td>
+                  <td><strong>YP-2610-0410</strong></td>
+                  <td class="num">RD-2026-1019</td>
+                  <td>ICP</td>
+                  <td>金属杂质定量</td>
+                  <td><span class="chip ok">已完成</span></td>
+                  <td class="num">12</td>
+                  <td>李敏</td>
+                  <td class="num">10-21 16:30</td>
+                  <td><span class="act-link">查看</span><span class="act-sep">|</span><span class="act-more">更多 ⋯</span></td>
+                </tr>
+                <tr>
+                  <td><span class="ck"></span></td>
+                  <td class="num">4</td>
+                  <td><strong>YP-2610-0409</strong></td>
+                  <td class="num">RD-2026-1018</td>
+                  <td>有机合成</td>
+                  <td>聚合物改性中试</td>
+                  <td><span class="chip rej">已退回</span></td>
+                  <td class="num">2</td>
+                  <td>陈晨</td>
+                  <td class="num">10-21 15:02</td>
+                  <td><span class="act-link">重新提交</span><span class="act-sep">|</span><span class="act-more">⋯</span></td>
+                </tr>
+                <tr>
+                  <td><span class="ck on"></span></td>
+                  <td class="num">5</td>
+                  <td><strong>YP-2610-0408</strong></td>
+                  <td class="num">RD-2026-1017</td>
+                  <td>热分析</td>
+                  <td>树脂固化行为</td>
+                  <td><span class="chip run">检测中</span></td>
+                  <td class="num">4</td>
+                  <td>王芳</td>
+                  <td class="num">10-21 14:20</td>
+                  <td><span class="act-link">查看</span><span class="act-sep">|</span><span class="act-more">更多 ⋯</span></td>
+                </tr>
+                <tr>
+                  <td><span class="ck"></span></td>
+                  <td class="num">6</td>
+                  <td><strong>YP-2610-0407</strong></td>
+                  <td class="num">RD-2026-1016</td>
+                  <td>ICP</td>
+                  <td>微量元素比对</td>
+                  <td><span class="chip neu">草稿</span></td>
+                  <td class="num">1</td>
+                  <td>李敏</td>
+                  <td class="num">10-21 11:08</td>
+                  <td><span class="act-link">继续填写</span><span class="act-sep">|</span><span class="act-more">⋯</span></td>
+                </tr>
+                <tr>
+                  <td><span class="ck"></span></td>
+                  <td class="num">7</td>
+                  <td><strong>YP-2610-0406</strong></td>
+                  <td class="num">RD-2026-1015</td>
+                  <td>有机合成</td>
+                  <td>新型催化剂开发</td>
+                  <td><span class="chip ok">已完成</span></td>
+                  <td class="num">8</td>
+                  <td>张伟</td>
+                  <td class="num">10-20 17:41</td>
+                  <td><span class="act-link">查看</span><span class="act-sep">|</span><span class="act-more">更多 ⋯</span></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pager">
+              <span>已选 1 条</span>
+              <span class="sp"></span>
+              <span>每页 20 条</span>
+              <span class="pg">‹</span><span class="pg on">1</span><span class="pg">2</span><span class="pg">3</span><span class="pg">…</span><span class="pg">16</span><span class="pg">›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="note"><b>规格沿用</b>：行高 38 / 表头 36 / 边框 1px / 表头底 #FBFCFB，与 <code>DEFAULT_RECORD_TABLE_STYLE</code> 对齐。</div>
+      <div class="note"><b>状态色</b>：检测中=info、待确认=warning、已完成=success、已退回=danger，Chip 一律 soft 底 + 同色描边。</div>
+      <div class="note"><b>操作列</b>：保留一个最常用主操作 + 「更多」收纳，符合现有 <code>actionDisplay: auto</code> 的行为。</div>
+    </div>
+  </section>
+
+  <!-- ===== 04 移动端 ===== -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2>移动端 · 底栏 3+1</h2></div>
+    <p class="sec-desc">最高频的三个动作直接进底栏，不必回首页二次跳转；「我的」承载账号、通知与关于。</p>
+    <div class="phones">
+      <!-- 手机 1 工作台 -->
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="p-status"><span>9:41</span><span>●●● ⌁ ▮</span></div>
+          <div class="p-appbar">
+            <div class="logomark" style="width:20px;height:20px;border-radius:2px;background:#2E7D32;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">知</div>
+            <div class="logotext">知微<em>LabFlow</em></div>
+            <div class="sp"></div>
+            <div class="ico-btn hoverable" style="width:26px;height:26px">◔<span class="badge" style="top:0;right:0">3</span></div>
+            <div class="avatar" style="width:24px;height:24px;font-size:10px">李</div>
+          </div>
+          <div class="p-body">
+            <div class="p-greet">下午好，李敏<span>10 月 22 日 · 3 项待处理</span></div>
+            <div class="p-stats">
+              <div class="p-stat w"><div class="v">2</div><div class="l">待确认</div></div>
+              <div class="p-stat"><div class="v">8</div><div class="l">进行中</div></div>
+              <div class="p-stat"><div class="v">12</div><div class="l">今日完成</div></div>
+            </div>
+            <div class="p-card">
+              <div class="p-card-top">
+                <div class="tt">研发送样</div><div class="sp"></div>
+                <span class="chip wait">2 待确认</span>
+              </div>
+              <div class="p-card-row"><span class="k">送样录入</span><span class="v">今日新增 5 条</span></div>
+              <div class="p-card-row"><span class="k">最近记录</span><span class="v">YP-2610-0412 / 检测中</span></div>
+            </div>
+            <div class="p-card">
+              <div class="p-card-top">
+                <div class="tt">分析检测</div><div class="sp"></div>
+                <span class="chip run">8 进行中</span>
+              </div>
+              <div class="p-card-row"><span class="k">待录入</span><span class="v">3 条检测工作量</span></div>
+              <div class="p-card-row"><span class="k">最近记录</span><span class="v">GC-2024 / 6 个样品</span></div>
+            </div>
+            <div class="p-card">
+              <div class="p-card-top">
+                <div class="tt">样品信息登记</div><div class="sp"></div>
+                <span class="chip ok">今日 4</span>
+              </div>
+              <div class="p-card-row"><span class="k">待完善</span><span class="v">1 条缺主要成分</span></div>
+            </div>
+          </div>
+          <div class="p-tabbar">
+            <div class="p-tab on"><div class="tic"></div><span>工作台</span></div>
+            <div class="p-tab"><div class="tic"></div><span>送样</span></div>
+            <div class="p-tab"><div class="tic plus"></div><span>登记</span></div>
+            <div class="p-tab"><div class="tic"></div><span>我的</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 手机 2 记录卡片 -->
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="p-status"><span>9:41</span><span>●●● ⌁ ▮</span></div>
+          <div class="p-appbar">
+            <div class="ico-btn" style="width:24px;height:24px">‹</div>
+            <div class="logotext" style="font-size:13px">研发送样记录</div>
+            <div class="sp"></div>
+            <div class="ico-btn" style="width:24px;height:24px">⌕</div>
+            <div class="ico-btn" style="width:24px;height:24px">⋯</div>
+          </div>
+          <div class="p-body">
+            <div class="filters" style="padding:7px 8px;gap:5px;margin-bottom:8px">
+              <div class="field" style="height:26px;font-size:11px;padding:3px 7px"><span class="k" style="font-size:10.5px">日期</span> 近 30 天</div>
+              <div class="field active" style="height:26px;font-size:11px;padding:3px 7px"><span class="k" style="font-size:10.5px">状态</span> 检测中 ✕</div>
+            </div>
+
+            <div class="p-card">
+              <div class="p-card-top">
+                <div class="tt">YP-2610-0412</div><div class="sp"></div>
+                <span class="chip run">检测中</span>
+              </div>
+              <div class="p-card-row"><span class="k">业务编号</span><span class="v">RD-2026-1021</span></div>
+              <div class="p-card-row"><span class="k">实验室</span><span class="v">有机合成 · 6 个样品</span></div>
+              <div class="p-card-row"><span class="k">送样时间</span><span class="v">10-22 09:12 · 王芳</span></div>
+              <div class="p-card-acts">
+                <button class="btn btn-ghost">查看详情</button>
+                <button class="btn btn-quiet">录工作量</button>
+              </div>
+            </div>
+
+            <div class="p-card">
+              <div class="p-card-top">
+                <div class="tt">YP-2610-0411</div><div class="sp"></div>
+                <span class="chip wait">待确认</span>
+              </div>
+              <div class="p-card-row"><span class="k">业务编号</span><span class="v">RD-2026-1020</span></div>
+              <div class="p-card-row"><span class="k">实验室</span><span class="v">热分析 · 3 个样品</span></div>
+              <div class="p-card-row"><span class="k">送样时间</span><span class="v">10-22 08:47 · 张伟</span></div>
+              <div class="p-card-acts">
+                <button class="btn btn-primary">确认接收</button>
+                <button class="btn btn-ghost">退回</button>
+              </div>
+            </div>
+
+            <div class="p-card">
+              <div class="p-card-top">
+                <div class="tt">YP-2610-0410</div><div class="sp"></div>
+                <span class="chip ok">已完成</span>
+              </div>
+              <div class="p-card-row"><span class="k">业务编号</span><span class="v">RD-2026-1019</span></div>
+              <div class="p-card-row"><span class="k">实验室</span><span class="v">ICP · 12 个样品</span></div>
+            </div>
+            <div style="text-align:center;font-size:11px;color:var(--ink-3);padding:6px">上滑加载更多</div>
+          </div>
+          <div class="p-tabbar">
+            <div class="p-tab on"><div class="tic"></div><span>工作台</span></div>
+            <div class="p-tab"><div class="tic"></div><span>送样</span></div>
+            <div class="p-tab"><div class="tic plus"></div><span>登记</span></div>
+            <div class="p-tab"><div class="tic"></div><span>我的</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1;min-width:240px">
+        <div class="note" style="margin-bottom:10px"><b>底栏逻辑</b>：工作台 / 送样 / 登记 / 我的。四个位置对应四条最高频路径，替代现在「主页 + 帮助与反馈」只能回首页二跳的结构。</div>
+        <div class="note" style="margin-bottom:10px"><b>触控尺寸</b>：底栏项高 ≥ 44px，卡片内按钮高 32px 且左右留 44px 热区；相比现状 40px 的操作按钮更易点中。</div>
+        <div class="note"><b>卡片沿用</b>：窄屏仍走现有卡片布局（4 行摘要 + 操作行），只换视觉，不改字段与折叠规则。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 05 组件 ===== -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">05</span><h2>组件与状态</h2></div>
+    <p class="sec-desc">统一后的按钮、输入、状态标签与空态，是 S2 阶段替换硬编码时的参照物。</p>
+    <div class="kit">
+      <div class="kit-box">
+        <h4>按钮</h4>
+        <div class="kit-row">
+          <button class="btn btn-primary">主要操作</button>
+          <button class="btn btn-ghost">次要操作</button>
+          <button class="btn btn-quiet">文字操作</button>
+        </div>
+        <div class="kit-row">
+          <button class="btn btn-primary btn-sm">小号主要</button>
+          <button class="btn btn-ghost btn-sm">小号次要</button>
+          <button class="btn btn-primary" style="opacity:.45;cursor:not-allowed">禁用</button>
+        </div>
+      </div>
+
+      <div class="kit-box">
+        <h4>状态标签</h4>
+        <div class="kit-row">
+          <span class="chip ok">已完成</span>
+          <span class="chip run">检测中</span>
+          <span class="chip wait">待确认</span>
+          <span class="chip rej">已退回</span>
+          <span class="chip neu">草稿</span>
+        </div>
+        <div class="kit-row" style="margin-top:14px">
+          <span class="chip ok">已取样</span>
+          <span class="chip run">待取样</span>
+          <span class="chip wait">超期 2 天</span>
+          <span class="chip rej">异常</span>
+        </div>
+      </div>
+
+      <div class="kit-box">
+        <h4>输入</h4>
+        <div class="lbl-sm">样品批号</div>
+        <input class="inp" value="YP-2610-0412" />
+        <div style="height:10px"></div>
+        <div class="lbl-sm">研发项目（聚焦态）</div>
+        <input class="inp focus" value="新型催化剂开发" />
+        <div style="height:10px"></div>
+        <div class="lbl-sm">样品数（错误态）</div>
+        <input class="inp error" value="0" />
+        <div class="hint-err">样品数须大于 0</div>
+      </div>
+
+      <div class="kit-box">
+        <h4>空态</h4>
+        <div class="empty">
+          <div class="eic"></div>
+          <div class="et">当前筛选没有记录</div>
+          <div class="es">试试放宽日期范围，或重置筛选条件</div>
+        </div>
+        <div class="kit-row" style="justify-content:center">
+          <button class="btn btn-ghost btn-sm">重置筛选</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-foot">
+    <b>交付说明</b>：本稿为静态视觉参考，用于确认方向，未接入任何业务数据。所有色值取自 <b>#2E7D32</b> 品牌绿体系；表格尺寸沿用现有默认样式规格，确保 S2 替换时不与样式引擎冲突。
+    <br /><b>待确认</b>：① 品牌主色是否采用 #2E7D32；② 品牌名统一为「知微 LabFlow」还是「样品管理系统」；③ 底栏是否按「工作台 / 送样 / 登记 / 我的」调整。
+  </footer>
+
+</div>
+</body>
+</html>

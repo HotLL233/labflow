@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LabFlow v2.3.62 · UI 设计评审与优化方案</title>
+<style>
+  :root {
+    --ink: #16201a;
+    --ink-2: #4a5a50;
+    --ink-3: #6b7a70;
+    --line: #e2e8e3;
+    --line-soft: #eef2ef;
+    --bg: #f6f8f6;
+    --card: #ffffff;
+    --brand: #2e7d32;
+    --brand-soft: #eef6ef;
+    --brand-line: #cfe3d2;
+    --p0: #c62828;
+    --p0-soft: #fdecec;
+    --p1: #b45309;
+    --p1-soft: #fdf3e7;
+    --p2: #475569;
+    --p2-soft: #f1f4f7;
+    --r-sm: 2px;
+    --r-md: 8px;
+    --r-pill: 999px;
+    --shadow-1: 0 1px 2px rgba(16, 32, 20, .04), 0 1px 8px rgba(16, 32, 20, .04);
+    --shadow-2: 0 2px 4px rgba(16, 32, 20, .05), 0 8px 24px rgba(16, 32, 20, .07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px 96px; }
+
+  /* ---------- Hero ---------- */
+  header.hero {
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    padding: 56px 0 40px;
+    margin-bottom: 40px;
+  }
+  .hero-inner { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600; letter-spacing: .08em;
+    color: var(--brand); background: var(--brand-soft);
+    border: 1px solid var(--brand-line); border-radius: var(--r-pill);
+    padding: 4px 12px; margin-bottom: 20px;
+  }
+  h1 { font-size: 30px; line-height: 1.3; font-weight: 700; letter-spacing: -.01em; }
+  .sub { color: var(--ink-2); font-size: 15px; margin-top: 10px; max-width: 720px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 24px; font-size: 13px; color: var(--ink-3); }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Verdict ---------- */
+  .verdict {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 28px 30px; margin-bottom: 36px; box-shadow: var(--shadow-1);
+    border-left: 3px solid var(--brand);
+  }
+  .verdict h2 { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-3); margin-bottom: 14px; }
+  .verdict p { font-size: 16px; color: var(--ink); }
+  .verdict p + p { margin-top: 12px; }
+  .verdict strong { color: var(--brand); font-weight: 700; }
+
+  /* ---------- Metrics ---------- */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 44px; }
+  .metric { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 18px 20px; }
+  .metric .num { font-size: 27px; font-weight: 700; letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .metric .num.bad { color: var(--p0); }
+  .metric .num.ok { color: var(--brand); }
+  .metric .lbl { font-size: 12px; color: var(--ink-3); margin-top: 4px; line-height: 1.4; }
+
+  /* ---------- Section ---------- */
+  section { margin-bottom: 52px; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+  .sec-num { font-size: 12px; font-weight: 700; color: var(--brand); font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+  h2.sec { font-size: 21px; font-weight: 700; letter-spacing: -.01em; }
+  .sec-desc { color: var(--ink-2); font-size: 14px; margin-bottom: 20px; max-width: 780px; }
+
+  /* ---------- Table ---------- */
+  .tbl-wrap { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; box-shadow: var(--shadow-1); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th {
+    text-align: left; font-size: 11.5px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--ink-3);
+    background: #fbfcfb; padding: 11px 16px; border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  tbody td { padding: 13px 16px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #fcfdfc; }
+  td.ev { color: var(--ink-3); font-size: 12.5px; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  td b { font-weight: 600; }
+
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: var(--r-sm); letter-spacing: .04em; white-space: nowrap; }
+  .tag.p0 { background: var(--p0-soft); color: var(--p0); }
+  .tag.p1 { background: var(--p1-soft); color: var(--p1); }
+  .tag.p2 { background: var(--p2-soft); color: var(--p2); }
+  .tag.keep { background: var(--brand-soft); color: var(--brand); border: 1px solid var(--brand-line); }
+
+  /* ---------- Cards ---------- */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 22px 24px; }
+  .box h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .box p { font-size: 13.5px; color: var(--ink-2); }
+  .box p + p { margin-top: 8px; }
+  .box code, p code, td code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 12px; background: #f4f7f4; border: 1px solid var(--line-soft);
+    border-radius: var(--r-sm); padding: 1px 5px; color: #2a4a32;
+  }
+  pre {
+    background: #fbfcfb; border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 16px 18px; overflow-x: auto; font-size: 12.5px; line-height: 1.7;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; color: #2b3a31;
+  }
+  pre .cm { color: #8a9a90; }
+  pre .bad { color: var(--p0); font-weight: 600; }
+  pre .good { color: var(--brand); font-weight: 600; }
+
+  /* ---------- Compare ---------- */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+  .pane { background: var(--card); padding: 0; }
+  .pane + .pane { border-left: 1px solid var(--line); }
+  .pane-label {
+    font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    padding: 10px 16px; border-bottom: 1px solid var(--line); color: var(--ink-3); background: #fbfcfb;
+    display: flex; justify-content: space-between;
+  }
+  .pane-label .now { color: var(--p0); }
+  .pane-label .next { color: var(--brand); }
+  .stage { padding: 22px 20px 26px; min-height: 268px; }
+
+  /* --- 现状复刻 --- */
+  .cur-bar {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.85); border-bottom: 1px solid rgba(0,0,0,.06);
+    padding: 7px 10px; border-radius: 4px; box-shadow: 0 1px 10px rgba(0,0,0,.04);
+  }
+  .cur-bar .t { font-size: 10px; font-weight: 800; color: #1f2937; }
+  .cur-bar .sp { flex: 1; }
+  .cur-bar .b { font-size: 9px; color: #475569; padding: 2px 4px; }
+  .cur-bar .b.on { color: #1769aa; font-weight: 700; }
+  .cur-bar .dot { width: 12px; height: 12px; border-radius: 3px; background: #eef1f4; border: 1px solid #e0e4e8; }
+  .cur-logo {
+    text-align: center; font-family: "KaiTi", "STKaiti", cursive, serif;
+    font-size: 34px; font-weight: 700; color: #667eea; margin: 16px 0 14px;
+  }
+  .cur-cards { display: flex; gap: 8px; }
+  .cur-card {
+    flex: 1; text-align: center; padding: 14px 8px; border-radius: 2px;
+    border: 2px solid; box-shadow: 0 8px 32px rgba(0,0,0,.08);
+  }
+  .cur-card.c1 { background: linear-gradient(145deg, #fff3e0, #ffe0b2); border-color: #e65100; }
+  .cur-card.c2 { background: linear-gradient(145deg, #e8eaf6, #c5cae9); border-color: #283593; }
+  .cur-card.c3 { background: linear-gradient(145deg, #e8f5e9, #c8e6c9); border-color: #2e7d32; }
+  .cur-card .ic { font-size: 22px; line-height: 1; margin-bottom: 6px; }
+  .cur-card .tt { font-size: 11.5px; font-weight: 700; }
+  .cur-card.c1 .tt { color: #e65100; } .cur-card.c2 .tt { color: #283593; } .cur-card.c3 .tt { color: #2e7d32; }
+  .cur-card .st { font-size: 8px; color: #888; margin-top: 3px; }
+  .cur-hint { text-align: center; font-size: 9px; color: #999; margin-top: 12px; }
+
+  /* --- 建议复刻 --- */
+  .nx-bar {
+    display: flex; align-items: center; gap: 10px;
+    background: #fff; border-bottom: 1px solid var(--line); padding: 7px 10px;
+    box-shadow: 0 1px 2px rgba(16,32,20,.04);
+  }
+  .nx-bar .brand { font-size: 11.5px; font-weight: 700; color: var(--ink); letter-spacing: .02em; }
+  .nx-bar .sep { width: 1px; height: 12px; background: var(--line); }
+  .nx-bar .nv { font-size: 9.5px; color: var(--ink-3); padding: 3px 7px; border-radius: var(--r-sm); }
+  .nx-bar .nv.on { color: var(--brand); background: var(--brand-soft); font-weight: 600; }
+  .nx-bar .sp { flex: 1; }
+  .nx-bar .av { width: 18px; height: 18px; border-radius: var(--r-pill); background: var(--brand-soft); border: 1px solid var(--brand-line); }
+  .nx-head { margin: 18px 0 12px; }
+  .nx-head .h { font-size: 17px; font-weight: 700; color: var(--ink); letter-spacing: -.01em; }
+  .nx-head .s { font-size: 10px; color: var(--ink-3); margin-top: 2px; }
+  .nx-list { display: flex; flex-direction: column; gap: 6px; }
+  .nx-item {
+    display: flex; align-items: center; gap: 10px; background: #fff;
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: 9px 12px;
+    box-shadow: var(--shadow-1);
+  }
+  .nx-item .ic {
+    width: 24px; height: 24px; border-radius: var(--r-sm); background: var(--brand-soft);
+    border: 1px solid var(--brand-line); display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--brand); flex-shrink: 0;
+  }
+  .nx-item .tt { font-size: 11px; font-weight: 600; color: var(--ink); }
+  .nx-item .st { font-size: 8.5px; color: var(--ink-3); }
+  .nx-item .sp { flex: 1; }
+  .nx-item .cnt { font-size: 9px; font-weight: 700; color: var(--brand); background: var(--brand-soft); border-radius: var(--r-pill); padding: 1px 7px; }
+
+  /* ---------- Contrast chips ---------- */
+  .swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 10px; }
+  .sw { border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; background: var(--card); }
+  .sw .chip { height: 52px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .sw .info { padding: 8px 10px; font-size: 10.5px; color: var(--ink-3); line-height: 1.45; }
+  .sw .info b { color: var(--ink); display: block; font-size: 11px; }
+  .fail { color: var(--p0); font-weight: 700; }
+  .pass { color: var(--brand); font-weight: 700; }
+
+  /* ---------- Roadmap ---------- */
+  .road { display: flex; flex-direction: column; gap: 0; }
+  .phase { display: grid; grid-template-columns: 92px 1fr; gap: 20px; padding: 22px 0; border-top: 1px solid var(--line); }
+  .phase:last-child { border-bottom: 1px solid var(--line); }
+  .ph-tag { font-size: 11px; font-weight: 700; color: var(--brand); letter-spacing: .06em; }
+  .ph-tag span { display: block; font-size: 11px; font-weight: 500; color: var(--ink-3); letter-spacing: 0; margin-top: 3px; }
+  .phase h4 { font-size: 14.5px; font-weight: 700; margin-bottom: 8px; }
+  .phase ul { list-style: none; font-size: 13.5px; color: var(--ink-2); }
+  .phase li { padding-left: 16px; position: relative; margin-bottom: 4px; }
+  .phase li::before { content: "—"; position: absolute; left: 0; color: var(--brand); }
+  .phase .risk { font-size: 12px; color: var(--ink-3); margin-top: 8px; }
+
+  /* ---------- Callout ---------- */
+  .callout {
+    background: var(--brand-soft); border: 1px solid var(--brand-line);
+    border-radius: var(--r-md); padding: 16px 20px; font-size: 13.5px; color: #24502b;
+  }
+  .callout b { font-weight: 700; }
+  .callout.warn { background: var(--p1-soft); border-color: #f0dcc0; color: #7a4708; }
+
+  footer { border-top: 1px solid var(--line); padding-top: 24px; font-size: 12.5px; color: var(--ink-3); }
+  footer b { color: var(--ink-2); }
+
+  @media (max-width: 820px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .cards, .compare { grid-template-columns: 1fr; }
+    .pane + .pane { border-left: none; border-top: 1px solid var(--line); }
+    .phase { grid-template-columns: 1fr; gap: 8px; }
+    h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">UI 设计评审 · 只评审未改动源码</div>
+    <h1>LabFlow v2.3.62 界面设计评审与优化方案</h1>
+    <p class="sub">评审对象：<code>source/LabFlow-PostgreSQL-v2.3.62/frontend</code>（84 个 TSX、2 个全局样式）。结论基于源码事实，不含主观偏好判断；每条问题都可定位到文件与行号。</p>
+    <div class="meta">
+      <div><b>技术栈</b> React 18 · MUI 5 · Vite</div>
+      <div><b>评审范围</b> 主题层 / 导航 / 门户 / 表单 / 记录表 / 移动端</div>
+      <div><b>日期</b> 2026-10-22</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="verdict">
+    <h2>总体结论</h2>
+    <p>当前界面<strong>不是审美问题，是缺少设计系统</strong>。全站 882 处硬编码色值、225 个唯一十六进制颜色、9 档小字号、5 种圆角并存，而主题层只被引用 25 次，后台「主题设置」实际上形同虚设——管理员改品牌色，页面基本不跟。</p>
+    <p>核心资产要保住：记录表的 Excel 化样式引擎（<code>recordTableStyle.ts</code>，个人视图 → 全局 → 默认三级解析）是这个产品最有价值的界面能力，本次方案<strong>不推翻、不重写</strong>，只把它接入统一的 token 层。</p>
+    <p>优化路径按「先止血、再收口、后品牌」三步走，每步可独立发版、独立回退，符合版本隔离口径。</p>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><div class="num bad">882</div><div class="lbl">硬编码色值出现次数</div></div>
+    <div class="metric"><div class="num bad">225</div><div class="lbl">唯一十六进制颜色</div></div>
+    <div class="metric"><div class="num bad">25</div><div class="lbl">主题色被引用次数</div></div>
+    <div class="metric"><div class="num ok">52</div><div class="lbl">2px 圆角使用处（尚有 5 种圆角并存）</div></div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec">问题矩阵</h2></div>
+    <p class="sec-desc">按严重度排序。P0 会直接损害功能承诺或无障碍合规，建议在下一版本内处理；P1 影响一致性与可用性；P2 属于体验打磨。</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th style="width:52px">等级</th><th style="width:170px">问题</th><th>事实与证据</th><th style="width:210px">影响</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag p0">P0</span></td>
+            <td><b>后台主题配置近乎失效</b></td>
+            <td class="ev">main.tsx:27-30 仅 primary/secondary/bg/radius 4 项进 theme；882 处硬编码 vs 25 处主题引用；LoginPage.tsx 完全未读 themeSettings，背景渐变在 :90、按钮色 #f4511e 在 :195 均为硬编码</td>
+            <td>管理员改「登录背景」「登录按钮色」不生效，属功能承诺未兑现</td>
+          </tr>
+          <tr>
+            <td><span class="tag p0">P0</span></td>
+            <td><b>禁用页面缩放</b></td>
+            <td class="ev">index.html:5 <code>maximum-scale=1.0, user-scalable=no</code></td>
+            <td>违反 WCAG 1.4.4；实验室戴手套、强光、年长用户无法放大读数</td>
+          </tr>
+          <tr>
+            <td><span class="tag p0">P0</span></td>
+            <td><b>文本对比度不达标</b></td>
+            <td class="ev">#999 正文 2.85:1（20 处）；#f4511e 白字 3.48:1（21 处）；#667eea 白字 3.66:1（11 处），均低于 4.5:1</td>
+            <td>违反 WCAG 1.4.3；弱光/低质量投影下辅助文字几乎不可读</td>
+          </tr>
+          <tr>
+            <td><span class="tag p1">P1</span></td>
+            <td><b>品牌识别分裂</b></td>
+            <td class="ev">AppBar「样品管理系统」(Layout.tsx:46)、抽屉「知微」(:63)、登录页「知微 / 样品管理系统」(LoginPage.tsx:102-111)、关于框「样品管理系统」四处并存；首页 logo 用「方正舒体」(:98)</td>
+            <td>装饰字体多数机器未安装，回退楷体/衬线，品牌呈现跨设备不可控</td>
+          </tr>
+          <tr>
+            <td><span class="tag p1">P1</span></td>
+            <td><b>语义色被品牌色污染</b></td>
+            <td class="ev">#2e7d32 出现 77 次，同时充当「样品信息登记」入口色、「完成/成功」状态色、「登记信息」标题色；#f4511e 既是登录主按钮又是警示色</td>
+            <td>用户无法从颜色推断含义，状态识别成本升高</td>
+          </tr>
+          <tr>
+            <td><span class="tag p1">P1</span></td>
+            <td><b>移动端信息架构错配</b></td>
+            <td class="ev">Layout.tsx:16-19 <code>MOBILE_NAV</code> 仅「主页 / 帮助与反馈」；三条高频业务全在首页二跳；AppBar 右侧挤公告+通知+用户+关于 4 个入口</td>
+            <td>手机端每次录样都要「回首页→找卡片」，与最高频路径相反</td>
+          </tr>
+          <tr>
+            <td><span class="tag p1">P1</span></td>
+            <td><b>圆角体系撕裂</b></td>
+            <td class="ev">'2px' 52 处、1(8px) 7 处、'6px' 4 处、'12px'/'16px' 各 1 处、nav-pill 24px；登录卡 16px 与全站 2px 直接冲突</td>
+            <td>同产品出现「锐角后台」与「圆角 C 端」两种语言</td>
+          </tr>
+          <tr>
+            <td><span class="tag p2">P2</span></td>
+            <td><b>门户卡片信息价值低</b></td>
+            <td class="ev">HomePage.tsx:120-143 仅标题+副标题，整卡渐变底 + 2px 实色边 + 彩色阴影，无待办/数量/最近动态</td>
+            <td>占据首屏最大视觉权重，却不承载任何决策信息</td>
+          </tr>
+          <tr>
+            <td><span class="tag p2">P2</span></td>
+            <td><b>字号无阶梯</b></td>
+            <td class="ev">0.68/0.7/0.75/0.78/0.8/0.875rem 与 11/12/12.5/13px 混用，小字至少 9 档</td>
+            <td>层级靠肉眼拼凑，密集表格区显得毛躁</td>
+          </tr>
+          <tr>
+            <td><span class="tag p2">P2</span></td>
+            <td><b>阴影与层级不成体系</b></td>
+            <td class="ev">0 4px 20px（theme elevation1）、0 8px 30px、0 8px 32px 彩色、0 4px 24px、0 1px 10px 同时存在</td>
+            <td>深度感不统一，卡片浮起程度无法预期</td>
+          </tr>
+          <tr>
+            <td><span class="tag p2">P2</span></td>
+            <td><b>无暗色模式</b></td>
+            <td class="ev">main.tsx:32-82 createTheme 未设 palette.mode；index.css 全量硬编码白底</td>
+            <td>夜间值班/弱光工位无适配；接入成本随硬编码数量线性增长</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec">三处关键证据</h2></div>
+    <p class="sec-desc">只列最需要当场确认的三条，其余可在源码中按行号复核。</p>
+
+    <div class="cards" style="margin-bottom:16px">
+      <div class="box">
+        <h3>① 主题层只覆盖 4 个变量</h3>
+        <p><code>ThemeSettings</code> 声明了 8 个可配字段，但进入 MUI theme 的只有 4 个，且没有任何组件消费它们。</p>
+<pre><span class="cm">// main.tsx:27-30</span>
+const primary = themeSettings?.primaryColor || '#667eea';
+const secondary = themeSettings?.secondaryColor || '#764ba2';
+const bg = themeSettings?.bgColor || '#f8fafc';
+const radius = themeSettings?.cardRadius ?? 2;
+
+<span class="cm">// 反差：业务页面里的绝对色值</span>
+<span class="bad">#2e7d32 × 77   #1976d2 × 54   #f4511e × 21</span></pre>
+      </div>
+      <div class="box">
+        <h3>② 登录页根本不读主题设置</h3>
+        <p>后台可配置 <code>loginBg</code> 与 <code>loginButtonColor</code>，但登录页把两者都写死了，因此这两个设置项永远无效。</p>
+<pre><span class="cm">// LoginPage.tsx:90</span>
+background: <span class="bad">'linear-gradient(135deg,#f0f4f8,#e8f5e9)'</span>
+
+<span class="cm">// LoginPage.tsx:195</span>
+bgcolor: <span class="bad">'#f4511e'</span>
+
+<span class="cm">// 该文件全文无 themeSettings 读取</span></pre>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <b>补充一条同类缺陷：</b>ErrorBoundary 与 404 页（<code>App.tsx:35、38</code>）用内联样式写死 <code>#1976d2</code> 蓝，既不随主题，也不符合其他页面配色——错误态恰恰是最不该露出「另一套皮肤」的地方。
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec">对比度实测</h2></div>
+    <p class="sec-desc">按 WCAG 2.1 相对亮度公式计算，正常文本阈值 4.5:1，大文本（≥18.66px 粗体或 ≥24px）阈值 3:1。</p>
+    <div class="swatches" style="margin-bottom:20px">
+      <div class="sw">
+        <div class="chip" style="background:#999;color:#fff">Aa 辅助文字</div>
+        <div class="info"><b>#999 on #fff</b>2.85:1 <span class="fail">不达标</span> · 20 处</div>
+      </div>
+      <div class="sw">
+        <div class="chip" style="background:#f4511e;color:#fff">登录按钮</div>
+        <div class="info"><b>#f4511e 白字</b>3.48:1 <span class="fail">不达标</span> · 21 处</div>
+      </div>
+      <div class="sw">
+        <div class="chip" style="background:#667eea;color:#fff">主题主色</div>
+        <div class="info"><b>#667eea 白字</b>3.66:1 <span class="fail">不达标</span> · 11 处</div>
+      </div>
+      <div class="sw">
+        <div class="chip" style="background:#2e7d32;color:#fff">品牌绿</div>
+        <div class="info"><b>#2e7d32 白字</b>5.12:1 <span class="pass">达标</span></div>
+      </div>
+      <div class="sw">
+        <div class="chip" style="background:#1976d2;color:#fff">旧主蓝</div>
+        <div class="info"><b>#1976d2 白字</b>4.60:1 <span class="pass">勉强达标</span></div>
+      </div>
+    </div>
+    <div class="callout">
+      <b>结论：</b>现用的紫蓝主色 <code>#667eea</code> 与登录橙 <code>#f4511e</code> 都无法承载白字正文。已有 <code>#2e7d32</code> 是唯一既高频（77 次）又达标的主色候选，这是下面推荐它作为品牌主色的首要依据——不是审美偏好。
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec">视觉对比：首页门户与顶栏</h2></div>
+    <p class="sec-desc">左侧按现有代码 1:1 复刻（三色渐变卡 + 2px 边 + 楷体 logo + 5 个顶栏入口）；右侧为建议方向（单色系、8px 圆角、入口列表带数量、导航收敛）。仅示意视觉方向，不含业务改动。</p>
+    <div class="compare">
+      <div class="pane">
+        <div class="pane-label"><span>现状</span><span class="now">3 套色系 / 圆角 2px</span></div>
+        <div class="stage">
+          <div class="cur-bar">
+            <div class="t">样品管理系统</div>
+            <div class="sp"></div>
+            <div class="b on">主页</div><div class="b">帮助与反馈</div><div class="b">管理</div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+          <div class="cur-logo">知微</div>
+          <div class="cur-cards">
+            <div class="cur-card c1"><div class="ic">⚗</div><div class="tt">研发送样</div><div class="st">送样录入 · 查看记录</div></div>
+            <div class="cur-card c2"><div class="ic">▤</div><div class="tt">分析检测</div><div class="st">检测录入 · 统计</div></div>
+            <div class="cur-card c3"><div class="ic">◫</div><div class="tt">样品信息登记</div><div class="st">ICP · 热分析</div></div>
+          </div>
+          <div class="cur-hint">选择功能入口，开始操作</div>
+        </div>
+      </div>
+      <div class="pane">
+        <div class="pane-label"><span>建议</span><span class="next">单色系 / 圆角 8px</span></div>
+        <div class="stage">
+          <div class="nx-bar">
+            <div class="brand">知微 LabFlow</div>
+            <div class="sep"></div>
+            <div class="nv on">工作台</div><div class="nv">记录</div><div class="nv">管理</div>
+            <div class="sp"></div>
+            <div class="dot" style="width:12px;height:12px;border-radius:2px;background:#eef2ef;border:1px solid #e2e8e3"></div>
+            <div class="av"></div>
+          </div>
+          <div class="nx-head">
+            <div class="h">今天待处理 3 项</div>
+            <div class="s">2026-10-22 · 周四</div>
+          </div>
+          <div class="nx-list">
+            <div class="nx-item">
+              <div class="ic">⚗</div>
+              <div><div class="tt">研发送样</div><div class="st">待确认 2 · 今日新增 5</div></div>
+              <div class="sp"></div><div class="cnt">2</div>
+            </div>
+            <div class="nx-item">
+              <div class="ic">▤</div>
+              <div><div class="tt">分析检测</div><div class="st">进行中 8 · 今日完成 12</div></div>
+              <div class="sp"></div><div class="cnt">8</div>
+            </div>
+            <div class="nx-item">
+              <div class="ic">◫</div>
+              <div><div class="tt">样品信息登记</div><div class="st">今日已登记 4</div></div>
+              <div class="sp"></div><div class="cnt">4</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="sec-desc" style="margin-top:14px;margin-bottom:0">差异要点：① 三个入口从「三种饱和色」收敛为「同一品牌色 + 中性底」，颜色重新只表达状态；② 卡片改为行式入口并带数量，首屏即可判断该做哪件事；③ logo 由楷体装饰字改为系统黑体加字距，跨设备一致；④ 顶栏入口从 5 个收敛为 3 个，通知与账号合并进头像。</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec">优化方案：三层 Token</h2></div>
+    <p class="sec-desc">原则是「原始值 → 语义 → 组件」单向引用，业务代码只允许使用语义层。落地方式为新增一个 <code>designTokens.ts</code> 并在 MUI theme 中扩展，不改业务逻辑、不引入新依赖。</p>
+
+    <div class="tbl-wrap" style="margin-bottom:16px">
+      <table>
+        <thead><tr><th style="width:120px">层级</th><th>定义</th><th style="width:280px">用途</th></tr></thead>
+        <tbody>
+          <tr><td><b>L1 原始值</b></td><td class="ev">--green-50 … --green-900 / --neutral-0 … --neutral-900 / --amber / --red / --blue</td><td>只允许在 token 文件出现，页面禁止直接引用</td></tr>
+          <tr><td><b>L2 语义</b></td><td class="ev">brand / brand-hover / brand-soft / surface / surface-sunken / border / text-primary / text-secondary / text-muted / success / warning / danger / info</td><td>组件与页面唯一可用的颜色名</td></tr>
+          <tr><td><b>L3 组件</b></td><td class="ev">button.primary.* / table.header.* / card.* / chip.status.* / nav.active.*</td><td>MUI components 覆盖层，统一样式出口</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cards">
+      <div class="box">
+        <h3>色彩：一个品牌色 + 四语义色</h3>
+        <p><b>建议品牌主色 <code>#2E7D32</code></b>（达标 5.12:1、现网出现 77 次、贴合检测/安全语义）。紫蓝 <code>#667eea</code> 退出正文用途，仅可作为渐变辅助。</p>
+        <p>语义色与品牌色彻底解耦：成功用 <code>#15803D</code>，警告 <code>#B45309</code>，危险 <code>#C62828</code>，信息 <code>#1D4ED8</code>；每个语义色配套 soft 底色用于 Chip/Alert。</p>
+        <p>橙色 <code>#f4511e</code> 降级为「需要注意」的强调色，不再充当登录主按钮。</p>
+      </div>
+      <div class="box">
+        <h3>字号：6 档阶梯</h3>
+        <p><code>12 / 13 / 14 / 16 / 20 / 28</code>（px），行高分别 <code>18 / 20 / 22 / 24 / 28 / 36</code>。</p>
+        <p>现有 0.68–0.875rem 的碎片统一并入 12 与 13 两档；表格辅助字号保留现有可配置能力（<code>auxFontSize</code> 12 起步），不破坏后台调字号的入口。</p>
+        <p>中文栈补齐 <code>Microsoft YaHei / PingFang SC</code>，避免 Windows 走 <code>sans-serif</code> 兜底导致的行高漂移。</p>
+      </div>
+      <div class="box">
+        <h3>圆角：3 档 + 1 例外</h3>
+        <p><code>2px</code> 数据面（表格、输入、Chip）；<code>8px</code> 容器面（卡片、弹窗、登录卡）；<code>999px</code> 胶囊（导航 pill、状态徽标）。</p>
+        <p>删除 6px / 12px / 16px / 24px 四类特例。后台 <code>cardRadius</code> 仍可调，但只在 2–12 区间给出预览约束，防止配出与体系冲突的值。</p>
+      </div>
+      <div class="box">
+        <h3>阴影：2 级</h3>
+        <p><code>level-1</code> 静止卡片：<code>0 1px 2px rgba(16,32,20,.04), 0 1px 8px rgba(16,32,20,.04)</code>；<code>level-2</code> 浮起/弹窗：<code>0 2px 4px rgba(16,32,20,.05), 0 8px 24px rgba(16,32,20,.07)</code>。</p>
+        <p>取消彩色阴影（当前 <code>0 8px 32px ${border}1f</code>），阴影只表达高度，不表达品牌。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec">落地路线</h2></div>
+    <p class="sec-desc">三个阶段各自独立发版、独立回退，不合并成一次大改。每阶段结束后按第 07 节的可测指标验收。</p>
+    <div class="road">
+      <div class="phase">
+        <div class="ph-tag">S1 止血<span>低风险</span></div>
+        <div>
+          <h4>修掉三处硬伤，不动视觉语言</h4>
+          <ul>
+            <li>放开 <code>viewport</code> 缩放限制，<code>maximum-scale</code> 移除、<code>user-scalable</code> 置 yes</li>
+            <li>修正三组不达标对比度：<code>#999</code>→<code>#6B7A70</code>；登录按钮改深一档橙 <code>#C2410C</code>；紫蓝仅保留大字号用途</li>
+            <li>登录页接入 <code>themeSettings</code>，让 <code>loginBg</code> / <code>loginButtonColor</code> 真正生效（这是兑现既有功能承诺，不是新功能）</li>
+            <li>ErrorBoundary / 404 页改读主题色，去掉内联 <code>#1976d2</code></li>
+          </ul>
+          <p class="risk">风险：极低。均为局部替换，不触碰表格引擎与业务逻辑。</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="ph-tag">S2 收口<span>中风险</span></div>
+        <div>
+          <h4>建 token 层，按模块替换硬编码</h4>
+          <ul>
+            <li>新增 <code>src/theme/designTokens.ts</code> 与 <code>createAppTheme()</code>，扩展 MUI <code>components</code> 覆盖</li>
+            <li>替换顺序按收益排序：记录表 → 表单页 → 门户与导航 → 管理后台</li>
+            <li>圆角与字号收敛：<code>'2px'</code> 归入 token、删除 6/12/16px 特例、登录卡 16px→8px</li>
+            <li>表格样式引擎保留：<code>DEFAULT_RECORD_TABLE_STYLE</code> 的默认值改为引用 token，解析逻辑一行不动</li>
+          </ul>
+          <p class="risk">风险：中。每模块替换后需跑该模块既有测试（前端 122 项测试基线），按模块提交便于定位回归。</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="ph-tag">S3 品牌<span>需决策</span></div>
+        <div>
+          <h4>统一识别与信息架构</h4>
+          <ul>
+            <li>品牌名二选一：对外统一「知微 LabFlow」或统一「样品管理系统」，四处置同名</li>
+            <li>logo 去掉「方正舒体」，改系统黑体 + 字距，或引入 1 个开源中文字体子集（需评估体积）</li>
+            <li>移动端底栏改 3+1（送样 / 登记 / 记录 / 我的），「关于」并入「我的」</li>
+            <li>首页卡片升级为带数量的入口列表，或保留卡片但补信息层</li>
+            <li>预留暗色模式：token 层先行，<code>palette.mode</code> 后续接入</li>
+          </ul>
+          <p class="risk">风险：需产品决策（命名、导航结构）。建议先出静态稿确认，再进入编码。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec">验收指标（可测量）</h2></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th style="width:150px">指标</th><th style="width:120px">现状</th><th style="width:120px">目标</th><th>验证方法</th></tr></thead>
+        <tbody>
+          <tr><td>唯一硬编码色值</td><td>225</td><td>≤ 20（仅 token 文件）</td><td>正则统计 <code>#[0-9a-fA-F]{3,6}</code> 于 <code>src/**</code>，排除 <code>theme/</code></td></tr>
+          <tr><td>主题色引用次数</td><td>25</td><td>≥ 200</td><td>统计 <code>primary.main</code> / token 引用</td></tr>
+          <tr><td>圆角种类</td><td>5</td><td>3</td><td>统计 <code>borderRadius</code> 字面量</td></tr>
+          <tr><td>小字号档位</td><td>9</td><td>2（12/13）</td><td>统计 <code>fontSize</code> 字面量</td></tr>
+          <tr><td>WCAG AA 文本对比度</td><td>3 组失败</td><td>0 组失败</td><td>逐色计算相对亮度，脚本化校验</td></tr>
+          <tr><td>页面缩放</td><td>禁用</td><td>允许至 200%</td><td>检查 <code>index.html</code> viewport</td></tr>
+          <tr><td>后台主题项生效</td><td>4/8 部分生效</td><td>8/8 生效</td><td>改设置后逐项比对页面</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2 class="sec">明确不做的事</h2></div>
+    <div class="cards">
+      <div class="box">
+        <h3>保留</h3>
+        <p><span class="tag keep">保住</span> 记录表 Excel 化样式引擎（行高/列宽/条件格式/操作色/个人视图三级优先级）——这是产品核心竞争力，只接入 token，不重写。</p>
+        <p><span class="tag keep">保住</span> 现有业务交互与权限逻辑、字段与流程一律不动。</p>
+      </div>
+      <div class="box">
+        <h3>不做</h3>
+        <p>不引入新的 UI 组件库（Ant Design / shadcn 等），继续用 MUI，避免双体系。</p>
+        <p>不做整站改版式重构、不改路由与数据契约、不新增未经确认的功能模块。</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <b>复核方式</b>：本报告所有行号对应 <code>source/LabFlow-PostgreSQL-v2.3.62/frontend</code>；色值、圆角、字号统计由正则扫描 <code>src/**/*.ts(x)</code> 得出。本次<strong>仅新增评审文档，未修改任何源码</strong>。
+    <br /><b>待确认</b>：品牌主色是否采用 <code>#2E7D32</code>；品牌名统一为哪一个；移动端底栏是否按 3+1 调整。三项确认后即可进入 S1。
+  </footer>
+
+</div>
+</body>
+</html>
