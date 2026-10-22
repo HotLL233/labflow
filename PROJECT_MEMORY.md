@@ -1,12 +1,12 @@
 # LabFlow 项目统一记忆
 
-> 最后更新：2026-10-16
+> 最后更新：2026-10-22
 >
-> 当前正式版本：`v2.3.62`（样品信息登记筛选样式统一）；开发验证、本地构建及GitHub/GHCR发布与资产核验完成，验证范围及未验收项见本版记录。
+> 当前正式版本：`v2.3.63`（配色达标与界面冲突修正，不改记录表排版）；开发验证、本地构建及GitHub发布与资产核验完成，验证范围及未验收项见本版记录。
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.62/`（正式版），隔离基线为v2.3.61。
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.63/`（正式版），隔离基线为v2.3.62。
 >
-> 当前开发状态：v2.3.62已完成本轮开发和交付；现场验收范围见本版记录。
+> 当前开发状态：v2.3.63已完成本轮开发和交付；现场验收范围见本版记录。
 
 ## 1. 文件定位与强制维护规则
 
@@ -932,6 +932,22 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 本地两包均产品／文件版本2.3.62.0，独立保留本版installer/，不被CI包覆盖：`LabFlow-v2.3.62.exe` 79658027字节，SHA-256 `ec1525a7c1bff417417954299ffa1a351a104928d38db2b3d22100d7fd9f72e9`；`LabFlow-v2.3.62-HotUpdate.exe` 29145769字节，SHA-256 `02dab28774ba114f3106ff643c961569a77841d002e19736f30cb375a4f31209`。Release SHA-256 `5bb1461056ccde2c68441c743a99ba49446064bc39fc0f8b6169d01d22e6951f`；证据test-artifacts/v2.3.62/。
 - 源码完整SHA `ec75abe8c565a2711a8c659ceb6e9151256dafd4`；Release ID 413575680。正式CI两包：`LabFlow-v2.3.62.exe` 79,635,622字节，SHA-256 `961e9a874a9d872d48df2b5bba219d2f00d3432fbf6fc08b7cbe8bc2e79ed773`；`LabFlow-v2.3.62-HotUpdate.exe` 29,122,515字节，SHA-256 `83dbb932e3a9b3f3d825bfa81cef4c31b9fe513c324e21d744128764dc8a66cd`。证据test-artifacts/v2.3.62/ci-packages-sha256.json、github-release-final.json、github-runs.json、ghcr-final.json。
 - 五份交付文档以[skip ci]收尾，不重复生成包或镜像；包内说明保留标签构建时状态，以根统一记忆与Release为最终交付状态。
+
+## v2.3.63 配色达标与界面冲突修正（2026-10-22，正式发布）
+
+- 范围由用户明确限定：**不改任何记录表排版**（列顺序、列宽、行高、表头、卡片结构、筛选栏布局一律保持v2.3.62原样），只处理配色不达标与跨页面视觉冲突。本版不含导航结构、底栏、首页卡片形态、品牌名统一等排版与信息架构改动。
+- 无障碍：`frontend/index.html` 移除 `maximum-scale=1.0` 与 `user-scalable=no`，恢复用户缩放；`theme-color` 由 `#1976d2` 改为 `#667eea`，与主题主色一致。
+- 对比度（按WCAG AA 4.5:1）：辅助文字 `#999`（2.85:1）与 `#888`（3.54:1）统一改 `#757575`（4.61:1），26处，全部为说明文字、空状态与图标色，逐行确认无色板预设值；强调橙 `#f4511e` 作白字仅3.48:1，改 `#C2410C`（5.18:1），14处，配套 hover `#e64a19`→`#9A3412`、阴影 `rgba(244,81,30,*)`→`rgba(194,65,12,*)`、渐变改 `#C2410C→#B91C1C`。
+- 跨页冲突：抽屉当前页激活色 `#667eea`（3.5:1）改 `#1769aa`（4.60:1），与顶栏激活色统一，选中底 `rgba(102,126,234,.12)`→`rgba(23,105,170,.10)`；ErrorBoundary 重试按钮 `#1976d2` 改 `#667eea`；登录页圆角由卡片16px、按钮与输入框12px 统一为2px，与全站52处2px一致。
+- 登录页接入后台「主题设置」的 `loginBg` 与 `loginButtonColor`。此前两项可配置但页面写死背景渐变与按钮色，配置从未生效；现按接口读取，缺失或格式异常回落原默认值，按钮 hover 改用亮度降低以适配任意配置色。
+- 保留未动：`GroupCard` 的 `CARD_COLORS` 色板中 `#f4511e` 属可选卡片色而非语义色；`#2e7d32` 同时充当入口品牌色与"已完成"状态色的语义混用未拆，拆分会牵动一批状态色，需另行确认。
+- 验证：前端类型检查通过；现有6个测试文件32项用例全通过（0失败）；生产构建成功（1827模块，JS 1,949.73kB／gzip 585.16kB，CSS 7.88kB／gzip 2.10kB）。逐行脚本比对证明17个文件44行改动**全部只涉及色值**，去掉色值后与v2.3.62逐字相同；唯一结构变化为`LoginPage.tsx`（213→236行，增加主题读取逻辑与圆角常量）。`utils/recordTableStyle.ts` 与 `utils/recordTableLayout.ts` 与v2.3.62逐字节一致，表格样式引擎与列宽算法未被触碰。
+- 交付完成：源码提交 `8a03efe2`（465文件）、文档提交 `658613cc`，注释标签 `v2.3.63`（`907a2adc` → `8a03efe2`）已推送GitHub；Windows工作流39787687178全部步骤成功；[GitHub Release v2.3.63](https://github.com/HotLL233/labflow/releases/tag/v2.3.63)已发布（非draft）。Docker工作流39787686981在交付时仍在运行，其最终状态与GHCR摘要未纳入本次核验。
+- **回写修正**：`windows-release.yml` 的 "Publish installers into repository" 使用 `git push origin HEAD:main` 且 `continue-on-error: true`。本版 docs 提交排在 tag 之后，main 领先 tag 提交，该推送为非快进被拒但 job 仍显示 success，`installers/` 未回写。已手动下载Release资产补交，提交 `5d741e43`，远端 main 为 `5d741e43`，与本地一致。**后续发版顺序必须为：源码提交 → 打tag → 推main+tag → 等CI回写installers → 最后再提交docs等收尾commit**（v2.3.62即以ec75abe8 → a5c53061 → 78a49f2e的顺序避开此问题）。
+- 正式CI两包（已入根 `installers/`）：`LabFlow-v2.3.63.exe` 79,635,074字节，SHA-256 `43430803cecf8a42010671834668f8f3d11e5b99a72893bb8e2f0ac9d635d5e0`；`LabFlow-v2.3.63-HotUpdate.exe` 29,122,497字节，SHA-256 `2c062647195a1cf7a3ca018339ebb8f84e569da6517561953a3bde90348acadb`。
+- 本地独立包保留在本版 `installer/` 与根 `rebuild-output/`，不被CI包覆盖：`LabFlow-v2.3.63.exe` 79,659,372字节，SHA-256 `737efabd658eddc74b0b846574381019b7e328dd356c785a30f9fd7a064475da`；`LabFlow-v2.3.63-HotUpdate.exe` 29,140,706字节，SHA-256 `483f674a6cd6c25edc56f8d46a7ab9aab68377d4cb92eb285a1d5e28d95c025b`。CI包与本地产物字节数不同属构建环境差异，版本号一致。
+- 真实桌面／手机浏览器像素与交互、移动端缩放手感、后台改配色后登录页的实际跟随效果、覆盖安装保留数据库与管理员账号，均未验收。本版后端业务源码与迁移未改，仅版本号同步。
+- 版本隔离：从v2.3.62复制464个跟踪文件，排除旧 `backend/static`、`target`、`node_modules`、`installer` 与运行数据；九处版本元数据统一2.3.63，Windows数字版本2.3.63.0，热更新 `BackupFolderName` 同步为 `v2.3.63`。旧版本目录与全部历史安装包保留。
 
 ## 共享源文件与独立缓存集中维护（2026-10-16）
 
