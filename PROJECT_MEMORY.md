@@ -2,11 +2,11 @@
 
 > 最后更新：2026-10-23
 >
-> 当前正式版本：`v2.3.64`（三类业务色统一与字号集中管理）；开发验证、本地构建及GitHub发布与资产核验完成，验证范围及未验收项见本版记录。
+> 当前正式版本：`v2.3.66`（修复检测类型卡片配色不生效）；开发验证、本地构建及GitHub发布与资产核验完成，验证范围及未验收项见本版记录。
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.64/`（正式版），隔离基线为v2.3.63。
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.66/`（正式版），隔离基线为v2.3.65。
 >
-> 当前开发状态：v2.3.64已完成本轮开发和交付；现场验收范围见本版记录。
+> 当前开发状态：v2.3.66已完成本轮开发和交付；现场验收范围见本版记录。
 
 ## 1. 文件定位与强制维护规则
 
@@ -946,6 +946,31 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - **回写修正**：`windows-release.yml` 的 "Publish installers into repository" 使用 `git push origin HEAD:main` 且 `continue-on-error: true`。本版 docs 提交排在 tag 之后，main 领先 tag 提交，该推送为非快进被拒但 job 仍显示 success，`installers/` 未回写。已手动下载Release资产补交，提交 `5d741e43`，远端 main 为 `5d741e43`，与本地一致。**后续发版顺序必须为：源码提交 → 打tag → 推main+tag → 等CI回写installers → 最后再提交docs等收尾commit**（v2.3.62即以ec75abe8 → a5c53061 → 78a49f2e的顺序避开此问题）。
 - 正式CI两包（已入根 `installers/`）：`LabFlow-v2.3.63.exe` 79,635,074字节，SHA-256 `43430803cecf8a42010671834668f8f3d11e5b99a72893bb8e2f0ac9d635d5e0`；`LabFlow-v2.3.63-HotUpdate.exe` 29,122,497字节，SHA-256 `2c062647195a1cf7a3ca018339ebb8f84e569da6517561953a3bde90348acadb`。
 - 本地独立包保留在本版 `installer/` 与根 `rebuild-output/`，不被CI包覆盖：`LabFlow-v2.3.63.exe` 79,659,372字节，SHA-256 `737efabd658eddc74b0b846574381019b7e328dd356c785a30f9fd7a064475da`；`LabFlow-v2.3.63-HotUpdate.exe` 29,140,706字节，SHA-256 `483f674a6cd6c25edc56f8d46a7ab9aab68377d4cb92eb285a1d5e28d95c025b`。CI包与本地产物字节数不同属构建环境差异，版本号一致。
+
+## v2.3.66 修复检测类型卡片配色不生效（2026-10-23，正式发布）
+
+- 用户反馈：「样品信息登记内的检测类型卡片的颜色不生效」。v2.3.65 只恢复了管理后台「样品信息类型 → 颜色色值」输入框，**读渲染这一端没接上**——`SampleInfoHome.tsx` 的类型卡片在 v2.3.64 统一业务色时把 `cat.color` 换成了 `BUSINESS_COLORS.info.main`，后台改色保存成功、列表色块也变色，前台卡片始终是业务绿。
+- 故障定位（写链路完好、读链路断裂）：写入 `ManagePage.tsx` `siTypeForm.color` → `createSampleInfoType/updateSampleInfoType` → `src/repo/sample_info_type_repo.rs` INSERT/UPDATE 均带 `color`，列表 `SELECT` 也返回 `color`；全仓库检索确认 `sample_info_types.color` 在 v2.3.63 仅 `SampleInfoHome.tsx` 一处消费（`SampleInfoStatsPage` 的 `c.color` 属统计卡配置，非类型色），故只影响首页类型卡片。
+- 修复（单文件 `frontend/src/pages/SampleInfoHome.tsx`）：新增 `typeColor(cat)`，取 `cat.color` 经 `/^#[0-9a-fA-F]{6}$/` 校验为合法 6 位 hex 才用，否则回落 `BUSINESS_COLORS.info.main`；卡片底色 `#ffffff → ${accent}1a`、边框 `2px solid ${accent}`、阴影 `${accent}1a`/悬停 `${accent}33`、图标与标题色全部取 `accent`。校验的意义是透明后缀只有 6 位 hex 才能拼出合法 CSS，避免填 3 位缩写或色名时拼成非法值、底色透明、看起来仍「不生效」。
+- 保持不变：页面标题与「查看统计」按钮仍用业务绿（页面级导航色，不随单个类型变化）；卡片结构、间距、栅格、圆角、字号与 v2.3.65 完全一致，仅替换颜色取值来源；首页入口卡与统计卡的「自由色值 > 业务预设 > 内置兜底」口径未改；业务预设色仍唯一由 `BUSINESS_COLORS` 给出。
+- 明确不做：检测类型颜色的对比度不自动修正——后台填什么色就渲染什么色（与 v2.3.63 行为一致），填极浅色（如 `#FFEB3B`）时白底标题偏淡属使用者选择，系统不静默改色。
+- 隔离声明：`recordTableStyle.ts`、`recordTableLayout.ts`、`mobileCardStyles.ts`、`TableStyleBar.tsx`、`useRecordTableStyle.ts`、`Layout.tsx` 与 v2.3.65 逐字节一致；移动端、记录表排版、导航结构未动；Rust 后端零改动。
+- 版本隔离：从 v2.3.65 复制新建本目录（robocopy `/XJ` 排除全部 junction，另排除 `installer` 与旧 `backend/static`），复制前把 v2.3.65 的临时修改 `git checkout` 还原为发布态，已发布版本目录不留脏改动；九处版本元数据统一 2.3.66；junction 手工建立（依赖池沿用 `65c5464…`，package-lock 未变故哈希一致，无需重装依赖）。
+- 验证：前端 `tsc --noEmit` 通过；`cargo build --release --locked` 通过；生产构建成功并写入本版 `backend/static`，产物中已确认含新校验正则（确认修复真正进了包）。
+- 本地两包（本版 `installer/` 与根 `rebuild-output/`）：`LabFlow-v2.3.66.exe` 79,637,695 字节，SHA-256 `74172a5810b2646c46e4e00458c3759141f6ff54a8f47e3d119fb4c84a061c2a`；`LabFlow-v2.3.66-HotUpdate.exe` 29,146,476 字节，SHA-256 `97b05a339c7ae267db2261fe86bc715f084e00e45fffc61c4c961f63d4a7eb7e`；两包产品/文件版本均 2.3.66.0。
+- 与 v2.3.65 的实质差异仅 1 个前端文件（`SampleInfoHome.tsx`）+9 处版本元数据+`更新说明.md`。
+
+## v2.3.65 恢复后台颜色自定义配置（2026-10-23，正式发布）
+
+- 用户口径：v2.3.64 把三类业务卡片的自由拾色收进「业务分类」预设后，用户要求**全部恢复**颜色自定义配置。优先级定为：自由色值 > 业务预设 > 内置兜底；移动端、记录表排版、导航结构不动；Rust 后端零改动（DB 字段与接口在 v2.3.64 期间一直保留）。
+- 恢复三处：① 管理→首页入口卡，「渐变背景／边框色／标题色」三组拾色器+hex 恢复，业务分类下拉保留并定位为「一键填预设」（切换即把达标三色填入三个字段）；加载旧配置时 `normalizeHomeCards` 按预设补齐缺失色值。② 管理→统计卡片，每卡「颜色」+「渐变背景」恢复；`StatsCards.tsx` 的 `applyVariantCards` 改为配置优先（v2.3.63/v2.3.64 曾用内置值整体覆盖，填什么色都不生效）。③ 管理→样品信息类型，「颜色色值」输入框恢复（DB `color` 字段未动）。
+- 顺带修正死配置：`applyVariantCards` 此前同样覆盖 `label`，管理页填的统计卡「显示名」一直不生效；本版起显示名也以配置为准，留空才回落内置名。此为修复既有缺陷，非新增功能。
+- 渲染口径（唯一）：首页卡 `gradient/border/titleColor` 逐个字段独立判断，有值即用、缺才回落 `BUSINESS_COLORS` 预设；统计卡 `stats-cards` 配置 `color/gradient/label` 有值即用。预设三色由 `ManagePage.tsx` 新增 `homeCardPreset()` 与 HomePage 兜底渲染同源给出，未建第二套色源。
+- 未恢复/未动：v2.3.64 移除的 `portal-styles` 死代码读取（无保存入口）不恢复；`#2e7d32` 品牌色/「已完成」状态色语义混用、品牌名「样品管理系统／知微」并存两项历史遗留仍未处理；主题设置 4 项颜色配置（primary/secondary/bg/loginButton）v2.3.64 起本就未动。
+- 验证：前端 `tsc --noEmit` 通过；`cargo fmt --check`、`cargo check --locked`、`cargo build --release --locked` 均通过（4 个既有 warning 与上版一致）；前端生产构建成功并写入本版 `backend/static`；两份安装包由 ISCC 本地编译，产品/文件版本 2.3.65.0。
+- 版本隔离：从v2.3.64复制460个文件（robocopy /XJ 排除全部 junction，另排除 `installer` 与旧 `backend/static`）；九处版本元数据统一2.3.65；junction 手工建立（`prepare-local-build.ps1` 因依赖池目录名与锁文件哈希不一致报 "Dependencies are missing"——既有池 `65c5464…` 为历史命名，v2.3.63/64 亦是手工建链，package-lock 未变故直接沿用，无需重装依赖）。
+- 源码提交 `6686f88e`（466文件），注释标签 `v2.3.65`，main与tag同一批推送（遵循v2.3.63「回写修正」条记的正确顺序）；本地两包产品/文件版本 2.3.65.0：`LabFlow-v2.3.65.exe` 79,640,602字节，SHA-256 `302aca6bd7fe42b8776cf1800a7d428ef3cec0527533823133edb1864f4e42a`；`LabFlow-v2.3.65-HotUpdate.exe` 29,149,517字节，SHA-256 `e7f75fcb5b8057102f0c4f908c5752ec55f69526d29f268166e6de23438c58ab`。本地副本存本版 `installer/` 与根 `rebuild-output/`。CI 包与 Release 状态见交付核验（另 v2.3.64 的 Docker 工作流 39901139690 本版核查时确认 success）。
+- 与v2.3.64的实质差异仅 5 个前端文件（`ManagePage.tsx`、`HomePage.tsx`、`StatsCards.tsx`、`types/index.ts`、`constants/designTokens.ts`）+9 处版本元数据+`更新说明.md`；`recordTableStyle.ts`、`recordTableLayout.ts`、`mobileCardStyles.ts`、`TableStyleBar.tsx`、`useRecordTableStyle.ts`、`Layout.tsx` 与v2.3.64逐字节一致。
 
 ## v2.3.64 三类业务色统一与字号集中管理（2026-10-23，正式发布）
 
