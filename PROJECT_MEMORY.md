@@ -959,6 +959,9 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 验证：前端 `tsc --noEmit` 通过；`cargo build --release --locked` 通过；生产构建成功并写入本版 `backend/static`，产物中已确认含新校验正则（确认修复真正进了包）。
 - 本地两包（本版 `installer/` 与根 `rebuild-output/`）：`LabFlow-v2.3.66.exe` 79,637,695 字节，SHA-256 `74172a5810b2646c46e4e00458c3759141f6ff54a8f47e3d119fb4c84a061c2a`；`LabFlow-v2.3.66-HotUpdate.exe` 29,146,476 字节，SHA-256 `97b05a339c7ae267db2261fe86bc715f084e00e45fffc61c4c961f63d4a7eb7e`；两包产品/文件版本均 2.3.66.0。
 - 与 v2.3.65 的实质差异仅 1 个前端文件（`SampleInfoHome.tsx`）+9 处版本元数据+`更新说明.md`。
+- 发布链路：提交 `2c0f995a`（468 文件）→ 打 tag `v2.3.66` → push main 被拒（远端已有 v2.3.65 CI 回写 `f56d4f49`）→ rebase 后 main=`76aaf366`；**tag 原指向变基前的 `2c0f995a`，若不管会重演 v2.3.63 的「CI Publish installers 非快进失败」**，故 `git tag -f` 把 tag 对齐 `76aaf366` 后强推（tag 对象 `a461158e`）。**教训：先 push main 成功再打 tag，或 rebase 后必须同步重打 tag——main 与 tag 必须指向同一提交。**
+- CI 全链成功：Windows 工作流构建两包并发布 [GitHub Release v2.3.66](https://github.com/HotLL233/labflow/releases/tag/v2.3.66)（非 draft，已置 Latest），同时回写根 `installers/`，回写提交 `5360c652` 已快进拉回。CI 两包：`LabFlow-v2.3.66.exe` 79,616,882 字节；`LabFlow-v2.3.66-HotUpdate.exe` 29,123,222 字节（构建环境差异故与本地包字节数不同）。Docker 工作流本版未单独核验。
+- 未验收：真实浏览器/手机端改色后卡片观感、覆盖安装后 DB 与管理员账号保留（本版后端源码与迁移未改，仅版本号同步）。
 
 ## v2.3.65 恢复后台颜色自定义配置（2026-10-23，正式发布）
 
