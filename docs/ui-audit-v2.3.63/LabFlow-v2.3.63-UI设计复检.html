@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LabFlow v2.3.63 UI 复检 · 结构问题诊断</title>
+<style>
+  :root {
+    --ink-1: #16202b;
+    --ink-2: #445566;
+    --ink-3: #6b7c8d;
+    --ink-4: #93a2b1;
+    --line: #e3e9ef;
+    --line-2: #eef2f6;
+    --bg: #ffffff;
+    --bg-2: #f7f9fb;
+    --bg-3: #eef3f7;
+    --brand: #17694f;
+    --brand-soft: #e8f3ee;
+    --warn: #a8480a;
+    --warn-soft: #fdf0e6;
+    --bad: #b3261e;
+    --bad-soft: #fceceb;
+    --ok: #2e6b34;
+    --ok-soft: #eaf3ec;
+    --r: 3px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg-2);
+    color: var(--ink-1);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px 96px; }
+
+  /* ---- 封面 ---- */
+  header.hero {
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    padding: 56px 0 40px;
+    margin-bottom: 40px;
+  }
+  .hero-in { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+  .kicker {
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .kicker::before { content: ""; width: 22px; height: 2px; background: var(--brand); }
+  h1 {
+    font-size: 34px; line-height: 1.28; margin: 0 0 14px;
+    font-weight: 700; letter-spacing: -.01em;
+  }
+  h1 .sub { display: block; font-size: 17px; font-weight: 400; color: var(--ink-2); margin-top: 10px; letter-spacing: 0; }
+  .meta { font-size: 12.5px; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  .meta b { color: var(--ink-2); font-weight: 600; }
+
+  /* ---- 指标条 ---- */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin: 32px 0 0; border-radius: var(--r); overflow: hidden; }
+  .kpi { background: var(--bg); padding: 18px 16px; }
+  .kpi .n { font-size: 26px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .kpi .l { font-size: 12px; color: var(--ink-3); margin-top: 3px; }
+  .kpi.bad .n { color: var(--bad); }
+  .kpi.warn .n { color: var(--warn); }
+  .kpi.ok .n { color: var(--ok); }
+
+  /* ---- 章节 ---- */
+  section { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 30px 32px; margin-bottom: 18px; }
+  section > h2 {
+    font-size: 19px; margin: 0 0 6px; font-weight: 700; letter-spacing: -.005em;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  section > h2 .idx { font-size: 12px; font-weight: 700; color: var(--brand); font-family: var(--mono); letter-spacing: .04em; }
+  .lede { color: var(--ink-2); font-size: 13.5px; margin: 0 0 22px; max-width: 780px; }
+  h3 { font-size: 14.5px; margin: 26px 0 10px; font-weight: 700; color: var(--ink-1); }
+  h3:first-of-type { margin-top: 4px; }
+  p { margin: 0 0 12px; }
+  code { font-family: var(--mono); font-size: 12px; background: var(--bg-3); padding: 1px 5px; border-radius: 2px; color: #2b3a48; }
+
+  /* ---- 表格 ---- */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0 18px; }
+  th { text-align: left; font-weight: 600; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--bg-2); }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--line-2); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.num { font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 2px; white-space: nowrap; }
+  .t-bad { background: var(--bad-soft); color: var(--bad); }
+  .t-warn { background: var(--warn-soft); color: var(--warn); }
+  .t-ok { background: var(--ok-soft); color: var(--ok); }
+  .t-neutral { background: var(--bg-3); color: var(--ink-2); }
+
+  /* ---- 色带 ---- */
+  .swatches { display: flex; flex-wrap: wrap; gap: 0; margin: 10px 0 6px; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  .sw { flex: 1 1 0; min-width: 62px; height: 54px; position: relative; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; }
+  .sw span { font-family: var(--mono); font-size: 9.5px; letter-spacing: -.02em; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+  .sw.light span { color: #16202b; text-shadow: 0 1px 1px rgba(255,255,255,.8); }
+  .cap { font-size: 11.5px; color: var(--ink-3); margin: 0 0 16px; }
+
+  /* ---- 对比度矩阵 ---- */
+  .matrix { font-size: 12px; }
+  .matrix td.pass { background: var(--ok-soft); color: #22532a; }
+  .matrix td.mid { background: var(--warn-soft); color: #7d3606; }
+  .matrix td.fail { background: var(--bad-soft); color: #8c1d18; font-weight: 600; }
+  .matrix td.cell { text-align: center; font-family: var(--mono); font-variant-numeric: tabular-nums; padding: 6px 4px; }
+  .matrix th.c { text-align: center; }
+  .matrix td.chipcell { width: 96px; }
+
+  /* ---- 条形 ---- */
+  .bars { margin: 10px 0 18px; }
+  .bar-row { display: grid; grid-template-columns: 132px 1fr 58px; gap: 10px; align-items: center; margin-bottom: 7px; font-size: 12.5px; }
+  .bar-track { height: 16px; background: var(--bg-3); border-radius: 1px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--brand); }
+  .bar-fill.g { background: #9db4a8; }
+  .bar-val { font-family: var(--mono); font-size: 12px; color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---- 引用块 ---- */
+  .note { border-left: 2px solid var(--brand); background: var(--bg-2); padding: 12px 16px; margin: 14px 0 18px; font-size: 13px; color: var(--ink-2); border-radius: 0 var(--r) var(--r) 0; }
+  .note b { color: var(--ink-1); }
+  .note.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+  .note.bad { border-left-color: var(--bad); background: var(--bad-soft); }
+
+  /* ---- 层级图 ---- */
+  .layers { margin: 14px 0 20px; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  .layer { background: var(--bg); padding: 14px 18px; display: grid; grid-template-columns: 56px 132px 1fr; gap: 14px; align-items: start; }
+  .layer .lv { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--brand); padding-top: 2px; }
+  .layer .nm { font-weight: 700; font-size: 13.5px; }
+  .layer .ds { font-size: 12.5px; color: var(--ink-2); }
+  .layer .ds em { font-style: normal; color: var(--ink-1); font-weight: 600; }
+
+  /* ---- 阶段 ---- */
+  .phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 16px 0 10px; }
+  .phase { border: 1px solid var(--line); border-radius: var(--r); padding: 16px; background: var(--bg); }
+  .phase .p-tag { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; color: var(--ink-3); text-transform: uppercase; }
+  .phase .p-name { font-size: 14px; font-weight: 700; margin: 4px 0 8px; }
+  .phase ul { margin: 0; padding-left: 16px; font-size: 12.5px; color: var(--ink-2); }
+  .phase li { margin-bottom: 4px; }
+  .phase .p-meta { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line-2); font-size: 11.5px; color: var(--ink-3); }
+
+  ul.plain { margin: 8px 0 14px; padding-left: 18px; font-size: 13px; color: var(--ink-2); }
+  ul.plain li { margin-bottom: 5px; }
+  ul.plain li b { color: var(--ink-1); }
+
+  .q { display: grid; grid-template-columns: 24px 1fr; gap: 12px; padding: 11px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+  .q:last-child { border-bottom: none; }
+  .q .qn { font-family: var(--mono); font-size: 11px; font-weight: 700; color: #fff; background: var(--ink-2); width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 2px; margin-top: 1px; }
+  .q .qt { color: var(--ink-2); }
+  .q .qt b { display: block; color: var(--ink-1); font-size: 13.5px; margin-bottom: 2px; }
+
+  footer { text-align: center; font-size: 11.5px; color: var(--ink-4); padding: 26px 0 0; }
+
+  @media (max-width: 760px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .phases { grid-template-columns: 1fr; }
+    section { padding: 22px 18px; }
+    h1 { font-size: 26px; }
+    .layer { grid-template-columns: 44px 1fr; }
+    .layer .ds { grid-column: 2; }
+    .bar-row { grid-template-columns: 96px 1fr 50px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-in">
+    <div class="kicker">UI Audit · Round 2</div>
+    <h1>v2.3.63 修好的是亮度，没修的是结构
+      <span class="sub">全站 896 处硬编码色值、219 个唯一颜色，而 <code>theme.palette</code> 被组件引用 <b>0</b> 次</span>
+    </h1>
+    <div class="meta">
+      <span><b>对象</b> source/LabFlow-PostgreSQL-v2.3.63/frontend</span>
+      <span><b>规模</b> 84 tsx / 39 ts / 2 css · 23 页面 · 32,500 行</span>
+      <span><b>复检日期</b> 2026-10-23</span>
+      <span><b>方法</b> 正则全量扫描 + WCAG 2.1 计算</span>
+    </div>
+    <div class="kpis">
+      <div class="kpi bad"><div class="n">896</div><div class="l">硬编码色值出现次数</div></div>
+      <div class="kpi bad"><div class="n">219</div><div class="l">唯一颜色值</div></div>
+      <div class="kpi bad"><div class="n">0</div><div class="l">组件对 theme.palette 的引用</div></div>
+      <div class="kpi warn"><div class="n">18</div><div class="l">字号档位（rem）</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ 1 ============ -->
+<section>
+  <h2><span class="idx">01</span>先说改对的</h2>
+  <p class="lede">v2.3.63 的四项改动经代码核对确实到位，不重复列为问题。这部分是本次复检的基线。</p>
+  <table>
+    <thead><tr><th style="width:26%">项</th><th style="width:44%">代码证据</th><th>状态</th></tr></thead>
+    <tbody>
+      <tr><td>页面缩放恢复</td><td><code>frontend/index.html</code> 已无 <code>maximum-scale</code> 与 <code>user-scalable=no</code></td><td><span class="tag t-ok">已生效</span></td></tr>
+      <tr><td>登录页接入后台配置</td><td><code>LoginPage.tsx:33-34</code> 用 useState 承接 <code>loginBg</code> / <code>loginButtonColor</code>，<code>:113</code>、<code>:218</code> 消费；缺失回落 <code>#C2410C</code></td><td><span class="tag t-ok">已生效</span></td></tr>
+      <tr><td>圆角收敛</td><td>2px 占 54 处，成为绝对主导；登录页卡片、按钮、输入框已并入</td><td><span class="tag t-ok">已生效</span></td></tr>
+      <tr><td>激活态统一</td><td>顶栏与抽屉同用 <code>#1769aa</code>，选中底 <code>rgba(23,105,170,.10)</code>（<code>Layout.tsx</code>）</td><td><span class="tag t-ok">已生效</span></td></tr>
+      <tr><td>辅助灰提亮</td><td><code>#999</code> 26 处改为 <code>#757575</code>，白底 4.61:1 达标</td><td><span class="tag t-warn">部分达标</span></td></tr>
+    </tbody>
+  </table>
+  <div class="note warn">
+    <b>但最后一项只做了一半。</b> <code>#757575</code> 在白底是 4.61:1，放到表头底 <code>#f5f5f5</code> 就掉到 <b>4.23:1</b>，放到浅绿卡底 <code>#e8f5e9</code> 掉到 <b>4.10:1</b>。而这类说明文字恰恰大量出现在浅色容器里。这是「只验白底」造成的盲区，第 4 节给完整矩阵。
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section>
+  <h2><span class="idx">02</span>主题层是装饰品，不是真源</h2>
+  <p class="lede">后台「主题设置」能改主色、辅色、背景色、卡片圆角。问题是：改完之后，只有一小部分界面跟着动。</p>
+  <table>
+    <thead><tr><th style="width:30%">链路</th><th style="width:20%">数量</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>组件读 <code>theme.palette.*</code></td><td class="num">0</td><td>全站无一处。主题对象只在 <code>main.tsx</code> 被创建，没有被消费</td></tr>
+      <tr><td>MUI 内置色属性<br><code>color="success"</code> 等</td><td class="num">137</td><td>error 56 / success 20 / warning 19 / primary 18 / inherit 13 / info 7 / secondary 4</td></tr>
+      <tr><td><code>sx</code> 内字符串 token</td><td class="num">48</td><td><code>text.secondary</code> 31、<code>primary.main</code> 6、<code>error.main</code> 4 等</td></tr>
+      <tr><td>硬编码 HEX</td><td class="num">896</td><td>真正决定界面的那一层</td></tr>
+      <tr><td>比对</td><td class="num">185 : 896</td><td>约 <b>1 : 4.8</b>，八成界面对配置免疫</td></tr>
+    </tbody>
+  </table>
+  <div class="note bad">
+    <b>被配置的系统，和看着像被配置的系统，是两回事。</b> 管理员在后台把主色改成红色，预期是全站变红；实际只有 <code>color="primary"</code> 那 18 处跟着变，<code>#2e7d32</code> 的 77 处、<code>#1976d2</code> 的 55 处纹丝不动。界面上于是出现「一半新主色、一半旧主色」，比不提供配置更糟——用户会认为是 bug。
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section>
+  <h2><span class="idx">03</span>同一语义，有多个实现值</h2>
+  <p class="lede">这是「看起来不整齐」的真正来源。不是审美差，是同一个意思在不同文件里被写成了不同的数。</p>
+
+  <h3>3.1 语义色家族有多散</h3>
+  <p>按色相聚类统计出现频次，每个语义都摊成了 10 个以上的近似色：</p>
+
+  <div class="swatches">
+    <div class="sw light" style="background:#c2410c"><span>c2410c·20</span></div>
+    <div class="sw" style="background:#e65100"><span>e65100·16</span></div>
+    <div class="sw" style="background:#ea580c"><span>ea580c·11</span></div>
+    <div class="sw" style="background:#f57c00"><span>f57c00·6</span></div>
+    <div class="sw light" style="background:#b45309"><span>b45309·6</span></div>
+    <div class="sw light" style="background:#d97706"><span>d97706·3</span></div>
+    <div class="sw light" style="background:#9a3412"><span>9a3412·3</span></div>
+    <div class="sw" style="background:#f4511e"><span>f4511e·2</span></div>
+    <div class="sw" style="background:#f97316"><span>f97316·1</span></div>
+    <div class="sw" style="background:#c65d12"><span>c65d12·1</span></div>
+    <div class="sw" style="background:#b53b00"><span>b53b00·1</span></div>
+  </div>
+  <p class="cap">橙色家族 · 11 个值 · 70 次引用。v2.3.63 把 <code>#f4511e</code> 换成 <code>#C2410C</code>，只处理了其中一支，家族反而扩大到 11 个。</p>
+
+  <div class="swatches">
+    <div class="sw" style="background:#2e7d32"><span>2e7d32·77</span></div>
+    <div class="sw" style="background:#43a047"><span>43a047·13</span></div>
+    <div class="sw" style="background:#1b5e20"><span>1b5e20·10</span></div>
+    <div class="sw" style="background:#16a34a"><span>16a34a·8</span></div>
+    <div class="sw" style="background:#4caf50"><span>4caf50·2</span></div>
+    <div class="sw" style="background:#22c55e"><span>22c55e·2</span></div>
+    <div class="sw light" style="background:#a5d6a7"><span>a5d6a7·2</span></div>
+    <div class="sw light" style="background:#c8e6c9"><span>c8e6c9·4</span></div>
+    <div class="sw light" style="background:#81c784"><span>81c784·1</span></div>
+    <div class="sw" style="background:#65a30d"><span>65a30d·2</span></div>
+  </div>
+  <p class="cap">绿色家族 · 10 个值。其中 <code>#2e7d32</code> 同时承担「品牌主色」「已完成状态」「入口图标」三种语义。</p>
+
+  <div class="swatches">
+    <div class="sw" style="background:#1976d2"><span>1976d2·55</span></div>
+    <div class="sw" style="background:#1e88e5"><span>1e88e5·7</span></div>
+    <div class="sw" style="background:#1769aa"><span>1769aa·11</span></div>
+    <div class="sw" style="background:#667eea"><span>667eea·11</span></div>
+    <div class="sw" style="background:#1d4ed8"><span>1d4ed8·6</span></div>
+    <div class="sw" style="background:#0369a1"><span>0369a1·5</span></div>
+    <div class="sw" style="background:#0891b2"><span>0891b2·5</span></div>
+    <div class="sw" style="background:#0288d1"><span>0288d1·2</span></div>
+    <div class="sw" style="background:#1565c0"><span>1565c0·2</span></div>
+    <div class="sw" style="background:#0e7490"><span>0e7490·3</span></div>
+  </div>
+  <p class="cap">蓝色家族 · 10 个值。主题主色 <code>#667eea</code>（紫蓝）与最大宗 <code>#1976d2</code>（Material 默认蓝）互不相干，两者并存。</p>
+
+  <h3>3.2 同一组件 variant，被覆盖成 7 档字号</h3>
+  <p><code>variant="caption"</code> 出现 <b>274 次</b>，是全站最高频的排版单元。它的 MUI 默认值是 0.75rem，但代码里用 <code>sx</code> 又覆盖了 6 种：</p>
+  <div class="bars">
+    <div class="bar-row"><span>0.75rem（默认）</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-val">18</span></div>
+    <div class="bar-row"><span>0.8rem</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-val">45</span></div>
+    <div class="bar-row"><span>0.7rem</span><div class="bar-track"><div class="bar-fill" style="width:42%"></div></div><span class="bar-val">19</span></div>
+    <div class="bar-row"><span>0.78rem</span><div class="bar-track"><div class="bar-fill" style="width:24%"></div></div><span class="bar-val">11</span></div>
+    <div class="bar-row"><span>0.68rem</span><div class="bar-track"><div class="bar-fill" style="width:20%"></div></div><span class="bar-val">9</span></div>
+    <div class="bar-row"><span>0.72rem</span><div class="bar-track"><div class="bar-fill" style="width:9%"></div></div><span class="bar-val">4</span></div>
+    <div class="bar-row"><span>0.65 / 0.66 / 0.64</span><div class="bar-track"><div class="bar-fill" style="width:20%"></div></div><span class="bar-val">10</span></div>
+  </div>
+  <p class="cap">0.70–0.80 之间挤了 <b>5 档</b>，换算成实际像素是 11.2 / 11.5 / 12 / 12.5 / 12.8px。在 96dpi 屏上肉眼无法区分，但维护时是 5 个独立决策点。</p>
+  <p>全站字号共 <b>18 档</b>（0.62 → 4rem），144 次显式声明。真实可用的层级不到这个数的一半。</p>
+
+  <h3>3.3 状态色没有单一来源</h3>
+  <table>
+    <thead><tr><th style="width:30%">位置</th><th style="width:26%">定义形式</th><th>后果</th></tr></thead>
+    <tbody>
+      <tr><td><code>SampleInfoEntry.tsx:107</code></td><td><code>STATUS_COLORS</code> → MUI 色名（'error' / 'warning' / 'success'）</td><td>走主题，后台改色会跟随</td></tr>
+      <tr><td><code>SampleInfoStatsPage.tsx:108</code></td><td><code>STATUS_COLORS</code> → 直接十六进制</td><td>不走主题，改色不跟随</td></tr>
+      <tr><td><code>RdRecordsPage</code> 等</td><td>各自内联 <code>sx</code> 里写色值</td><td>第三种实现</td></tr>
+    </tbody>
+  </table>
+  <div class="note">
+    <b>同一个「待确认」</b>，在样品登记页是 MUI warning 主题色，在统计页是写死的 <code>#ea580c</code>，在记录页是另一处内联值。用户在不同页面之间切换时，同一个状态是不同颜色——这比「颜色不好看」严重得多，它破坏的是状态的可信度。
+  </div>
+
+  <h3>3.4 图表色板三套，互不相同</h3>
+  <table>
+    <thead><tr><th style="width:34%">位置</th><th style="width:14%">色数</th><th>取值</th></tr></thead>
+    <tbody>
+      <tr><td><code>GroupCard.tsx:6</code> CARD_COLORS</td><td class="num">10</td><td><code>#667eea #764ba2 #1e88e5 #00acc1 #00897b #43a047 #f4511e #e53935 #7b1fa2 #f57c00</code></td></tr>
+      <tr><td><code>SampleInfoStatsPage.tsx:87</code></td><td class="num">8</td><td><code>#ea580c #16a34a #f59e0b #059669 #b45309 #dc2626 #64748b #854d0e</code></td></tr>
+      <tr><td><code>StatsChartPanel.tsx:61</code></td><td class="num">2 组</td><td>workload / rd 各一套，与上两者均不同</td></tr>
+    </tbody>
+  </table>
+  <p>同一批数据在首页卡片、样品信息统计、工作量统计里会呈现三种配色。分类色本身承载信息，色不一致等于分类映射不稳定。</p>
+</section>
+
+<!-- ============ 4 ============ -->
+<section>
+  <h2><span class="idx">04</span>对比度：只验了白底</h2>
+  <p class="lede">按 WCAG 2.1 公式重算全部高频色 × 五种真实底色。<b>绿底行是达标</b>，<b>橙底行是大字勉强、正文不够</b>，<b>红底行是连大字都不够</b>。</p>
+
+  <table class="matrix">
+    <thead>
+      <tr>
+        <th style="width:15%">前景色</th>
+        <th class="c">#ffffff</th><th class="c">#fafafa</th><th class="c">#f5f5f5</th><th class="c">#f7fbf7</th><th class="c">#e8f5e9</th>
+        <th style="width:26%">用途 / 出现次数</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="num">#2e7d32</td><td class="cell pass">5.13</td><td class="cell pass">4.91</td><td class="cell pass">4.70</td><td class="cell pass">4.91</td><td class="cell pass">4.56</td><td>品牌绿 / 已完成 · 77</td></tr>
+      <tr><td class="num">#c2410c</td><td class="cell pass">5.18</td><td class="cell pass">4.96</td><td class="cell pass">4.75</td><td class="cell pass">4.96</td><td class="cell pass">4.60</td><td>强调橙（本版改入）· 20</td></tr>
+      <tr><td class="num">#1976d2</td><td class="cell pass">4.60</td><td class="cell mid">4.41</td><td class="cell mid">4.22</td><td class="cell mid">4.40</td><td class="cell mid">4.09</td><td>Material 蓝 · 55</td></tr>
+      <tr><td class="num">#757575</td><td class="cell pass">4.61</td><td class="cell mid">4.41</td><td class="cell mid">4.23</td><td class="cell mid">4.41</td><td class="cell mid">4.10</td><td>辅助灰（本版改入）· 26</td></tr>
+      <tr><td class="num">#667eea</td><td class="cell mid">3.66</td><td class="cell mid">3.51</td><td class="cell mid">3.36</td><td class="cell mid">3.50</td><td class="cell mid">3.25</td><td>主题主色 · 11</td></tr>
+      <tr><td class="num">#e65100</td><td class="cell mid">3.79</td><td class="cell mid">3.63</td><td class="cell mid">3.48</td><td class="cell mid">3.63</td><td class="cell mid">3.37</td><td>深橙 · 16</td></tr>
+      <tr><td class="num">#ea580c</td><td class="cell mid">3.56</td><td class="cell mid">3.41</td><td class="cell mid">3.26</td><td class="cell mid">3.41</td><td class="cell mid">3.16</td><td>橙 · 11</td></tr>
+      <tr><td class="num">#43a047</td><td class="cell mid">3.30</td><td class="cell mid">3.16</td><td class="cell mid">3.03</td><td class="cell mid">3.16</td><td class="cell fail">2.94</td><td>中绿 · 13</td></tr>
+      <tr><td class="num">#16a34a</td><td class="cell mid">3.30</td><td class="cell mid">3.16</td><td class="cell mid">3.02</td><td class="cell mid">3.15</td><td class="cell fail">2.93</td><td>Tailwind 绿 · 8</td></tr>
+      <tr><td class="num">#f57c00</td><td class="cell fail">2.70</td><td class="cell fail">2.59</td><td class="cell fail">2.48</td><td class="cell fail">2.59</td><td class="cell fail">2.40</td><td>Material 橙 · 6</td></tr>
+      <tr><td class="num">#4caf50</td><td class="cell fail">2.78</td><td class="cell fail">2.66</td><td class="cell fail">2.55</td><td class="cell fail">2.66</td><td class="cell fail">2.47</td><td>Material 绿 · 2</td></tr>
+      <tr><td class="num">#9e9e9e</td><td class="cell fail">2.68</td><td class="cell fail">2.57</td><td class="cell fail">2.46</td><td class="cell fail">2.56</td><td class="cell fail">2.38</td><td>浅灰 · 3</td></tr>
+    </tbody>
+  </table>
+
+  <p><b>三档判定</b>：<span class="tag t-ok">≥4.5 正文达标</span> <span class="tag t-warn">3.0–4.5 仅大字号</span> <span class="tag t-bad">&lt;3.0 大字也不够</span></p>
+
+  <div class="note warn">
+    <b>结论：v2.3.63 修的两组，都是「换了个在白底成立的值」。</b><br>
+    <code>#757575</code> 在四种浅底上全部落到 4.1–4.4，仍未达 4.5。<code>#C2410C</code> 是全表唯一在所有底色上都稳过 5.0 的橙——这个选择是对的，但它只覆盖了 20 处，同一家族另外 50 处橙色（<code>#e65100</code> 16、<code>#ea580c</code> 11、<code>#f57c00</code> 6……）仍在 3.5 以下。<br>
+    绿色同理：<code>#2e7d32</code> 5.13 很稳，但同家族的 <code>#43a047</code>、<code>#16a34a</code>、<code>#4caf50</code> 全在 3.3 以下。<b>问题不在某个色值选错，在于同语义有多个值，达标的和没达标的混着用。</b>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section>
+  <h2><span class="idx">05</span>视觉权重失衡</h2>
+  <p class="lede">不是颜色问题，是「哪些按钮该被看见」没被定义。</p>
+  <table>
+    <thead><tr><th style="width:24%">维度</th><th style="width:38%">分布</th><th>判断</th></tr></thead>
+    <tbody>
+      <tr><td>Button variant</td><td class="num">outlined 144 · contained 111 · text 3</td><td><span class="tag t-bad">反了</span> 描边比实心还多，主次不分</td></tr>
+      <tr><td>Button size</td><td class="num">small 276 · medium 1</td><td><span class="tag t-warn">单一</span> 无尺寸层级，所有操作等重</td></tr>
+      <tr><td>Chip variant</td><td class="num">outlined 41 · filled 0 · soft 0</td><td><span class="tag t-bad">缺态</span> 状态只能靠描边+文字，密集表格里扫读困难</td></tr>
+      <tr><td>间距档位</td><td class="num">32 档 / 1,713 次</td><td><span class="tag t-warn">脱轨</span> 22 档不在 4px 网格上</td></tr>
+      <tr><td>阴影</td><td class="num">13 种 / 24 次</td><td><span class="tag t-warn">偏多</span> 有的卡片有影，有的没有</td></tr>
+      <tr><td>加载态</td><td class="num">CircularProgress 30 文件 · Skeleton 0</td><td><span class="tag t-warn">缺</span> 高密度表格用转圈，首屏空白</td></tr>
+    </tbody>
+  </table>
+
+  <h3>间距为什么重要</h3>
+  <p>MUI 的间距单位是 8px，法律值只有 0 / 4 / 8 / 12 / 16 / 20 / 24 / 32 / 48 / 64。实际用到的 32 档里，出现频次最高的边缘值暴露了问题：</p>
+  <table>
+    <thead><tr><th style="width:24%">值</th><th style="width:20%">实际像素</th><th style="width:16%">次数</th><th>性质</th></tr></thead>
+    <tbody>
+      <tr><td class="num">0.25</td><td class="num">2px</td><td class="num">31</td><td>违反最小档 4px</td></tr>
+      <tr><td class="num">0.3</td><td class="num">2.4px</td><td class="num">12</td><td>目测微调残留</td></tr>
+      <tr><td class="num">0.35</td><td class="num">2.8px</td><td class="num">8</td><td>目测微调残留</td></tr>
+      <tr><td class="num">0.4</td><td class="num">3.2px</td><td class="num">8</td><td>目测微调残留</td></tr>
+      <tr><td class="num">0.75</td><td class="num">6px</td><td class="num">122</td><td>合法但应与 4 / 8 二选一</td></tr>
+      <tr><td class="num">1.25</td><td class="num">10px</td><td class="num">46</td><td>合法但夹在 8 / 12 之间</td></tr>
+    </tbody>
+  </table>
+  <p class="cap">2.4 / 2.8 / 3.2px 这三个值没有任何视觉意义，它们是「看起来差一点，手动推两个像素」的产物。这类值会指数级增长——每改一次界面就可能多一个。</p>
+</section>
+
+<!-- ============ 6 ============ -->
+<section>
+  <h2><span class="idx">06</span>移动端信息架构：三条高频业务仍在二跳</h2>
+  <p class="lede"><code>Layout.tsx:16-19</code> 的底栏定义，从 v2.3.62 到 v2.3.63 没有任何变化。</p>
+  <table>
+    <thead><tr><th style="width:22%">底栏项</th><th style="width:26%">路径</th><th>业务权重</th></tr></thead>
+    <tbody>
+      <tr><td>主页</td><td><code>/</code></td><td>入口集合，本身不产生工作</td></tr>
+      <tr><td>帮助与反馈</td><td><code>/help</code></td><td><span class="tag t-bad">低频</span> 占用了一半底栏</td></tr>
+      <tr><td colspan="3" style="color:var(--ink-3)">缺失：研发送样 · 样品登记 · 记录查询 —— 现场最高频的三个动作</td></tr>
+    </tbody>
+  </table>
+  <p>另外顶栏右侧堆了 6 个控件：公告、通知、用户菜单、关于、管理入口、登录（未登录时）。在 375px 宽度下，品牌名 <code>样品管理系统</code> 已被 <code>textOverflow: ellipsis</code> 保护，说明宽度本来就紧张。</p>
+  <div class="note">
+    顺带一处遗留：未登录时的「登录」按钮仍是 <code>#1976d2</code>（<code>Layout.tsx</code>），v2.3.63 只改了 ErrorBoundary 那处，这里漏了。品牌名也还是两套——顶栏写「样品管理系统」，抽屉里写「知微」。
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section>
+  <h2><span class="idx">07</span>结构性判断：这个产品的 UI，是配出来的</h2>
+  <p class="lede">这一条决定了方案形态，比前面任何一条都重要。</p>
+  <p>系统里有大量「管理员可配外观」的能力，且它们直接写色值：</p>
+  <table>
+    <thead><tr><th style="width:34%">配置入口</th><th style="width:20%">可配内容</th><th>落盘形式</th></tr></thead>
+    <tbody>
+      <tr><td>表格样式栏 <code>TableStyleBar</code></td><td>行高 24–90、表头高、边框色、斑马纹、辅助字号、按钮宽</td><td>十六进制 + 数值</td></tr>
+      <tr><td>建议默认表 <code>DEFAULT_RECORD_TABLE_STYLE</code></td><td>38/36px、<code>#d9dfe7</code> 边框、<code>#e0e0e0</code> 卡片边、<code>#fafbfd</code> 斑马</td><td>常量</td></tr>
+      <tr><td>布局设计器 <code>LayoutDesigner</code> / <code>PageLayoutAdmin</code></td><td>页面区块、字段顺序</td><td>JSON</td></tr>
+      <tr><td>字段库 <code>FieldLibrary</code> / <code>FieldPropertyPanel</code></td><td>字段类型、样式</td><td>JSON</td></tr>
+      <tr><td>条件格式 <code>ConditionalFormatDialog</code></td><td>按值上色</td><td>十六进制</td></tr>
+      <tr><td>主题设置</td><td>主色、辅色、背景色、圆角</td><td>十六进制</td></tr>
+    </tbody>
+  </table>
+  <div class="note bad">
+    <b>这就是 896 处硬编码的真正来源。</b> 不是开发者随手写死，是<b>配置系统的数据模型里，「颜色」这个字段的类型就是十六进制字符串</b>。每配一次表格样式、每设一条条件格式，就新增一个游离色值，它们不进主题、不受约束、不会被人统一。<br><br>
+    所以：<b>再改一轮颜色，数字也不会降。</b> 只要配置层还能写 hex，它就会自己生产新的。
+  </div>
+  <p>反过来说，这套配置能力本身是这个产品最值钱的界面资产——<code>recordTableStyle.ts</code> 的三级解析（个人视图 → 全局 → 默认）配合 <code>safeNumber</code> 的范围钳制（行高 24–90、字号 9–24、边框 0–3），工程质量明显高于界面其它部分。<b>它是资产，不该被推翻；它缺的是一层能托住它的语义层。</b></p>
+</section>
+
+<!-- ============ 8 ============ -->
+<section>
+  <h2><span class="idx">08</span>方案：给配置系统加一层语义，而不是再改一轮颜色</h2>
+  <p class="lede">目标不是「统一好看的色板」，而是让配置层从「填十六进制」变成「选语义」。</p>
+
+  <div class="layers">
+    <div class="layer">
+      <div class="lv">L0</div>
+      <div class="nm">原始值</div>
+      <div class="ds">唯一真源。<em>只允许在这里出现十六进制</em>。约 24 个灰阶 + 4 个语义各 5 阶 = 44 个值封顶，替代现在的 219 个。</div>
+    </div>
+    <div class="layer">
+      <div class="lv">L1</div>
+      <div class="nm">语义令牌</div>
+      <div class="ds"><code>brand</code> <code>success</code> <code>warning</code> <code>danger</code> <code>info</code> <code>text-1/2/3</code> <code>surface-1/2/3</code> <code>border</code>。每个语义<em>只有一个正文达标值 + 一个 soft 底</em>，对比度在定义时就验过五种底色。</div>
+    </div>
+    <div class="layer">
+      <div class="lv">L2</div>
+      <div class="nm">组件令牌</div>
+      <div class="ds"><code>chip.success</code> <code>btn.primary</code> <code>table.header</code> <code>card.border</code>。组件只引用 L2，不碰 L0。<em>状态色从此只有一处定义</em>，样品登记页 / 统计页 / 记录页自动一致。</div>
+    </div>
+    <div class="layer">
+      <div class="lv">L3</div>
+      <div class="nm">配置层</div>
+      <div class="ds">后台与样式栏<em>只允许选 L1 语义名</em>，不提供 hex 输入框。存量配置在读取时把旧 hex 映射到最接近的语义名，写回时只写语义名。这是止血的关键一步。</div>
+    </div>
+  </div>
+
+  <h3>落地约束（必须同时满足，否则会退回去）</h3>
+  <ul class="plain">
+    <li><b>表格引擎不重写。</b> <code>recordTableStyle.ts</code> 的解析顺序、钳制范围、版本号全部保留，只把默认值里的 hex 换成 L1 令牌引用。</li>
+    <li><b>不只验白底。</b> 每个语义色必须同时给出在 <code>#ffffff</code> / <code>#fafafa</code> / <code>#f5f5f5</code> / 语义 soft 底 上的对比度，全部 ≥4.5 才算通过。v2.3.63 的 <code>#757575</code> 就是漏了这一步。</li>
+    <li><b>字号收敛到 6 档。</b> 20 / 16 / 14 / 13 / 12 / 12 — 把 0.70–0.80 那 5 档合成 <code>12px</code> 与 <code>13px</code> 两档，视觉差异靠字重和颜色做。 <span class="tag t-neutral">改动面大，需单独评估</span></li>
+    <li><b>间距回到 4px 网格。</b> 2.4 / 2.8 / 3.2px 一律就近归到 2 或 4px。这一项风险最低、收益直观。</li>
+  </ul>
+
+  <h3>分三步，每步可独立发版回退</h3>
+  <div class="phases">
+    <div class="phase">
+      <div class="p-tag">S1</div>
+      <div class="p-name">语义收敛</div>
+      <ul>
+        <li>建 <code>designTokens.ts</code>（L0 + L1）</li>
+        <li>状态色三处合一，统一走 L1</li>
+        <li>对比度按五种底色补齐</li>
+        <li>配置层改「选语义」而非填 hex</li>
+      </ul>
+      <div class="p-meta">收益最大。做完 896 会停止增长</div>
+    </div>
+    <div class="phase">
+      <div class="p-tag">S2</div>
+      <div class="p-name">权重分级</div>
+      <ul>
+        <li>按钮规范：每屏 1 个 contained</li>
+        <li>Chip 补 soft 态（状态用浅底+深字）</li>
+        <li>间距归 4px 网格</li>
+        <li>表格首屏改 Skeleton</li>
+      </ul>
+      <div class="p-meta">解决「满屏都是按钮」的观感</div>
+    </div>
+    <div class="phase">
+      <div class="p-tag">S3</div>
+      <div class="p-name">品牌与结构</div>
+      <ul>
+        <li>底栏改 送样 / 登记 / 记录 / 我的</li>
+        <li>品牌名二选一，去掉楷体标题</li>
+        <li>顶栏右侧控件收纳</li>
+        <li>暗色模式（实验室夜间场景）</li>
+      </ul>
+      <div class="p-meta">涉及 IA，需要你先定方向</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section>
+  <h2><span class="idx">09</span>明确不建议动的</h2>
+  <table>
+    <thead><tr><th style="width:30%">资产</th><th>原因</th></tr></thead>
+    <tbody>
+      <tr><td><code>recordTableStyle.ts</code> 样式引擎</td><td>三级解析 + 范围钳制 + 版本号迁移，是全站工程质量最高的部分。只接令牌，不重构</td></tr>
+      <tr><td>表格 38/36px 行高、1px 描边</td><td>高密度是这类工具的正当选择，不是缺陷。密度问题靠字号与留白解决，不靠加高行</td></tr>
+      <tr><td><code>caption</code> 主导的排版</td><td>274 次小字是业务密度决定的，合理。要改的是这些小字的取值收敛，不是取消小字</td></tr>
+      <tr><td>2px 圆角</td><td>已经收敛（54 处），符合工具型产品的克制调性，不要为「现代感」改大</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ 10 ============ -->
+<section>
+  <h2><span class="idx">10</span>需要你拍板</h2>
+  <div class="q"><div class="qn">1</div><div class="qt"><b>品牌主色到底是哪个</b>现在是三套并存：主题 <code>#667eea</code>、界面最大宗 <code>#2e7d32</code>、Material 蓝 <code>#1976d2</code>。不选定，L1 层就没法建。<br>从数据看，<code>#2e7d32</code> 是唯一「既达标（5.13）又已是最高频（77 次）」的候选，改造成本最低。</div></div>
+  <div class="q"><div class="qn">2</div><div class="qt"><b>配置层的 hex 输入能收掉吗</b>S1 的成败取决于这一条。如果必须保留自由配色（比如客户要求按自己 VI 配），那方案要改成「自由配色 + 语义默认值」，治理效果会明显打折，需要提前知道。</div></div>
+  <div class="q"><div class="qn">3</div><div class="qt"><b>字号要不要动</b>18 档收敛到 6 档，视觉收益明显，但会触及大量页面布局细节。是放进 S1 一起做，还是单独开一版专门处理。</div></div>
+  <div class="q"><div class="qn">4</div><div class="qt"><b>移动端底栏是否改四格</b>这一项不在配色范围内，属于 IA 调整。改了会影响现场人员的使用习惯，需要你判断接受度。</div></div>
+</section>
+
+<footer>
+  LabFlow v2.3.63 UI 复检 · 数据来源：source/LabFlow-PostgreSQL-v2.3.63/frontend 全量静态扫描（125 文件）· WCAG 2.1 相对亮度公式实算 · 未接入任何运行实例
+</footer>
+
+</div>
+</body>
+</html>

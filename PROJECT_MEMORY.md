@@ -1,12 +1,12 @@
 # LabFlow 项目统一记忆
 
-> 最后更新：2026-10-22
+> 最后更新：2026-10-23
 >
-> 当前正式版本：`v2.3.63`（配色达标与界面冲突修正，不改记录表排版）；开发验证、本地构建及GitHub发布与资产核验完成，验证范围及未验收项见本版记录。
+> 当前正式版本：`v2.3.64`（三类业务色统一与字号集中管理）；开发验证、本地构建及GitHub发布与资产核验完成，验证范围及未验收项见本版记录。
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.63/`（正式版），隔离基线为v2.3.62。
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.3.64/`（正式版），隔离基线为v2.3.63。
 >
-> 当前开发状态：v2.3.63已完成本轮开发和交付；现场验收范围见本版记录。
+> 当前开发状态：v2.3.64已完成本轮开发和交付；现场验收范围见本版记录。
 
 ## 1. 文件定位与强制维护规则
 
@@ -946,6 +946,21 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - **回写修正**：`windows-release.yml` 的 "Publish installers into repository" 使用 `git push origin HEAD:main` 且 `continue-on-error: true`。本版 docs 提交排在 tag 之后，main 领先 tag 提交，该推送为非快进被拒但 job 仍显示 success，`installers/` 未回写。已手动下载Release资产补交，提交 `5d741e43`，远端 main 为 `5d741e43`，与本地一致。**后续发版顺序必须为：源码提交 → 打tag → 推main+tag → 等CI回写installers → 最后再提交docs等收尾commit**（v2.3.62即以ec75abe8 → a5c53061 → 78a49f2e的顺序避开此问题）。
 - 正式CI两包（已入根 `installers/`）：`LabFlow-v2.3.63.exe` 79,635,074字节，SHA-256 `43430803cecf8a42010671834668f8f3d11e5b99a72893bb8e2f0ac9d635d5e0`；`LabFlow-v2.3.63-HotUpdate.exe` 29,122,497字节，SHA-256 `2c062647195a1cf7a3ca018339ebb8f84e569da6517561953a3bde90348acadb`。
 - 本地独立包保留在本版 `installer/` 与根 `rebuild-output/`，不被CI包覆盖：`LabFlow-v2.3.63.exe` 79,659,372字节，SHA-256 `737efabd658eddc74b0b846574381019b7e328dd356c785a30f9fd7a064475da`；`LabFlow-v2.3.63-HotUpdate.exe` 29,140,706字节，SHA-256 `483f674a6cd6c25edc56f8d46a7ab9aab68377d4cb92eb285a1d5e28d95c025b`。CI包与本地产物字节数不同属构建环境差异，版本号一致。
+
+## v2.3.64 三类业务色统一与字号集中管理（2026-10-23，正式发布）
+
+- 用户口径：颜色按「分析检测／研发送样／样品信息登记」三类业务分色；**移动端结构本版不动**；配置层可优化；字号统一管理。记录表排版、导航结构、首页卡片形态均未改动。
+- 三类业务色（`frontend/src/constants/designTokens.ts` 的 `BUSINESS_COLORS`，各含 main/soft/onMain，经7种底色交叉校验≥4.5:1）：分析检测靛蓝 `#283593`（soft `#e8eaf6`，最低5.14:1）；研发送样深橙 `#9a3412`（soft `#fff3e0`，最低5.34:1，原 `#e65100` 白字仅3.79:1）；样品信息登记深绿 `#1b5e20`（soft `#e8f5e9`，最低5.97:1，原 `#2e7d32` 在浅绿底仅4.10:1）。原同一业务双色（分析检测首页靛蓝／门户 Material 蓝 `#1976d2`）已统一。
+- 落地范围：HomePage 三卡、三个门户页、`GroupCard`（移除 `group.id % 10` 十色随机板，改 `BUSINESS_COLORS.analysis` 兜底）、`RecordsCard`（默认色 `#1976d2`→业务靛蓝）、`StatsCards`（workload/rd 两套6色改业务同色系渐变）、`SampleInfoStatsPage`（7卡7色→登记色）、`StatsPage`/`SampleStatsPage` 的 themeColor。图表多色系列保留（数据系列需区分，不属业务标识色）。
+- 字号集中管理：`main.tsx` typography 显式声明 h1–h6/subtitle1-2/body1-2/caption/overline 全档位，**数值与v2.3.63渲染一致**（收敛写法不改视觉尺寸）；新增 `FONT`/`FONT_PX` 六档（11/12/13/14/16/20px，rem 表达）；253处行内 `fontSize` 归并为 token 引用。排除用户可配区域：`TableStyleBar.tsx`、`ConditionalFormatDialog.tsx`、`recordTableStyle.ts`、`mobileCardStyles.ts`（字号由后台控制）；`GroupCard`/`RecordsCard` 移动端徽标 `0.68rem` 按原值保留。
+- 配置层不再产出游离色值（896处硬编码的主要来源）：① 首页卡片配置移除「渐变背景」自由文本+「边框色」「标题色」取色器与hex框，改为三业务预设按钮；② 统计卡片配置移除颜色/渐变——经核查该配置本就被 `StatsCards` 代码内置值覆盖、从未生效（承诺未兑现，与登录页同类）；③ 检测类型「颜色色值」输入框移除，DB 字段保留兼容旧数据，界面显示改用登记业务色；④ 删除门户 `portal-styles` 的 sampleColor/workloadColor 死代码读取（全站无保存入口，颜色恒取默认值）。
+- `HomeCard` 类型移除 `gradient`/`border`/`titleColor` 三自由色值字段，改由卡片归属业务推导颜色，新增卡片不再产生游离色值。
+- 保留未动：`recordTableStyle.ts`、`recordTableLayout.ts`、`mobileCardStyles.ts`、`TableStyleBar.tsx`、`useRecordTableStyle.ts` 与v2.3.63**逐字节一致**；`Layout.tsx` 无差异（移动端底栏两格未动）；`#2e7d32` 品牌色/「已完成」状态色语义混用未拆；品牌名「样品管理系统／知微」并存未处理。
+- 验证：TypeScript 0 错（首轮4错：StatsPage/SampleStatsPage/WorkloadPortal 漏 import designTokens、ManagePage statsCardsForm 残留 color/gradient 字段，已修）；现有122项测试全过；生产构建成功（`assets/index-DON3y1Hx.js`，2.0MB）。色值规模 219种/896次 → 194种/715次；行内字号写法 35种 → 12种（含token引用）。
+- 交付完成：源码提交 `0e793658`（466文件）、注释标签 `v2.3.64`，**main与tag同一批推送**（执行v2.3.63「回写修正」条记的正确顺序：源码→tag→推main+tag→CI回写→docs收尾最后）。Windows工作流39901139708全部步骤成功，含 "Publish installers into repository"（本版该步骤首次真正成功）；[GitHub Release v2.3.64](https://github.com/HotLL233/labflow/releases/tag/v2.3.64) 已发布（非draft），两CI包由CI自动回写根 `installers/`，回写提交 `ae1115e6` 已快进拉回，与本地一致。Docker工作流39901139690状态未单独核验。
+- 正式CI两包（已入根 `installers/`，与Release一致）：`LabFlow-v2.3.64.exe` 79,642,713字节；`LabFlow-v2.3.64-HotUpdate.exe` 29,125,495字节。
+- 本地独立包（本版 `installer/` 与根 `rebuild-output/`，构建环境差异故字节数与CI包不同）：`LabFlow-v2.3.64.exe` 79,665,491字节，SHA-256 `e9629c32bbdf0c305bf7c387105a3926821731463243cf95660bc5c678f65049`；`LabFlow-v2.3.64-HotUpdate.exe` 29,144,388字节，SHA-256 `6c52ce7899047d62176cdae59c8d9bffdd074aa54364c1786887b6b401708cde`。
+- 未验收：真实浏览器三类色观感、后台预设按钮配置流程、覆盖安装后数据保留、移动端不受影响（本版未改移动端，无需回归）。
 - 真实桌面／手机浏览器像素与交互、移动端缩放手感、后台改配色后登录页的实际跟随效果、覆盖安装保留数据库与管理员账号，均未验收。本版后端业务源码与迁移未改，仅版本号同步。
 - 版本隔离：从v2.3.62复制464个跟踪文件，排除旧 `backend/static`、`target`、`node_modules`、`installer` 与运行数据；九处版本元数据统一2.3.63，Windows数字版本2.3.63.0，热更新 `BackupFolderName` 同步为 `v2.3.63`。旧版本目录与全部历史安装包保留。
 
