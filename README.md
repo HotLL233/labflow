@@ -6,11 +6,13 @@
 
 升级仅一次为原分析检测入口角色补辅助录入和编辑本人权限；管理员可独立配置范围维护，事项配置仍仅系统管理员可改。记录页默认近30天，支持全部历史、时间及关键词查询，保留列宽、显隐、字体、配色、操作排序及手机紧凑卡片设置。
 
-隔离基线为v2.3.67，源码目录为source/LabFlow-PostgreSQL-v2.3.68。完整包和热更新包已在本地生成并核验版本、大小和SHA-256；正在同步源码及发布，最终结果见PROJECT_MEMORY.md本版记录。发布使用GitHub及GHCR，Gitee继续暂停。
+隔离基线为v2.3.67，源码目录为source/LabFlow-PostgreSQL-v2.3.68。源码与注释标签v2.3.68已同步GitHub；Windows与Docker工作流均成功，正式完整包／热更新包与Release的版本、大小、SHA-256及Git blob核验一致，GHCR 2.3.68／latest同摘要。详细结果见PROJECT_MEMORY.md本版记录。发布使用GitHub及GHCR，Gitee继续暂停。
 
 本地验证完成：前端138项测试、类型检查、生产构建及两份gzip逐字节核验；Rust格式／编译检查、271项库回归及1项修正测试夹具后的生命周期补验通过，原有3项备份恢复专项按既有ignore保留，默认非console Release通过。独立PostgreSQL上的86项Release HTTP检查通过，覆盖原记录筛选及新增辅助权限、快照、并发、删除恢复与混合统计；两组Excel合计202项检查通过，统一总量61.5与旧表一致，零系数保留、明确来源去重。
 
 真实浏览器／手机交互、现场覆盖安装、生产规模压测与容器实际启动尚未验收；未操作生产数据库或现场服务。
+
+正式安装包：[完整服务器包](installers/LabFlow-v2.3.68.exe)、[热更新升级包](installers/LabFlow-v2.3.68-HotUpdate.exe)。Docker：`ghcr.io/hotll233/labflow:2.3.68`。
 
 ## 开发续接与记忆惯例
 
