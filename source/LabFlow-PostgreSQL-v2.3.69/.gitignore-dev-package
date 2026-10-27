@@ -1,0 +1,36 @@
+# 开发交付包排除清单
+# 用于创建可在任意电脑继续开发的源码包
+
+# 构建产物
+/target/
+/backend/static/
+
+# 前端依赖（需要重新 npm install）
+/frontend/node_modules/
+
+# 运行时依赖（已包含在安装包中，开发不需要）
+/postgres-runtime/
+/pdf-runtime/
+
+# 安装包产物
+/installer/*.exe
+
+# 开发工具临时文件
+*.log
+*.lock
+.DS_Store
+Thumbs.db
+
+# IDE 配置（可选保留）
+/.vscode/
+/.idea/
+*.swp
+*.swo
+*~
+
+# Git 仓库（如果有）
+/.git/
+
+# 临时和缓存
+/tmp/
+/.cache/
