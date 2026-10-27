@@ -1,0 +1,123 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { readFileSync, existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import ts from 'typescript';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import * as mui from '@mui/material';
+
+const require = createRequire(import.meta.url);
+const pagePath = fileURLToPath(new URL('./AuxiliaryWorkPage.tsx', import.meta.url));
+const sourceText = readFileSync(pagePath, 'utf8');
+const source = ts.createSourceFile(pagePath, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+function expression(name) {
+  let found;
+  const visit = node => { if (ts.isVariableDeclaration(node) && node.name.getText(source) === name) found = node.initializer; if (!found) ts.forEachChild(node, visit); };
+  visit(source); assert.ok(found, name); return found.getText(source);
+}
+function bind(name, environment) {
+  const compiled = ts.transpileModule(`const value = (${expression(name)});`, { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText;
+  return new Function(...Object.keys(environment), `${compiled}\nreturn value;`)(...Object.values(environment));
+}
+function loadTs(file, overrides = {}, transform) {
+  const compiled = ts.transpileModule(readFileSync(file, 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React, esModuleInterop: true }, transformers: transform ? { before: [transform] } : undefined }).outputText;
+  const module = { exports: {} };
+  const localRequire = key => {
+    if (key in overrides) return overrides[key];
+    if (!key.startsWith('.')) return require(key);
+    const target = path.resolve(path.dirname(file), key);
+    for (const ext of ['.ts', '.tsx']) if (existsSync(target + ext)) return loadTs(target + ext);
+    return require(target);
+  };
+  new Function('require', 'module', 'exports', 'React', compiled)(localRequire, module, module.exports, React);
+  return module.exports;
+}
+const styles = loadTs(fileURLToPath(new URL('../utils/recordTableStyle.ts', import.meta.url)));
+const dates = loadTs(fileURLToPath(new URL('../utils/sampleWorkloadDateTime.ts', import.meta.url)));
+const rdDates = loadTs(fileURLToPath(new URL('../utils/rdRecordFilters.ts', import.meta.url)));
+const normalItem = { id: 7, name: '仪器日常维护', coefficient: 2, category: '仪器维护', scope_type: 'public', group_id: null, group_name: '', enabled: true, sort_order: 0, notes: '', updated_at: 'token', deleted_at: null };
+const record = { id: 1, origin: 'auxiliary_record', auxiliary_work_item_id: 7, user_id: 11, user_name: '检测人员甲', auxiliary_work_name: '仪器日常维护', coefficient: 2, category: '仪器维护', quantity: 3, recorded_at: '2026-10-27 08:30:00', notes: '检查进样系统', status: '有效', detection_division_id: 5, detection_division_name: '分析一部', group_id: null, group_name: '', created_by: 11, created_by_name: '检测人员甲', updated_at: 'record-token', deleted_at: null, can_edit: true, can_delete: true, can_restore: false, linked_work_record_id: null };
+
+test('auxiliary datetime editing preserves naive Beijing time and normalizes explicit UTC', () => {
+  const storedDateInput = bind('storedDateInput', { formatBeijingDateTimeInput: dates.formatBeijingDateTimeInput, recordTimeDraft: rdDates.recordTimeDraft });
+  assert.equal(storedDateInput('2026-10-27 08:30:00'), '2026-10-27T08:30:00');
+  assert.equal(storedDateInput('2026-10-27T00:30:00Z'), '2026-10-27T08:30:00');
+  assert.equal(storedDateInput('2026-10-27T08:30:00+08:00'), '2026-10-27T08:30:00');
+});
+
+function callbackHarness(overrides = {}) {
+  const state = { error: '', saving: false, editor: 'new', messages: [], writes: [], refreshes: 0 };
+  const environment = { mutationPending: { current: false }, recordForm: { auxiliary_work_item_id: 7, user_id: 11, detection_division_id: 5, quantity: '3', recorded_at: '2026-10-27T08:30:00', notes: 'notes' }, editingRecord: null, selectedItem: normalItem, itemChanged: false,
+    normalizeWorkloadDateTime: dates.normalizeWorkloadDateTime, window: { confirm: () => true }, errorText: reason => reason.message,
+    setError: value => { state.error = value; }, setSaving: value => { state.saving = value; }, setRecordEditor: value => { state.editor = value; }, setMessage: value => { state.messages.push(value); }, refresh: () => { state.refreshes++; },
+    saveAuxiliaryRecord: async (body, id) => { state.writes.push({ body, id }); }, ...overrides };
+  return { state, environment, save: () => bind('saveRecord', environment)() };
+}
+test('auxiliary entry rejects fractional quantities and disabled items; valid write separates owner from operator', async () => {
+  for (const quantity of ['0', '-1', '1.5', 'NaN']) { const h = callbackHarness(); h.environment.recordForm.quantity = quantity; await h.save(); assert.equal(h.state.writes.length, 0); assert.ok(h.state.error); }
+  const disabled = callbackHarness({ selectedItem: { ...normalItem, enabled: false } }); await disabled.save(); assert.equal(disabled.state.writes.length, 0);
+  const h = callbackHarness(); await h.save();
+  assert.equal(h.state.writes.length, 1); assert.equal(h.state.writes[0].body.user_id, 11);
+  assert.equal(h.state.writes[0].body.recorded_at, '2026-10-27T08:30:00+08:00');
+  assert.equal(h.state.writes[0].body.expected_item_updated_at, 'token');
+  assert.equal('coefficient' in h.state.writes[0].body, false); assert.equal(h.state.refreshes, 1);
+});
+test('snapshot-only legacy edits preserve identity and methodless binding; same-frame duplicate writes are blocked', async () => {
+  const h = callbackHarness({ editingRecord: { ...record, auxiliary_work_item_id: null, detection_division_id: null }, selectedItem: undefined });
+  h.environment.recordForm.auxiliary_work_item_id = 0; await h.save();
+  assert.deepEqual(h.state.writes[0], { id: 1, body: { quantity: 3, recorded_at: '2026-10-27T08:30:00+08:00', notes: 'notes', expected_updated_at: 'record-token' } });
+  let finish; const pending = new Promise(resolve => { finish = resolve; }); let writes = 0;
+  const concurrent = callbackHarness({ saveAuxiliaryRecord: async () => { writes++; await pending; } });
+  const first = concurrent.save(); await concurrent.save(); assert.equal(writes, 1); finish(); await first;
+  assert.equal(concurrent.environment.mutationPending.current, false);
+});
+
+function renderPage(fixtures, { card = false, management = false } = {}) {
+  const noop = () => {};
+  const spec = styles.DEFAULT_RECORD_TABLE_STYLE;
+  const resolver = styles.createStyleResolver(spec, {});
+  const style = { spec, resolver, tableSx: styles.tableSxFromSpec(spec), setPageSize: noop };
+  const context = { people: [{ id: 11, username: '检测人员甲' }], divisions: [{ id: 5, name: '分析一部' }], groups: [], can_create: true, can_manage_items: true, can_manage_records: true, can_edit_own: true };
+  const values = { context, loading: false, items: [normalItem], records: [record], ...fixtures };
+  const hooks = { ...React, useEffect: noop, useMemo: fn => fn(), useRef: value => ({ current: value }), useState: (initial, name) => [name in values ? values[name] : typeof initial === 'function' ? initial() : initial, noop] };
+  const replaceState = transformer => root => {
+    const visit = node => {
+      if (ts.isVariableDeclaration(node) && ts.isArrayBindingPattern(node.name) && ts.isCallExpression(node.initializer) && node.initializer.expression.getText() === 'useState') {
+        const name = node.name.elements[0].name.getText();
+        return transformer.factory.updateVariableDeclaration(node, node.name, node.exclamationToken, node.type, transformer.factory.updateCallExpression(node.initializer, node.initializer.expression, node.initializer.typeArguments, [...node.initializer.arguments, transformer.factory.createStringLiteral(name)]));
+      }
+      return ts.visitEachChild(node, visit, transformer);
+    };
+    return ts.visitNode(root, visit);
+  };
+  const Page = loadTs(pagePath, {
+    react: hooks, 'react-router-dom': { useNavigate: () => noop, useSearchParams: () => [new URLSearchParams()] },
+    '@mui/material': { ...mui, Dialog: ({ open, children }) => open ? React.createElement('section', null, children) : null },
+    '../UserContext': { useUser: () => ({ user: { id: 11, username: '检测人员甲', is_admin: true }, hasPermission: () => true }) },
+    '../api/auxiliary': {}, '../components/recordTable/useRecordTableStyle': { useRecordTableStyle: () => style }, '../components/recordTable/useCardLayout': { useCardLayout: () => card },
+    '../components/recordTable/TableStyleBar': { __esModule: true, default: () => null }, '../components/ManageNav': { __esModule: true, default: () => null },
+    '../components/WorkloadAuxiliaryConfig': { __esModule: true, default: () => null }, '../components/recordTable/RecordActionSettings': { __esModule: true, default: () => null, useRecordActionLayout: () => ({ config: { before_column: '', button_order: [] } }) },
+    '../components/ConfirmDialog': { __esModule: true, default: () => null },
+  }, replaceState).default;
+  return renderToStaticMarkup(Page({ management }));
+}
+test('actual auxiliary desktop and compact mobile markup contain necessary data and state-appropriate actions', () => {
+  for (const card of [false, true]) {
+    const html = renderPage({ tab: 'records' }, { card });
+    for (const text of ['仪器日常维护', '检测人员甲', '分析一部', '仪器维护', '检查进样系统', '编辑', '删除']) assert.ok(html.includes(text), `${card ? 'mobile' : 'desktop'} ${text}`);
+    assert.equal(html.includes('确认恢复'), false);
+    if (card) assert.ok(html.includes('data-summary-row="4"'));
+    else { assert.ok(html.includes('<colgroup>')); assert.ok(html.includes('table-layout:fixed')); }
+  }
+  const readOnly = renderPage({ tab: 'records', records: [{ ...record, can_edit: false, can_delete: false, linked_work_record_id: 99 }] }, { card: true });
+  assert.ok(readOnly.includes('请在原工作量入口维护'));
+});
+test('actual entry and item dialogs render owner, date, quantity, snapshot and maintenance controls', () => {
+  const entry = renderPage({ recordEditor: 'new', recordForm: { auxiliary_work_item_id: 7, user_id: 11, detection_division_id: 5, group_id: 0, quantity: '3', recorded_at: '2026-10-27T08:30:00', notes: '' } });
+  for (const label of ['工作量归属人员', '检测部门', '工作量时间（北京时间）', '数量（正整数）', '当前事项系数', '工作量预览', '当前操作账号']) assert.ok(entry.includes(label), label);
+  const items = renderPage({ tab: 'items', itemEditor: 'new' }, { management: true });
+  for (const label of ['新增公共辅助事项', '辅助子类型', '默认系数（0有效）', '保存事项']) assert.ok(items.includes(label), label);
+});
