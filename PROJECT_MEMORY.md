@@ -2,11 +2,11 @@
 
 > 最后更新：2026-10-27
 >
-> 当前正式版本：`v2.3.68`；源码、两类安装包与GHCR镜像均已发布并核验。
+> 当前正式版本：`v2.3.69`；源码、两类安装包与GHCR镜像均已发布并核验。
 >
 > 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.3.69/`（隔离基线为正式v2.3.68）。
 >
-> 当前开发状态：v2.3.69本地验证、完整包和热更新包已完成并核验，准备推送源码与标签并核验GitHub／GHCR发布。
+> 当前开发状态：v2.3.69交付完成；本地验证、源码与标签、正式完整包／热更新包及GHCR发布核验均已完成。
 
 ## 1. 文件定位与强制维护规则
 
@@ -1041,7 +1041,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - GHCR 2.3.68与latest同摘要sha256:c036deb34812340e760d0add94cdad501942f7fe728f51a200ae02155dfe3d56，linux/amd64；index／manifest／config实际字节哈希、描述符大小、版本／来源标签、用户、端口和入口均核验通过。未下载镜像层或启动容器。
 - 验证摘要与发布证据位于ignored的test-artifacts/v2.3.68/，含rust-verification.json、frontend-verification.json、HTTP／Excel摘要、local-packages-sha256.json、ci-packages-sha256.json、ci-final-status.json、ghcr-final.json及github-release-final.json。隔离HTTP进程及56568测试数据库均已停止。只推GitHub；Gitee继续暂停，原有.workbuddy/、rebuild-output/保留未提交。
 
-## v2.3.69 辅助录入样式与主数据配置（2026-10-27，发布准备中）
+## v2.3.69 辅助录入样式与主数据配置（2026-10-27，交付完成）
 
 - 按用户纠正，移除首页新增辅助工作入口，分析检测门户保留紧凑入口；辅助录入对齐现有EntryPage手动录入的人员／时间、逐事项数量直接确认及今日记录，保留历史记录分页、手机摘要、自定义列宽／显隐／顺序／字体／配色及操作配置。未修改原EntryPage或统计业务代码。
 - 辅助事项编辑抽成共用组件，纳入主数据管理，旧管理路由仅复用同组件。主数据可选辅助工作表覆盖模板、预览、导出、预检和事务导入；缺表保留配置，存在且upsert时软删遗漏事项，空表软删全部，skip对含软删的既有身份都不修改／恢复。系数0合法，同名公共与不同实验室身份不合并，不重算历史系数／分类快照。
@@ -1049,5 +1049,10 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 九处版本元数据统一2.3.69、Windows数字版本2.3.69.0；从正式v68隔离，旧版本未改，没有新增迁移或依赖，static由v69前端重新构建，资源引用根build-resources。新增两份配置组件／测试，未复制旧构建产物或旧发布指南。
 - 前端146项测试、类型检查、生产构建及2份gzip逐字节核验通过。Rust格式／编译检查通过；首次全库275项通过、1项新增测试因空快照夹具统计了8条原主数据删除而失败，修为真实导出夹具并补边界后20项主数据回归通过，合计277项不同库测试有效验证，3项原备份恢复专项维持ignore。最终默认非console Release SHA-256为da3703a60b3300f13bb4fb6c5c641da9da80ac5cf74f9fc9907b1ad01a0a75c5。
 - 最终Release在独立56569 PostgreSQL上完成原记录33项、辅助53项、主数据导入38项HTTP检查，共124项。覆盖真实Excel往返、缺表保留、软删、同名范围、管理员门禁、非管理员原流程、零系数、过期token、快照及历史统计；原Excel5项、辅助Excel197项共202项通过，旧表与统一汇总总量61.5一致。首次HTTP夹具漏传必填时间，补齐后38项完整重跑通过，未改业务代码。
-- 本地完整包79,766,863字节，SHA-256 d3e48c037ca6cdd243e96ccbd5c636a412d7d7e7866a8b18dc6b797ad027f436；热更新包29,274,567字节，SHA-256 b5f922f98969199c6b7dc761ad74a821a7f928d15c77ea2bddd14ab2865b4355。产品／文件版本均2.3.69.0，最终Release SHA与核验记录一致。保留在本版installer/，GitHub／GHCR尚未发布。
+- 本地完整包79,766,863字节，SHA-256 d3e48c037ca6cdd243e96ccbd5c636a412d7d7e7866a8b18dc6b797ad027f436；热更新包29,274,567字节，SHA-256 b5f922f98969199c6b7dc761ad74a821a7f928d15c77ea2bddd14ab2865b4355。产品／文件版本均2.3.69.0，最终Release程序SHA与核验记录一致。本版installer/保留独立本地构建包，未用其覆盖CI正式包；正式包结果见下项。
 - 当前无可用浏览器，SSR不代表真实桌面／手机交互验收；现场覆盖安装、生产规模压测及容器实际启动未验收。未操作生产数据库、8000服务或实际安装配置。.workbuddy/与rebuild-output/保留未提交。证据位于ignored的test-artifacts/v2.3.69/。
+
+- 源码提交a32ad6e6c12d923012f3b232ac213c91fb38cb9a与注释标签v2.3.69已推送GitHub。Windows标签工作流40463275255、Docker主分支40463275252及标签40463275276均成功；Windows编译、两包生成、上传、安装包回写及Release步骤和两个GHCR推送步骤均逐项核验success，未仅以总任务绿色判定。
+- 正式非草稿／非预发布Release v2.3.69（ID 425124934）已发布并更新本版说明。CI安装包回写提交6bed3f6e8386c749519824d57c034cbd239ccb98已快进拉回；根installers/两包的大小、产品／文件版本2.3.69.0、SHA-256与Release及origin/main Git blob全部一致：LabFlow-v2.3.69.exe，79,754,208字节，SHA-256 1a7b69595fe3e647163d89f6b7ec6f28af0174a518d40a7f49b73765f06a4b63；LabFlow-v2.3.69-HotUpdate.exe，29,261,116字节，SHA-256 dba2e9a092bf3b6d7eef548642cfbb01fb3a92759db07c5c43fc22ed85629627。
+- GHCR 2.3.69与latest匿名可读且同index摘要sha256:250c552b989eff3069035d10c9fbbe6ad42c9b647a5282534acec78d76463c2e；linux/amd64 manifest实际字节摘要sha256:8bde18010b091546b7e014040d1f5b608770b333872ce0fdfe39d69b79cabb42，config实际字节摘要sha256:e11da15f7f335eccdee09bcb1a3007b4beb94a814e20379018b10053478ceed6。描述符大小／摘要、平台、版本与来源标签、运行用户、入口和端口均核验通过；未下载镜像层或启动容器。
+- 发布证据保存在test-artifacts/v2.3.69/：ci-final-status.json、ci-packages-sha256.json、ghcr-final.json、github-release-final.json及本地验证摘要。隔离HTTP进程与56569测试数据库已停止；现有真实服务未动。仅推GitHub，Gitee继续暂停，原有.workbuddy/、rebuild-output/保留未提交。状态查询遇一次代理EOF后直连成功；Git直连fetch无进展，仅停止该次fetch进程树后改用单次代理成功，未修改全局网络配置或清理Git对象。
