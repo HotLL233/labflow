@@ -4,9 +4,9 @@
 >
 > 当前正式版本：`v2.3.70`；源码、两类安装包与GHCR镜像均已发布并核验。
 >
-> 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.3.74/`（承接v2.3.71至v2.3.73）。
+> 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.3.75/`（承接v2.3.71至v2.3.74）。
 >
-> 当前开发状态：v71/v72/v73及共享自动化已推送GitHub。v73首次CI暴露旧依赖锁文件与Windows CRLF测试夹具问题，已隔离至v74修复；v74本地Build、242项HTTP、202项Excel和两类安装包核验通过，准备正式发布。保留已推送v73标签，不强推或重写；正式版本以文末发布核验结果为准。
+> 当前开发状态：v71至v74及共享自动化已推送GitHub。v73/v74的首次CI暴露旧锁文件元数据及共享测试的CRLF问题；v75已完成全部依赖官方核验、真正冷安装、完整LF/CRLF工具回归、All Build、242项HTTP、202项Excel和两类本地安装包，准备正式发布。保留已推送标签，不强推或重写；正式版本以文末发布核验结果为准。
 
 ## 1. 文件定位与强制维护规则
 
@@ -64,6 +64,8 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 ### 4.3 版本号同步
 
 发布新版本时必须同步以下 9 处：
+
+只修改应用自身的版本字段，不得对锁文件执行不区分包身份的全局版本替换；依赖版本、resolved地址、integrity及子依赖范围必须保持一致。新增依赖池不等于冷下载，验证干净安装需使用全新npm cache，防止全局缓存掩盖错误的锁元数据。
 
 1. `VERSION`
 2. `Cargo.toml`
@@ -1128,7 +1130,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - v70的466、v71的473、v72的473，共1412项原源码哈希保持。三个HTTP子服务及56573隔离PostgreSQL均已停止，确认无测试端口监听。证据在ignored的test-artifacts/v2.3.73/，未操作生产数据库、8000服务或实际安装配置。
 - 浏览器仍被Work设置禁用，未绕过；未做真实桌面/手机交互、现场覆盖安装、生产规模压测或容器启动。升级前备份数据库、附件及配置；从v70升级还执行v71独立区域迁移，回退须恢复升级前数据库。准备一并同步v71/v72/v73和根共享自动化，仅为最新v73发布正式标签；Gitee暂停，原.workbuddy/、rebuild-output/保留不提交。
 
-## v2.3.74 干净环境交付修复与辅助事项发布（2026-10-28，发布验证中）
+## v2.3.74 干净环境交付修复（2026-10-28，本地交付，远端CI失败）
 
 - 更正上条发布准备状态：v71/v72/v73源码及共享工具已在提交7fb4e6cc23613aabefd5b595e54c4480babb2e79推送GitHub，v2.3.73标签保持。其Windows工作流40644129082及Docker工作流40644129061首次失败，未宣称v73正式安装包或镜像已发布。
 - 两项根因均为干净环境交付问题：旧锁文件将实际使用的pify 2.3.0写成不存在的2.3.1，本机既有依赖掩盖错误；共享版本测试在Windows CRLF检出后重复转换换行，生成CRCRLF。只在隔离v74修复npm/pnpm锁元数据及根共享测试夹具；保留官方2.3.0 integrity，不升级依赖、不放宽版本解析、不改已推送源码或标签。
@@ -1138,4 +1140,16 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 同一新Release在56574隔离PostgreSQL完成原记录/通知40、辅助/人员关联73、主数据/独立区域129，共242项HTTP检查；Excel202项通过，旧表与统一统计混合工作量61.5保持。包含稳定ID改名回导、新建自动编号、未知/重复ID及歧义拒绝、无实验室归属、金额排除、人员权限与历史快照验证。
 - v73原474项源码哈希保持，v70/v71/v72共1412项原源码沿用前轮零变化证据；374项Rust/SQL及前端业务脚本/样式与v73一致，无新增依赖或业务逻辑改动。构建、验收、包和发布核验留存于ignored的test-artifacts/v2.3.74/。
 - 两类本地包已真实生成并移入本版installer/，最终manifest/SHA256SUMS在test-artifacts/v2.3.74/packages/。完整包79,779,853字节，SHA-256 32c0ab14dc1fd0bf3c06b1c94af49545c96047f519a9e1286082c3018dec1c39；热更新29,291,055字节，SHA-256 a64742aef26ae1ee96e23042b956debaa1427f9012dd756275b43a3cd7f4d300。产品/文件版本均2.3.74.0；这些是独立本地包，不能当作后续CI正式包。
-- 三个HTTP子服务和56574隔离PostgreSQL已停止，四个测试端口无监听；未操作生产数据库、8000服务或现场安装。浏览器/手机实机、现场覆盖安装、生产规模压测及容器启动仍未验收。远端发布结果待CI及正式包/镜像核验后补记。
+- 三个HTTP子服务和56574隔离PostgreSQL已停止，四个测试端口无监听；未操作生产数据库、8000服务或现场安装。浏览器/手机实机、现场覆盖安装、生产规模压测及容器启动仍未验收。
+- 源码4a444f1ea8af49a61169a272da8b1db27d66b468及v2.3.74标签已推送。Windows40648411428因另一处workflow测试的CRLF行尾假设失败；Docker40648411430在npm ci发现binary-extensions旧版本元数据错误。本地新依赖目录仍复用了全局npm缓存，不能算真正冷下载。未发布v74正式包或镜像，保留标签并隔离v75继续修复，不移动历史标签。
+
+## v2.3.75 全量锁元数据与完整检出兼容（2026-10-28，交付验证中）
+
+- 业务承接v71独立辅助区域、v72统一人员归属及v73事项稳定ID/无实验室归属，v74原474项文件哈希保持。v75全部216项Rust/SQL及158项前端业务脚本/样式与v74、v73逐字节一致；只修版本、锁元数据及共享workflow断言，不新增功能、依赖或迁移。
+- npm锁binary-extensions恢复2.3.0，json5/picomatch版本标签恢复原URL与integrity对应的2.2.3/2.3.2，parse-json子依赖范围恢复官方^2.3.0，实际选用的json-parse-even-better-errors 2.3.1保持。pnpm仅同步binary相关3处；所有integrity保留，不升级实际依赖。pify 2.3.0修复沿用v74。
+- 官方核验npm全部312项（含61项optional）、pnpm全部311项（含其他平台及npm未覆盖版本）通过，元数据、下载地址和校验值一致。真正独立目录和全新npm缓存执行cold npm ci成功：256次cache miss、0次cache hit；实装版本和hidden lock一致。证据在test-artifacts/v2.3.75/dependency-audit/，不是只凭本机已有缓存声明干净安装。
+- npm锁SHA-256 8f9be3fa21c9250f32fcf7e7a591d9b4bd85b8ad821bcdb96ac68be78d3eec14，pnpm锁17f72594fb3ab5c32d228ef06431c5a0c96f76b51594e7e851f46e8aeb4f114f。旧v75依赖junction可逆移到ignored测试目录后按新锁建立新池，原池实体保留。
+- 完整LF和完整CRLF检出副本各复制24项tracked工具/workflow/wrapper，两份test-automation均exit0：版本99、delivery122、verify7、resolver42、module12、installer mock26、Node10全部通过，原输入哈希保持。修复仅让required: true断言接受正常CRLF，不放宽应用版本解析；证据在test-artifacts/v2.3.74/tools/full-checkout-results.json。
+- 304项库测试通过、3项既有ignore继续明确复用v73同源Integration基线；v75未重复库测试，Build中的rust-tests保持not_run。v75 All Build通过：172项前端、类型检查、生产构建/gzip及Rust格式/check/Release；可执行文件SHA-256 0b9969926f7a01a08cbae692d978a30c1f524ec036ad0af8edb4a9dcfc398c33，输入指纹8edbaf7640fcad4c38c0ee10d9cd6b2bca40dcd1a4f55d2e23412ee986574983。生产前端已写入本版backend/static并核验哈希。
+- 同一v75新Release实跑242项HTTP（记录/通知40、辅助/人员73、主数据/独立区域129）及202项Excel检查全部通过，混合统计总量61.5保持。三个HTTP子服务与56575隔离PostgreSQL已停止，四个测试端口clear；未操作生产数据库、8000服务或现场安装。
+- 两类本地包已真实构建，产品/文件版本均2.3.75.0，移入本版installer/避免重复保存。完整包79,787,456字节，SHA-256 b141bdb2098379fb47fe0fcc1a59f6ac37754d98eeef9d923b148bf66d1f52c0；热更新29,295,125字节，SHA-256 0de9e207bd5a4866807cce623362bacb5856c60b7226f732d4245a18db52409e。manifest/SHA256SUMS留在test-artifacts/v2.3.75/packages/，只代表独立本地包，不冒充CI正式包。远端结果完成后另记。

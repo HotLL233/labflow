@@ -45,7 +45,7 @@ if ($ExpectedVersion -eq '8.8.9') { return [pscustomobject]@{version=$ExpectedVe
     Reject { & $resolve -Version '8.8.9' } 'Wrong cross-checked source accepted.'
     foreach ($name in @('windows-release','docker-publish')) {
         $yaml = Get-Content -LiteralPath (Join-Path $repo ".github/workflows/$name.yml") -Raw
-        Assert ($yaml -match '(?m)^      version:\s*$' -and $yaml -match '(?m)^        required: true$') "$name missing required dispatch version."
+        Assert ($yaml -match '(?m)^      version:\s*$' -and $yaml -match '(?m)^        required: true\r?$') "$name missing required dispatch version."
         Assert ($yaml -match 'resolve-release[.]ps1' -and $yaml -notmatch 'Select-Object -Last|sort -V|shell: powershell|shell: bash') "$name bypasses shared resolver/pwsh."
         Assert ($yaml -match 'node-version: "24"' -and $yaml -match '-Profile Build -Component (All|Frontend)') "$name missing Build verification/setup."
         Assert ($yaml -match 'if: always\(\)' -and $yaml -match 'verification/verification[.]json' -and $yaml -match 'verification/\*\*/\*[.]log') "$name missing always diagnostics."
