@@ -98,7 +98,7 @@ services:
         Expect-Failure { & $validator -SourceDir $source } ([regex]::Escape($file))
     }
     Reset-Fixture
-    foreach ($file in $baseline.Keys) { Write-FixtureFile $file ($baseline[$file].Replace("`n", "`r`n")) }
+    foreach ($file in $baseline.Keys) { Write-FixtureFile $file ($baseline[$file] -replace '\r?\n', "`r`n") }
     $crlfResult = & $validator -SourceDir $source
     Assert ($crlfResult.version -ceq '9.8.7') 'CRLF version files were rejected.'
     $passed++
