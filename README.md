@@ -6,9 +6,11 @@
 
 v2.3.75 承接 v2.3.71 至 v2.3.74 的业务功能与迁移，继续修复干净环境交付：完整 Windows CRLF 检出的 workflow 断言兼容正常行尾；binary-extensions、json5、picomatch 的锁内版本标签分别恢复为原完整性摘要对应的 2.3.0、2.2.3、2.3.2，parse-json 的子依赖范围恢复为上游的 ^2.3.0。保留 v74 的 pify 2.3.0 与 CRLF 夹具修复，不增加或升级实际依赖，不修改业务逻辑或新增迁移。
 
-已核验官方 npm 的312项与 pnpm 的311项依赖，覆盖可选及其他平台依赖，保留全部原 integrity。全新隔离目录及全新缓存的冷 `npm ci` 成功，256次 cache miss、0次 cache hit；实际安装版本与锁文件一致。本版 All Build 已通过：172项前端测试、类型检查、生产构建、gzip及Rust格式、check、Release。本版实际 Release 另通过242项 HTTP 与202项 Excel 专项验收，混合统计总量61.5保持；隔离测试服务及数据库均已停止，四个测试端口已清空。本版全部216份 Rust/SQL 文件与 v2.3.73、v2.3.74 逐字节一致，未重复运行库测试；304项通过、3项 ignore 仅为 v2.3.73 Integration 基线。浏览器、手机实机、现场覆盖安装及容器启动尚未验收。
+已核验官方 npm 的312项与 pnpm 的311项依赖，覆盖可选及其他平台依赖，保留全部原 integrity。全新隔离目录及全新缓存的冷 `npm ci` 成功，256次 cache miss、0次 cache hit；实际安装版本与锁文件一致。本地 All Build 已通过：172项前端测试、类型检查、生产构建、gzip及Rust格式、check、Release。本版实际 Release 另通过242项 HTTP 与202项 Excel 专项验收，混合统计总量61.5保持；隔离测试服务及数据库均已停止，四个测试端口已清空。本版全部216份 Rust/SQL 文件与 v2.3.73、v2.3.74 逐字节一致，未重复运行库测试；304项通过、3项 ignore 仅为 v2.3.73 Integration 基线。浏览器、手机实机、现场覆盖安装及容器启动尚未验收。
 
-当前交付版本隔离于 `source/LabFlow-PostgreSQL-v2.3.75/`，本地验收及两类安装包制作、版本和哈希核验已完成，产品及文件版本均为2.3.75.0。包大小、哈希见本版安装包说明与根 `test-artifacts/v2.3.75/packages/manifest.json`；待提交及 CI 正式发布，本地包与后续 CI 包分别记录。远端结果以根 `PROJECT_MEMORY.md` 的实际记录为准。从更早版本升级仍需执行已有迁移，升级前备份数据库、附件和配置，回退须恢复升级前数据库。
+当前交付版本隔离于 `source/LabFlow-PostgreSQL-v2.3.75/`，本地验收与正式 CI 发布均已完成。tag `v2.3.75` 的 Windows 工作流40654592970、Docker 工作流40654593027均成功；远端 All Build 为12项 passed（含 `npm-ci`）、5项 not_run，未运行库测试。正式两类安装包的产品及文件版本均为2.3.75.0，已上传 GitHub Release 并回写根 `installers/`，Release 与 `origin/main` 中两包的字节一致。版本目录 `installer/` 保留独立本地包，本地包与正式 CI 包的大小、哈希在本版安装包说明中分别记录。
+
+GitHub Release 的 `manifest.json`、`SHA256SUMS`、`DELIVERY-CHECKLIST.md` 已核验。GHCR 的 `2.3.75` 与 `latest` 均已发布，指向同一索引摘要 `sha256:96e5672a63ea59280b4ffad4279a8a00da21352fc38c83a433608b704e7d7c31`。远端证据见根 `test-artifacts/v2.3.75/`，实际记录见根 `PROJECT_MEMORY.md`。从更早版本升级仍需执行已有迁移，升级前备份数据库、附件和配置，回退须恢复升级前数据库。
 
 ## 开发验证与交付自动化
 
@@ -36,5 +38,5 @@ v2.3.75 承接 v2.3.71 至 v2.3.74 的业务功能与迁移，继续修复干净
 
 - 安装包文件名沿用 `LabFlow-v<版本>.exe`（完整服务器版）与 `LabFlow-v<版本>-HotUpdate.exe`（热更新升级包）。
 - 发布流程根据 tag `v<版本>` 自动构建，并**自动提交到仓库根 `installers/` 目录**，同时上传 GitHub Release。
-- 本地留档副本放在对应版本目录的 `installer/` 中；该目录被 `.gitignore` 忽略，不进入版本库。
+- 本地构建包留档于对应版本目录的 `installer/`，与根 `installers/` 的 CI 正式包分别核验；该目录被 `.gitignore` 忽略，不进入版本库。
 - Docker 镜像由发布工作流推送到 GHCR（`ghcr.io/hotll233/labflow:<版本>` 与 `latest`）；向 Gitee registry 的同步自 v2.3.18 起暂停。

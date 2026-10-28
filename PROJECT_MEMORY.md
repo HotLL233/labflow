@@ -2,11 +2,11 @@
 
 > 最后更新：2026-10-28
 >
-> 当前正式版本：`v2.3.70`；源码、两类安装包与GHCR镜像均已发布并核验。
+> 当前正式版本：`v2.3.75`；近期源码、两类CI正式安装包、交付清单及GHCR镜像均已发布并核验。
 >
 > 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.3.75/`（承接v2.3.71至v2.3.74）。
 >
-> 当前开发状态：v71至v74及共享自动化已推送GitHub。v73/v74的首次CI暴露旧锁文件元数据及共享测试的CRLF问题；v75已完成全部依赖官方核验、真正冷安装、完整LF/CRLF工具回归、All Build、242项HTTP、202项Excel和两类本地安装包，准备正式发布。保留已推送标签，不强推或重写；正式版本以文末发布核验结果为准。
+> 当前开发状态：v71至v75及共享自动化已同步GitHub，v75 Windows与Docker标签CI全部成功，正式包已回写根installers并快进拉回。v73/v74首次CI暴露的旧锁元数据及CRLF问题在v75修复，已推送历史标签保持不变；本轮最终结果见文末v75发布核验记录。
 
 ## 1. 文件定位与强制维护规则
 
@@ -1143,7 +1143,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 三个HTTP子服务和56574隔离PostgreSQL已停止，四个测试端口无监听；未操作生产数据库、8000服务或现场安装。浏览器/手机实机、现场覆盖安装、生产规模压测及容器启动仍未验收。
 - 源码4a444f1ea8af49a61169a272da8b1db27d66b468及v2.3.74标签已推送。Windows40648411428因另一处workflow测试的CRLF行尾假设失败；Docker40648411430在npm ci发现binary-extensions旧版本元数据错误。本地新依赖目录仍复用了全局npm缓存，不能算真正冷下载。未发布v74正式包或镜像，保留标签并隔离v75继续修复，不移动历史标签。
 
-## v2.3.75 全量锁元数据与完整检出兼容（2026-10-28，交付验证中）
+## v2.3.75 全量锁元数据与完整检出兼容（2026-10-28，已发布并核验）
 
 - 业务承接v71独立辅助区域、v72统一人员归属及v73事项稳定ID/无实验室归属，v74原474项文件哈希保持。v75全部216项Rust/SQL及158项前端业务脚本/样式与v74、v73逐字节一致；只修版本、锁元数据及共享workflow断言，不新增功能、依赖或迁移。
 - npm锁binary-extensions恢复2.3.0，json5/picomatch版本标签恢复原URL与integrity对应的2.2.3/2.3.2，parse-json子依赖范围恢复官方^2.3.0，实际选用的json-parse-even-better-errors 2.3.1保持。pnpm仅同步binary相关3处；所有integrity保留，不升级实际依赖。pify 2.3.0修复沿用v74。
@@ -1153,3 +1153,10 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 304项库测试通过、3项既有ignore继续明确复用v73同源Integration基线；v75未重复库测试，Build中的rust-tests保持not_run。v75 All Build通过：172项前端、类型检查、生产构建/gzip及Rust格式/check/Release；可执行文件SHA-256 0b9969926f7a01a08cbae692d978a30c1f524ec036ad0af8edb4a9dcfc398c33，输入指纹8edbaf7640fcad4c38c0ee10d9cd6b2bca40dcd1a4f55d2e23412ee986574983。生产前端已写入本版backend/static并核验哈希。
 - 同一v75新Release实跑242项HTTP（记录/通知40、辅助/人员73、主数据/独立区域129）及202项Excel检查全部通过，混合统计总量61.5保持。三个HTTP子服务与56575隔离PostgreSQL已停止，四个测试端口clear；未操作生产数据库、8000服务或现场安装。
 - 两类本地包已真实构建，产品/文件版本均2.3.75.0，移入本版installer/避免重复保存。完整包79,787,456字节，SHA-256 b141bdb2098379fb47fe0fcc1a59f6ac37754d98eeef9d923b148bf66d1f52c0；热更新29,295,125字节，SHA-256 0de9e207bd5a4866807cce623362bacb5856c60b7226f732d4245a18db52409e。manifest/SHA256SUMS留在test-artifacts/v2.3.75/packages/，只代表独立本地包，不冒充CI正式包。远端结果完成后另记。
+- 源码af163f833950070b03d999502419b8d9b167f3cd与注释标签v2.3.75已推送GitHub，v71/v72/v73近期业务修改及共享自动化已一并同步。Windows40654592970、Docker40654593027均success，逐步骤核验包含continue-on-error的安装包仓库回写及Release创建，全部实际成功。
+- CI正式包LabFlow-v2.3.75.exe：79777825字节，SHA-256 9c7ae2967c716079e12ee401b615dfc81befa3d1c50716d01621328f13f6430b；热更新LabFlow-v2.3.75-HotUpdate.exe：29284354字节，SHA-256 35bdd73ed43cd85ee537da9d8eafc20b0f057111b1f7a848e23b78a833dd1d27。产品/文件版本均2.3.75.0，根installers、Release资产与origin/main的Git blob逐项一致；它们与前述独立本地包分别记录。
+- CI安装包回写提交f36c2542d4a8569c261bb93c5a0616d545ca64d6已快进拉回；Release ID426413720。三份小交付文档的实际字节/哈希和清单内容均与Release一致，manifest绑定准确的干净tag源码及构建指纹。Windows真实All Build为12项passed（包含npm-ci）与5项not_run；后者继续保留库测试、浏览器、HTTP/Excel、现场升级和容器运行的未执行口径，不冒充CI集成测试。本地HTTP/Excel专项通过另有独立证据。
+- GHCR 2.3.75与latest同index摘要sha256:96e5672a63ea59280b4ffad4279a8a00da21352fc38c83a433608b704e7d7c31；linux/amd64 manifest sha256:35d63c3d986234bd1228c96749d9b4a5b164d21d99b31f19a3fdaf17c385e610；config sha256:5d2f6a11e96af7b6797bc1160ca9eb0fb8fc7178be8047e971d62fd13784afca。匿名验证原始字节、descriptor大小及版本/入口/用户/端口通过；未下载镜像层或启动容器。
+- 发布链上传纯中文交付清单文件名后，Release资产名实际为default.md。已仅将既有资产684336036改名DELIVERY-CHECKLIST.md，内容、大小和SHA-256不变；本地逻辑名仍为交付清单.md。后续Release资产宜使用明确ASCII名称，并按原始内容和发布来源核验，不能只凭文件名判定。
+- 正式包、发布、镜像与交付证据保留在ignored的test-artifacts/v2.3.75/。本次提交前477条路径核验通过，继承空白100条、零新增问题；CRLF与LF仅规范化比较行尾，不忽略真实空格或Tab。曾遇本机提交内存紧张，将ignored核验的477次索引读取合并一次，并使用单次低内存Git参数完成，不停止用户应用、不改全局Git配置。
+- 发布说明与共享记忆完成后以[skip ci]文档提交同步，继续只推GitHub，Gitee暂停；.workbuddy/、rebuild-output/保持未跟踪。未操作生产数据库、8000服务或现场安装，未做真实浏览器/手机、现场覆盖升级、生产规模压测或容器启动验收。升级前备份数据库、附件及配置；从v70升级执行v71独立区域与v73事项ID迁移，回退旧程序须恢复升级前数据库。
