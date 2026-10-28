@@ -10,12 +10,9 @@ build-resources/
   local/                      # 全部被Git忽略
     target/                   # 共享Rust Debug/Release编译缓存
       postgres-compat/        # 新版兼容层共享编译缓存
-    version-cache/            # 保留的各版独立缓存，不合并覆盖
-      v2.3.37/target/
-      v2.3.38/target/
-      v2.3.39/target/
-      v2.3.39/postgres-compat-target/
-      ...                     # 40／51／56／60的既有缓存同样归档在此
+    version-cache/            # 按需保留仍被引用的独立缓存，不合并覆盖
+      v2.3.56/postgres-compat-target/
+      v2.3.60/postgres-compat-target/
     node_modules/<锁文件SHA256>/
       package.json
       package-lock.json
@@ -26,7 +23,7 @@ build-resources/
       v2.3.49/                # 旧验收入口的静态资源
 ```
 
-根 `target/` 始终链接 `local/target/`。新版源码的 `target/` 默认链接同一公共缓存；若 `local/version-cache/v<版本>/target/` 已存在，则沿用该版独立缓存。37／38／39的缓存完整保留在根目录，原版本路径通过Windows junction继续使用，不合并覆盖。
+根 `target/` 始终链接 `local/target/`。新版源码的 `target/` 默认链接同一公共缓存；若 `local/version-cache/v<版本>/target/` 已存在，则沿用该版独立缓存。2026-10-28按用户授权清理已无链接消费者的37／38／39／40／51独立缓存；以后重编译这些旧版时，可通过准备脚本使用公共缓存并重新编译。56／60的兼容层缓存仍有消费者，继续保留。
 
 存在 `postgres-compat/` 源码时，准备脚本也会创建其 `target/` 链接：优先使用已保存的 `version-cache/v<版本>/postgres-compat-target/`，否则使用 `local/target/postgres-compat/`。已有实体目录、其他目标的链接和非实体缓存路径会被拒绝覆盖。
 
@@ -48,6 +45,10 @@ build-resources/
 以后创建隔离版本时，排除 `target/`、`postgres-compat/target/`、`frontend/node_modules/` 和本地运行库链接，随后运行此准备脚本，使版本目录引用根共享资源。已有独立缓存应先经核验迁到根 `version-cache/`，再建立兼容链接；准备脚本自身不会擅自移动或覆盖已有缓存。
 
 脚本拒绝覆盖实体target、现有运行库或指向其他依赖池的链接。旧共享依赖保留原消费者；锁文件变化时需要检查后切换到新池，不能直接对共享node_modules执行npm ci。脚本不修改全局环境、不复制历史构建产物，也不启动应用或数据库。缓存迁移后，Cargo可能因记录的绝对路径变化而重新编译部分依赖。
+
+## 统一验证与打包
+
+完整流程见 [开发验证与交付自动化](../docs/开发验证与交付自动化.md)。先用根 `scripts/verify.ps1 -Profile Build` 验证，再用 `scripts/build-installers.ps1` 复用独立静态产物和Release文件制作两包并生成交付清单；不修改已发布源码。`build_full_installer.ps1` 保留为兼容入口，但必须显式指定 SourceDir/OutputDir，可传 VerificationReport 避免重复编译。共享node_modules不能直接执行npm ci。
 
 ## 清理原则
 

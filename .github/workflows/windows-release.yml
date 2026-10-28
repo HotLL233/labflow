@@ -4,6 +4,11 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Explicit release version (X.Y.Z)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -16,67 +21,101 @@ jobs:
         with:
           # 完整历史用于把安装包提交回仓库（Publish installers into repository 步骤）。
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Test shared release automation
+        shell: pwsh
+        run: ./scripts/test-automation.ps1
       - uses: dtolnay/rust-toolchain@stable
       - name: Resolve version and source directory
         id: version
-        shell: powershell
+        shell: pwsh
+        env:
+          DISPATCH_VERSION: ${{ inputs.version }}
         run: |
-          if ($env:GITHUB_REF_TYPE -eq 'tag') {
-            $version = $env:GITHUB_REF_NAME -replace '^v', ''
-            $sourceDir = "source/LabFlow-PostgreSQL-v$version"
-          } else {
-            $sourceDir = (Get-ChildItem source -Directory -Filter 'LabFlow-PostgreSQL-v*' | Sort-Object Name | Select-Object -Last 1).FullName
-            $sourceDir = $sourceDir.Substring($PWD.Path.Length + 1).Replace('\', '/')
-            $version = (Get-Content "$sourceDir/VERSION" -Raw).Trim()
-          }
-          if (-not (Test-Path "$sourceDir/VERSION")) { throw "Version directory not found: $sourceDir" }
-          "source_dir=$sourceDir" >> $env:GITHUB_OUTPUT
-          "version=$version" >> $env:GITHUB_OUTPUT
+          $arguments = if ($env:GITHUB_EVENT_NAME -eq 'workflow_dispatch') { @{ Version = $env:DISPATCH_VERSION } } else { @{ Tag = $env:GITHUB_REF_NAME } }
+          $release = & ./scripts/resolve-release.ps1 @arguments
+          "source_dir=$($release.source_dir)" >> $env:GITHUB_OUTPUT
+          "version=$($release.version)" >> $env:GITHUB_OUTPUT
+      - name: Verify all Build inputs (database tests not run)
+        shell: pwsh
+        run: |
+          & ./scripts/verify.ps1 -SourceDir '${{ steps.version.outputs.source_dir }}' -Profile Build -Component All -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/windows/verification" -InstallDependencies
       - name: Prepare VC++ runtime
-        working-directory: ${{ steps.version.outputs.source_dir }}
-        shell: powershell
+        shell: pwsh
         run: |
-          foreach ($runtime in @('postgres-runtime', 'pdf-runtime')) {
-            if (-not (Test-Path $runtime)) {
-              Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "build-resources\$runtime") -Destination $runtime -Recurse
-            }
-          }
-          $runtimeDir = Join-Path $PWD 'postgres-runtime\installer'
+          $runtimeDir = Join-Path $env:GITHUB_WORKSPACE 'build-resources/postgres-runtime/installer'
           New-Item -ItemType Directory -Path $runtimeDir -Force | Out-Null
           Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vc_redist.x64.exe' -OutFile (Join-Path $runtimeDir 'vcredist_x64.exe')
-      - name: Build server
-        working-directory: ${{ steps.version.outputs.source_dir }}
-        run: cargo build --release --locked
       - name: Install Inno Setup
+        shell: pwsh
         run: choco install innosetup --no-progress -y
-      - name: Build installers
-        working-directory: ${{ steps.version.outputs.source_dir }}
-        shell: powershell
+      - name: Build installers from verified artifacts
+        shell: pwsh
         run: |
-          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' build_server_installer.iss
-          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' build_hot_update_installer.iss
-          Get-ChildItem installer -Filter '*.exe' | Select-Object Name,Length
+          & ./scripts/build-installers.ps1 -SourceDir '${{ steps.version.outputs.source_dir }}' -VerificationReport "$env:GITHUB_WORKSPACE/ci-artifacts/windows/verification/verification.json" -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/windows/installers" -IsccPath 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+      - name: Write Windows delivery manifest
+        shell: pwsh
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          $artifacts = @("$env:GITHUB_WORKSPACE/ci-artifacts/windows/installers/LabFlow-v$version.exe", "$env:GITHUB_WORKSPACE/ci-artifacts/windows/installers/LabFlow-v$version-HotUpdate.exe")
+          & ./scripts/write-delivery-manifest.ps1 -SourceDir '${{ steps.version.outputs.source_dir }}' -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/windows/delivery" -ArtifactPath $artifacts -RequireWindowsInstallers -VerificationReport "$env:GITHUB_WORKSPACE/ci-artifacts/windows/verification/verification.json"
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: labflow-${{ github.ref_name }}-windows
           path: |
-            ${{ steps.version.outputs.source_dir }}/installer/LabFlow-v${{ steps.version.outputs.version }}.exe
-            ${{ steps.version.outputs.source_dir }}/installer/LabFlow-v${{ steps.version.outputs.version }}-HotUpdate.exe
+            ci-artifacts/windows/installers/LabFlow-v${{ steps.version.outputs.version }}.exe
+            ci-artifacts/windows/installers/LabFlow-v${{ steps.version.outputs.version }}-HotUpdate.exe
+            ci-artifacts/windows/delivery/manifest.json
+            ci-artifacts/windows/delivery/SHA256SUMS
+            ci-artifacts/windows/delivery/交付清单.md
+          if-no-files-found: error
+      - name: Upload verification logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labflow-windows-verification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ci-artifacts/windows/verification/verification.json
+            ci-artifacts/windows/verification/**/*.log
+          if-no-files-found: warn
       - name: Publish installers into repository
+        id: repository_publish
         if: startsWith(github.ref, 'refs/tags/')
         continue-on-error: true
-        shell: powershell
+        shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.version }}"
           New-Item -ItemType Directory -Path 'installers' -Force | Out-Null
-          Copy-Item "${{ steps.version.outputs.source_dir }}/installer/LabFlow-v$version.exe" 'installers/' -Force
-          Copy-Item "${{ steps.version.outputs.source_dir }}/installer/LabFlow-v$version-HotUpdate.exe" 'installers/' -Force
+          Copy-Item "ci-artifacts/windows/installers/LabFlow-v$version.exe" 'installers/' -Force
+          Copy-Item "ci-artifacts/windows/installers/LabFlow-v$version-HotUpdate.exe" 'installers/' -Force
+          function Assert-Git([string]$Action) { if ($LASTEXITCODE -ne 0) { "status=failed" >> $env:GITHUB_OUTPUT; throw "Git $Action failed (exit $LASTEXITCODE)." } }
           git add installers
+          Assert-Git 'add'
           git diff --cached --quiet
-          if ($LASTEXITCODE -eq 0) { Write-Host 'installers already up to date'; exit 0 }
+          if ($LASTEXITCODE -eq 0) { "status=unchanged" >> $env:GITHUB_OUTPUT; Write-Host 'installers already up to date'; exit 0 }
+          if ($LASTEXITCODE -ne 1) { Assert-Git 'diff' }
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "build: add LabFlow v$version Windows installers [skip ci]"
+          Assert-Git 'commit'
+          git fetch origin main
+          Assert-Git 'fetch main'
+          git merge-base --is-ancestor origin/main HEAD
+          if ($LASTEXITCODE -eq 1) { "status=non_fast_forward" >> $env:GITHUB_OUTPUT; throw 'Repository publish would be non-fast-forward; no force push attempted.' }
+          Assert-Git 'ancestry check'
           git push origin 'HEAD:main'
+          Assert-Git 'push (remote rejection, including a concurrent non-fast-forward, is a failure)'
+          "status=published" >> $env:GITHUB_OUTPUT
+      - name: Record repository publish status
+        if: always() && startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          PUBLISH_STATUS: ${{ steps.repository_publish.outputs.status }}
+          PUBLISH_OUTCOME: ${{ steps.repository_publish.outcome }}
+        run: |
+          "Repository installer write-back: status=$env:PUBLISH_STATUS; outcome=$env:PUBLISH_OUTCOME (non-blocking; artifact and release retention remain enabled)." >> $env:GITHUB_STEP_SUMMARY
+          if ($env:PUBLISH_OUTCOME -eq 'failure') { Write-Host '::warning::Installer repository write-back failed. See explicit status and Git logs; no force push was used.' }
 
       - name: Create GitHub release
         if: startsWith(github.ref, 'refs/tags/')
@@ -84,5 +123,8 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            ${{ steps.version.outputs.source_dir }}/installer/LabFlow-v${{ steps.version.outputs.version }}.exe
-            ${{ steps.version.outputs.source_dir }}/installer/LabFlow-v${{ steps.version.outputs.version }}-HotUpdate.exe
+            ci-artifacts/windows/installers/LabFlow-v${{ steps.version.outputs.version }}.exe
+            ci-artifacts/windows/installers/LabFlow-v${{ steps.version.outputs.version }}-HotUpdate.exe
+            ci-artifacts/windows/delivery/manifest.json
+            ci-artifacts/windows/delivery/SHA256SUMS
+            ci-artifacts/windows/delivery/交付清单.md

@@ -5,6 +5,11 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Explicit release version (X.Y.Z)"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -24,20 +29,58 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Test shared release automation
+        shell: pwsh
+        run: ./scripts/test-automation.ps1
       - name: Resolve version and source directory
         id: version
-        shell: bash
+        shell: pwsh
+        env:
+          DISPATCH_VERSION: ${{ inputs.version }}
         run: |
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            VERSION="${GITHUB_REF_NAME#v}"
-            SOURCE_DIR="source/LabFlow-PostgreSQL-v${VERSION}"
-          else
-            SOURCE_DIR="$(find source -maxdepth 1 -mindepth 1 -type d -name 'LabFlow-PostgreSQL-v*' | sort -V | tail -n 1)"
-            VERSION="$(cat "${SOURCE_DIR}/VERSION")"
-          fi
-          test -f "${SOURCE_DIR}/VERSION"
-          echo "source_dir=${SOURCE_DIR}" >> "${GITHUB_OUTPUT}"
-          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          $arguments = if ($env:GITHUB_EVENT_NAME -eq 'workflow_dispatch') { @{ Version = $env:DISPATCH_VERSION } } else { @{ Tag = $env:GITHUB_REF_NAME } }
+          $release = & ./scripts/resolve-release.ps1 @arguments
+          "source_dir=$($release.source_dir)" >> $env:GITHUB_OUTPUT
+          "version=$($release.version)" >> $env:GITHUB_OUTPUT
+      - name: Verify Frontend Build
+        shell: pwsh
+        run: |
+          & ./scripts/verify.ps1 -SourceDir '${{ steps.version.outputs.source_dir }}' -Profile Build -Component Frontend -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/docker/verification" -InstallDependencies
+      - name: Validate and copy verified static into Docker context
+        shell: pwsh
+        run: |
+          Import-Module ./scripts/lib/labflow-automation.psm1 -Force
+          $source = (Resolve-Path -LiteralPath '${{ steps.version.outputs.source_dir }}').Path
+          $report = Get-Content -LiteralPath "$env:GITHUB_WORKSPACE/ci-artifacts/docker/verification/verification.json" -Raw | ConvertFrom-Json
+          if ($report.status -cne 'passed' -or $report.profile -cne 'Build' -or $report.component -cne 'Frontend' -or $report.version -cne '${{ steps.version.outputs.version }}' -or $report.source_dir -cne $source) { throw 'Wrong verification report for Docker frontend.' }
+          if ($report.git_revision -cne (Get-LabFlowRevision $source) -or $report.input_fingerprint -cne (Get-LabFlowInputFingerprint $source)) { throw 'Verification provenance is stale.' }
+          $static = (Resolve-Path -LiteralPath $report.artifacts.static_path).Path
+          if ((Get-LabFlowTreeHash $static) -cne $report.artifacts.static_sha256) { throw 'Verified static hash mismatch.' }
+          & node ./scripts/verify-static.mjs $static
+          if ($LASTEXITCODE -ne 0) { throw 'Static verification failed.' }
+          # Resolve and check the exact destination before replacing its generated files.
+          $destination = [IO.Path]::GetFullPath((Join-Path $source 'backend/static'))
+          if ($destination -cne (Join-Path $source 'backend/static')) { throw 'Unexpected Docker static destination.' }
+          if (Test-Path -LiteralPath $destination) {
+            $item = Get-Item -LiteralPath $destination
+            if (-not $item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Docker static destination must be a real directory.' }
+            Remove-Item -LiteralPath $destination -Recurse -Force
+          }
+          New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force | Out-Null
+          Copy-Item -LiteralPath $static -Destination $destination -Recurse
+          if ((Get-LabFlowTreeHash $destination) -cne $report.artifacts.static_sha256) { throw 'Docker context static copy hash mismatch.' }
+      - name: Upload verification logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labflow-docker-verification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ci-artifacts/docker/verification/verification.json
+            ci-artifacts/docker/verification/**/*.log
+          if-no-files-found: warn
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
@@ -58,6 +101,7 @@ jobs:
           password: ${{ env.GITEE_TOKEN }}
 
       - name: Build and push GHCR image
+        id: ghcr
         uses: docker/build-push-action@v6
         with:
           context: ${{ steps.version.outputs.source_dir }}
@@ -73,7 +117,25 @@ jobs:
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.source=https://github.com/HotLL233/labflow
 
+      - name: Write image-only delivery manifest
+        shell: pwsh
+        env:
+          IMAGE_DIGEST: ${{ steps.ghcr.outputs.digest }}
+        run: |
+          if (-not $env:IMAGE_DIGEST) { throw 'Build push returned no GHCR image digest.' }
+          & ./scripts/write-delivery-manifest.ps1 -SourceDir '${{ steps.version.outputs.source_dir }}' -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/docker/delivery" -VerificationReport "$env:GITHUB_WORKSPACE/ci-artifacts/docker/verification/verification.json" -ImageReference "$($env:IMAGE_NAME):${{ steps.version.outputs.version }}" -ImageDigest $env:IMAGE_DIGEST
+      - name: Upload image delivery evidence (not release assets)
+        uses: actions/upload-artifact@v4
+        with:
+          name: labflow-${{ steps.version.outputs.version }}-docker-delivery
+          path: |
+            ci-artifacts/docker/delivery/manifest.json
+            ci-artifacts/docker/delivery/SHA256SUMS
+            ci-artifacts/docker/delivery/交付清单.md
+          if-no-files-found: error
+
       - name: Build and push Gitee image
+        id: gitee
         if: ${{ env.GITEE_REGISTRY != '' && env.GITEE_IMAGE_NAME != '' && env.GITEE_USERNAME != '' && env.GITEE_TOKEN != '' }}
         uses: docker/build-push-action@v6
         with:

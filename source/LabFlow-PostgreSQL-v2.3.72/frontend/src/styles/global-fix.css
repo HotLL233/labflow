@@ -1,0 +1,11 @@
+/* v0.3.21 全局样式修复 */
+/* 隐藏所有 number input 的上下调节键（spinner） */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
