@@ -1,6 +1,6 @@
-# LabFlow v2.3.75：辅助事项稳定 ID 与干净环境交付修复
+# LabFlow v2.3.79：研发送样必填校验与钉钉定向提醒
 
-当前正式发布仍为 v2.3.75。当前开发目录为 `source/LabFlow-PostgreSQL-v2.3.79/`，承接 v2.3.78 钉钉定向 @，修复研发送样中批号、部门、实验室已填写却仍阻止提交的问题，同步前后端校验，排除隐藏或不适用字段，提交可见自定义默认值并增加每行待填提示。保留权限、模板、布局、全部自定义配置和历史数据；验证与本地安装包状态见本版《安装包说明.md》及根 `test-artifacts/v2.3.79/`。v2.3.76 至 v2.3.79 源码及生产前端产物已同步 GitHub main；v2.3.78、v2.3.79 功能提交为 `05b73c4a6`，已核对远端提交号一致。未打发布标签，正式 Release 仍为 v2.3.75。
+v2.3.79 正式发布准备中，当前正式 Release 仍为 v2.3.75。源码目录为 `source/LabFlow-PostgreSQL-v2.3.79/`，承接 v2.3.78 钉钉定向 @，修复研发送样中批号、部门、实验室已填写却仍阻止提交的问题，同步前后端校验，排除隐藏或不适用字段，提交可见自定义默认值并增加每行待填提示。保留权限、模板、布局、全部自定义配置和历史数据。v2.3.76 至 v2.3.79 源码及生产前端产物已同步 GitHub main；本轮将补发 v2.3.79 标签，触发 Windows 正式两包、GitHub Release、安装包仓库回写及 GHCR 镜像。完成状态以本版《安装包说明.md》、根 `PROJECT_MEMORY.md` 和 `test-artifacts/v2.3.79/` 的发布核验为准。
 
 辅助事项增加自动生成的只读“事项ID”，改名、调整系数或区域后仍识别为同一事项。辅助工作模板移除“范围、所属实验室”，末列增加“事项ID”；回导优先按 ID 更新，新建留空自动生成，旧模板仍兼容唯一名称，歧义时提示重新导出。
 
@@ -25,7 +25,7 @@ GitHub Release 的 `manifest.json`、`SHA256SUMS`、`DELIVERY-CHECKLIST.md` 已�
 - 不再新增或维护按日期记忆、`历史记忆_*.md`、`开发交接_*.md`、`续接提示词_*.md` 或 `HANDOFF.md`；旧版本目录中的同类文件只作历史归档，不得作为当前规则来源或复制到新版本。
 - 版本 `更新说明.md` 和专项文档仍按用途维护，但不得复制一套长期记忆。规则冲突时以当前用户要求、当前源码与工作流、`PROJECT_MEMORY.md` 的顺序为准。
 
-1. 本版源码目录：`source/LabFlow-PostgreSQL-v2.3.75/`。行为、验证与交付状态见本版 `更新说明.md` 与根 `PROJECT_MEMORY.md`。
+1. 本版源码目录：`source/LabFlow-PostgreSQL-v2.3.79/`。行为、验证与交付状态见本版 `更新说明.md` 与根 `PROJECT_MEMORY.md`。
 2. Gitee 源码仓库：`https://gitee.com/HotLL233/labflow`（自 v2.3.18 起暂停向 Gitee 推送，仅保留历史仓库）。
 3. Docker 部署使用 `docker-compose.deploy.yml`，推荐执行 `scripts/pull-labflow-image.ps1`（Windows）或 `scripts/pull-labflow-image.sh`（Ubuntu）。
 4. 脚本按 `LABFLOW_IMAGE_PRIORITY` 依次尝试已配置的镜像地址，成功后再启动 Compose；Gitee 镜像地址未配置时跳过，目前发布仅使用 GHCR。
