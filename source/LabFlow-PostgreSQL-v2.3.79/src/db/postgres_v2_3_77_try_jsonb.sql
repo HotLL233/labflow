@@ -1,0 +1,8 @@
+CREATE OR REPLACE FUNCTION labflow_try_jsonb(value TEXT) RETURNS JSONB
+LANGUAGE plpgsql IMMUTABLE AS '
+BEGIN
+    RETURN value::JSONB;
+EXCEPTION WHEN invalid_text_representation THEN
+    RETURN NULL;
+END;
+';
