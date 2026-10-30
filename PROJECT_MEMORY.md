@@ -2,11 +2,11 @@
 
 > 最后更新：2026-10-30
 >
-> 当前正式版本：`v2.3.75`；近期源码、两类CI正式安装包、交付清单及GHCR镜像均已发布并核验。
+> 当前正式版本：`v2.3.79`；源码、两类CI正式安装包、交付清单及GHCR镜像均已发布并核验。
 >
 > 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.3.79/`（承接v2.3.78，修复研发送样配置字段已填写仍无法提交）。
 >
-> 当前开发状态：v79已完成All Integration（193项前端、324项后端通过，3项既有ignore）、21项实际HTTP及本地完整/热更新两包。两个隔离测试库已删除，56579/57579服务停止；临时PG数据目录删除被自动审批拒绝并保留，未绕过。v78已验证输入不变，生产库、8000服务及真实群未操作。v76至v79源码已同步GitHub main；用户要求按惯例正式发布，本轮准备推送v79标签并等待Windows及Docker工作流，正式Release在核验完成前仍记为v75。
+> 当前开发状态：v79正式发布完成。Windows 40994166760、Docker 40994166807均成功，正式两包与Release/origin/main一致，CI安装包提交78ab5fa6b已快进；GHCR 2.3.79/latest同摘要。本地193项前端、324项后端（3项既有ignore）及21项HTTP通过，CI为All Build的12项passed/5项not_run，不冒充数据库测试。隔离测试库已删、56579/57579已停，临时PG目录删除被审批拒绝并保留；未操作现场库、8000服务或真实群，未实际安装或启动容器。
 
 ## 1. 文件定位与强制维护规则
 
@@ -113,6 +113,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 6. 共享工作流已接入完整版本检查、独立前端构建和交付清单；手动执行必须明确填写三段版本，不再按最大目录猜测。旧tag不包含新工具，历史tag重跑不会自动获得新流程。Windows安装包回写与Release分别记录状态，保持现有产物留存约定；本次不改变latest及Gitee策略，旧版本镜像重跑覆盖latest风险仍待独立治理。
 7. 自v2.3.70起Docker自动发布仅由版本标签触发，也保留workflow_dispatch；推main不再重复构建同一版本，原生linux/amd64构建不配置QEMU。Windows标签发布规则不变。交付记录继续使用[skip ci]并核对工作流，避免为了写发布结果重复构建。
 8. 正式标签指向不含[skip ci]的发布准备提交；推标签后不要抢先提交main状态文档，先等待Windows安装包回写，避免当前回写工作流的快进检查失败。源码同步与正式发布分别核验，用户按历史惯例要求交付时应完成标签、两类安装包及镜像发布，不以只推源码代替。
+9. Release中文交付清单上传后可能成为default.md。按惯例改为DELIVERY-CHECKLIST.md前，核对资产原始字节SHA-256、大小、版本及标签源码；只修改名称和标签，保留原资产ID与内容，再执行交付清单校验。
 
 ### 5.2 安装包命名与留存
 
@@ -1213,3 +1214,13 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 推送前重新核验两版受控输入指纹与生产前端树，均匹配既有通过报告，不修改业务代码或重新构建。前述“未提交”为本地交付完成时的历史状态。
 - 首次推送时，本机原代理127.0.0.1:7897无监听，GitHub直连超时/连接被重置；后台启动现有Clash Verge并重试连接的命令被自动审批拒绝，仅返回blocked by policy，未绕过或修改系统代理/TUN设置，当时未能推送。
 - 用户要求重新推送后，核对代理端口已恢复，通过单次Git代理参数fetch及普通push成功；GitHub origin/main实测为05b73c4a6667608eee3a4ccbd8881a0dc3cf9475，与本地HEAD一致，领先/落后0/0。随后仅回写同步状态文档，不改业务源码或重跑构建。仅同步GitHub源码，未推Gitee、打发布标签或发布安装包/镜像。
+
+## v2.3.79 正式发布补齐（2026-10-30）
+
+- 用户明确指出只推源码未完成发布，本轮按惯例补发最新v79，承接v76/v77/v78源码改动，不为旧中间版本重复发布覆盖latest。发布准备提交f7a9ac40c3b3d0c646077466652b2a19493e9424不含跳过CI标记，注释标签v2.3.79对象0e2ff9bd0979970a9abed3322fc2db67b2bb7c83已推GitHub，未推Gitee。
+- Windows工作流40994166760与Docker工作流40994166807均completed/success，必需构建、资产上传、仓库安装包回写及Release创建步骤全部success。CI All Build为12项passed（含npm-ci）、5项not_run，未执行数据库库测试、浏览器、HTTP/Excel、现场升级或容器运行；本地193/324/21专项另有独立证据。
+- Release ID428615731，tag v2.3.79已公开正式发布且为latest，非草稿、非预发布。两类CI包产品/文件版本2.3.79.0；完整包79,900,669字节，SHA-256 b875970b6737474bd8b5a51b16e5888d0daceafb3e8e5b6d8de2a4a3e714d418；热更新29,410,708字节，SHA-256 4f61e15fe449a1e33f58c19f1fe248491e8259b2d18c74c75e4ff67a8598eec4。实际文件与Release资产元数据及origin/main Git blob一致。
+- CI安装包提交78ab5fa6be66745bf8c5f2dfbbcdc6f8a74a3a52已快进拉回，根installers保留正式包，本版installer继续保留独立本地验收包；未替换或混同两类来源。CI源码指纹b1d31451efc3126cdbf0b65e9fc1d7ea5d0f24ae5291ab23c39031a588dfaea8，发布可执行文件哈希db5936021ff570802fd83939a0ce34d1fb88fa912f094476289792f5bea56a8b；静态树24f57aa02e50e4aa38c2c3953192aec6e1c4e708f103f7c9b6900ceda8357205与本地静态相同，CI与本地可执行文件哈希分别记录。
+- 三份小交付文档原始字节/哈希及manifest中的准确标签源码、干净状态、构建指纹和验证范围已校验。GitHub将中文清单命名default.md，核对版本/源码/字节后只重命名为DELIVERY-CHECKLIST.md，资产ID690754345及SHA-256 8e5055083a127b3adab2345c11fe5846a52394f1710a8625b7150defa11a5bd8不变。
+- GHCR 2.3.79与latest索引摘要均为sha256:81fef30b0a2202367bb9b328e824b02396f9a61e73cd1078f8567aa1b96215d8；linux/amd64 manifest为sha256:55f7aaf6e0ae4c9fda85d6c6ff7e6f5cf9dbead7868bd470462ae70838669d2e，config为sha256:f8fee03cc38c1cc46a2873364e88aa4bf0a891b84edc1516293173cd46cdb45c。匿名读取原始字节和版本/架构/入口/用户/端口等元数据核验通过；未下载完整镜像层或启动容器。
+- 证据在ignored的test-artifacts/v2.3.79：ci-final-status、ci-packages-sha256、ci-delivery-verification、ghcr-final、release-checklist-asset及GitHub最终Release记录。正式发布说明与根README/本版安装包说明同步后以[skip ci]文档提交收尾；不改业务源码或受控更新说明，不重构或重跑本地Build。未实际安装、访问生产数据或发送真实群消息；原.workbuddy/与rebuild-output/保留不提交。
