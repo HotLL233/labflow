@@ -1,16 +1,24 @@
-# labflow v2.4.0 开发与发布准备
+# labflow v2.4.0：名称、图标与Windows桌面管理
 
-当前正式版本为 v2.3.79，源码目录为 `source/LabFlow-PostgreSQL-v2.3.79/`。修复研发送样中批号、部门、实验室已填写却仍阻止提交的问题，排除隐藏或不适用字段，正确提交自定义默认值，并在电脑与手机显示逐行缺项提示。承接钉钉定向 @、历史辅助工作关联及系数诊断，保留权限、模板、布局、全部自定义配置和历史快照。
+当前正式版本为 **v2.4.0**，源码目录为 `source/LabFlow-PostgreSQL-v2.4.0/`。程序文件统一为labflow，发布者HotLL，图标覆盖桌面、托盘、原生窗口、安装/卸载与网页。启动快捷方式打开本机控制窗口，提供端口、自启动、关于和完整退出；承接此前备份/网盘优化，保留业务逻辑、历史数据及自定义配置。
 
-当前开发目录为 `source/LabFlow-PostgreSQL-v2.4.0/`。本地All Integration通过205项前端和342项后端测试，3项备份恢复专项、65项真实隔离HTTP和13项Windows进程生命周期检查通过；两类本地包均为2.4.0.0，名称统一labflow、发布者HotLL。源码同步及正式Windows/Docker发布准备中，当前正式版本仍v2.3.79。computer-use原生通道不可用，未做窗口点击/截图、UAC、开机登录或现场覆盖安装验收；当前文件未代码签名。
+当前最新源码目录为 `source/LabFlow-PostgreSQL-v2.4.0/`。本地205项前端、342项后端、3项恢复专项、65项隔离HTTP和13项Windows进程检查通过。正式标签源码96e5b32d01f02c05628a50ba73a0fa6a85281ffb；Windows 41299557319、Docker 41299557301均成功，正式两包2.4.0.0已发布并回写根installers，字节/哈希与Release及Git一致。CI仅All Build的12项通过、5项未运行，不冒充本地数据库验收。
 
-v81本地交付已完成：新增OneDrive官方设备授权、常见WebDAV及明确标注的OpenList网关入口，并修正坚果云根目录、当前配置测试与HTTP错误诊断。最终All Integration通过204项前端、336项后端，另有3项备份恢复专项和同一最终Release的57项模拟网盘HTTP通过，两类本地安装包均为2.3.81.0。测试库和服务已收尾；真实账号、网关、微软授权、Ubuntu容器及现场升级未验收。v81尚未提交、推送或发布，详情见本版安装包说明和根 PROJECT_MEMORY.md。
+v81本地交付已完成：新增OneDrive官方设备授权、常见WebDAV及明确标注的OpenList网关入口，并修正坚果云根目录、当前配置测试与HTTP错误诊断。最终All Integration通过204项前端、336项后端，另有3项备份恢复专项和同一最终Release的57项模拟网盘HTTP通过，两类本地安装包均为2.3.81.0。测试库和服务已收尾；真实账号、网关、微软授权、Ubuntu容器及现场升级未验收。v81源码已随v2.4.0同步，未单独发布，详情见本版安装包说明和根 PROJECT_MEMORY.md。
 
-v80已通过最终All Integration（199项前端、330项后端）、3项单独备份恢复专项、同一最终Release的43项模拟网盘HTTP验收，并完成2.3.80.0本地完整/热更新两包。测试库与测试服务已收尾；未连接真实网盘、未实际安装或启动Ubuntu容器。v80尚未提交、推送或发布，实际交付清单见本版安装包说明和根 PROJECT_MEMORY.md。
+v80已通过最终All Integration（199项前端、330项后端）、3项单独备份恢复专项、同一最终Release的43项模拟网盘HTTP验收，并完成2.3.80.0本地完整/热更新两包。测试库与测试服务已收尾；未连接真实网盘、未实际安装或启动Ubuntu容器。v80源码已随v2.4.0同步，未单独发布，实际交付清单见本版安装包说明和根 PROJECT_MEMORY.md。
 
 本地 All Integration 通过 193 项前端、324 项后端（3 项既有 ignore）及同一最终本地 Release 的 21 项 HTTP。正式标签源码为 `f7a9ac40c3b3d0c646077466652b2a19493e9424`，Windows 工作流 40994166760、Docker 工作流 40994166807 均成功；CI All Build 为 12 项 passed、5 项 not_run，未执行数据库库测试或 HTTP 专项。两类正式包均为 2.3.79.0，已发布 GitHub Release 并回写根 `installers/`，本地已快进 CI 提交 `78ab5fa6b`，文件版本、大小和 SHA-256 与 Release、origin/main 一致。本地验收包继续独立保留在本版 `installer/`，详情见本版《安装包说明.md》。
 
-三份 Release 交付文件已核验准确源码及实际构建范围。GHCR 的 `2.3.79` 与 `latest` 均为 `sha256:81fef30b0a2202367bb9b328e824b02396f9a61e73cd1078f8567aa1b96215d8`，linux/amd64 manifest/config 原始字节及运行元数据核验通过。证据在 `test-artifacts/v2.3.79/`；未实际安装、启动容器或操作现场服务，真实浏览器/手机及覆盖升级未验收。升级前备份数据库、附件及配置，回退须恢复升级前数据库。
+三份 Release 交付文件已核验准确源码及实际构建范围。v2.3.79发布当时，GHCR 的 `2.3.79` 与 `latest` 均为 `sha256:81fef30b0a2202367bb9b328e824b02396f9a61e73cd1078f8567aa1b96215d8`，linux/amd64 manifest/config 原始字节及运行元数据核验通过。证据在 `test-artifacts/v2.3.79/`；未实际安装、启动容器或操作现场服务，真实浏览器/手机及覆盖升级未验收。升级前备份数据库、附件及配置，回退须恢复升级前数据库。
+
+## v2.4.0 正式交付
+
+GitHub Release包含 `labflow-v2.4.0.exe`（79,468,809字节，SHA-256 `36005d785dbb127d93c00b13e06201e07624e07862cb80d3229863a89af6580e`）和 `labflow-v2.4.0-hotupdate.exe`（29,023,680字节，SHA-256 `401a96d82ce54ade438878e7e4236aa109dac5c7171fa6d1936034d6cee72696`），以及manifest、SHA256SUMS和DELIVERY-CHECKLIST。根installers是CI正式包，本版installer保留独立本地包，不混同来源。
+
+GHCR `2.4.0` 与 `latest` 均为 `sha256:82781afad6bd9228021336966c943b6b1aba11590849eab2bceb019960c7db82`，linux/amd64，入口 `/app/labflow`、发布者HotLL；已核对索引、平台manifest及配置原始字节，未实际启动容器。
+
+当前安装文件未代码签名。computer-use原生通道不可用，窗口点击/截图、UAC、开机登录、实际安装/现场升级、Ubuntu容器启动及真实网盘未验收。升级前备份数据库、附件与配置；退出会结束labflow托盘及所属后台，独立数据库服务由Windows管理。
 
 ## v2.3.75 历史交付记录
 
@@ -37,7 +45,7 @@ GitHub Release 的 `manifest.json`、`SHA256SUMS`、`DELIVERY-CHECKLIST.md` 已�
 - 不再新增或维护按日期记忆、`历史记忆_*.md`、`开发交接_*.md`、`续接提示词_*.md` 或 `HANDOFF.md`；旧版本目录中的同类文件只作历史归档，不得作为当前规则来源或复制到新版本。
 - 版本 `更新说明.md` 和专项文档仍按用途维护，但不得复制一套长期记忆。规则冲突时以当前用户要求、当前源码与工作流、`PROJECT_MEMORY.md` 的顺序为准。
 
-1. 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.4.0/`；当前正式发布仍为v2.3.79。行为、验证与交付状态见对应版本 `更新说明.md`、`安装包说明.md` 与根 `PROJECT_MEMORY.md`。
+1. 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.4.0/`；当前正式发布为v2.4.0。行为、验证与交付状态见对应版本 `更新说明.md`、`安装包说明.md` 与根 `PROJECT_MEMORY.md`。
 2. Gitee 源码仓库：`https://gitee.com/HotLL233/labflow`（自 v2.3.18 起暂停向 Gitee 推送，仅保留历史仓库）。
 3. Docker 部署使用 `docker-compose.deploy.yml`，推荐执行 `scripts/pull-labflow-image.ps1`（Windows）或 `scripts/pull-labflow-image.sh`（Ubuntu）。
 4. 脚本按 `LABFLOW_IMAGE_PRIORITY` 依次尝试已配置的镜像地址，成功后再启动 Compose；Gitee 镜像地址未配置时跳过，目前发布仅使用 GHCR。
