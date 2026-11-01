@@ -2,11 +2,11 @@
 
 > 最后更新：2026-11-01
 >
-> 当前正式版本：`v2.4.0`；GitHub源码、两类CI正式安装包、交付清单及GHCR镜像均已发布并核验。
+> 当前正式版本：`v2.4.1`；GitHub源码、两类CI正式安装包、交付清单及GHCR镜像均已发布并核验。
 >
-> 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.4.1/`（恢复程序内名称和页面，正在验证和准备修正版发布；不修改旧标签）。
+> 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.4.1/`（业务网页原名称和页面已恢复，本地验证及正式Windows/Docker发布完成，可作为下轮基线）。
 >
-> 当前开发状态：v2.4.0本地205项前端、342项后端、3项恢复专项、65项隔离HTTP和13项Windows进程检查通过。正式源码96e5b32d、Windows41299557319与Docker41299557301均success；正式两包2.4.0.0与Release及根installers字节一致，CI回写4b634d910已快进本地。GHCR2.4.0/latest同摘要82781afad6bd9228021336966c943b6b1aba11590849eab2bceb019960c7db82。CI是12项All Build通过/5项未运行，不冒充本地数据库测试。测试库和服务已收尾，数据目录及日志保留；未操作生产库和8000。computer-use通道不可用，窗口点击/截图、UAC、开机登录、实际安装/现场升级、Ubuntu容器及真实网盘未验收；文件未代码签名。
+> 当前开发状态：v2.4.1本地204项前端、343项后端（3项既有备份专项本轮未重跑）及12项实际HTTP通过。正式源码a1b101830，Windows41319567674与Docker41319567677均success，Release430670284为最新正式版；两类CI包2.4.1.0与Release、根installers和origin/main一致，CI回写d6eb3a2b0已快进本地。CI为All Build的12项passed/5项not_run，未跑数据库测试。GHCR2.4.1/latest同摘要dd49b99d310b9bf808fd50f75f40806e28b34600f5bda7f9070d4ad834145c01，镜像前端层已核对。隔离库已删、56640/57641已停；未操作生产库和8000。未做浏览器视觉/手机实机、现场安装升级、开机登录/UAC或容器运行验收；文件未代码签名。
 >
 > v81本地交付记录：最终All Integration通过（204项前端、336项后端，3项备份专用ignore已在最终二进制另行通过），同一最终Release通过57项本机模拟网盘HTTP，Graph协议测试覆盖令牌隐私、下载跳转及分片断点续传。初次完整回归缺少私有人员字段夹具，补齐后单项及全部通过，未改通知业务代码。两类本地包均2.3.81.0，位于v81/installer，清单在test-artifacts/v2.3.81/packages，最终报告为verified-clean。专用测试库已删、56581/57581/57681已停；未连接真实网盘/微软账号，未操作现场数据库和8000服务，未做浏览器/手机、Ubuntu容器或现场升级。v81当时未发布；源码现已随v2.4.0同步，未单独发布旧版本。
 >
@@ -1281,11 +1281,20 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 5个专用测试库已删，56640/57640/57740/58640/58641均无监听；保留临时集群目录/日志，不重试此前被拒的旧目录删除。未访问生产数据库、操作8000或真实网盘；未做原生点击/截图、实际覆盖安装、UAC、开机登录及Ubuntu容器运行。原未跟踪.workbuddy、rebuild-output和UI方案原样保留。
 - 发布状态文档随后以skip-ci提交同步，不更改标签业务源码或触发重复构建。后续版本从已发布v2.4.0基线继续。
 
-## v2.4.1 恢复程序内名称和页面（2026-11-01，本地交付完成，正在发布）
+## v2.4.1 恢复程序内名称和页面（2026-11-01，正式发布完成）
 
 - 用户纠正v2.4.0改名范围：外部软件/安装包/程序文件叫labflow，业务网页名称和UI保持原样。从v2.4.0隔离递增开发，五份业务页面与种子文件恢复为v2.3.82逐字节版本；删除branding强制替换及其测试，恢复网页/手机主屏/通知测试名称，保留favicon和手机图标资源。
 - 新库默认“知微”恢复；2.4.1-restore-web-brand-defaults仅在完整配置和原始种子更新时间均匹配v2.4.0时修复三行默认名称。事务及单次迁移标记保证重复启动安全；已保存名称、颜色、其他定制配置及无效JSON不改写。原工作量、权限、统计、业务数据、历史系数和桌面功能保持。
 - 最终All Integration通过204项前端、343项后端测试，3项既有备份专项保持ignore，本轮未重跑；类型/生产构建/gzip、Rust格式/check/Release均通过。输入指纹d19650770b2e39982e101a9c0806f2c3f9237bdc781f2452399792cb2fbc33c1，Release SHA-256 ac2bf3a88e3a1cd6566b0c2e80ef3b614c7d95327fe70d0d5698babc34848648，静态树7b606f4313cc19fb18123e9fc55a24b67707a477dde6462724cb40fc6bc2647b，与backend/static一致。
 - 同一Release通过12项隔离HTTP，覆盖网页/手机名称、图标、新默认、旧种子修复、自定义保留和登录。首次格式检查失败已修正后完整复验；首轮HTTP脚本缺少受保护配置鉴权，补齐测试脚本后通过，不修改产品权限。证据test-artifacts/v2.4.1/verified-final与同级JSON/日志。
 - 完整/热更新本地两包已生成并单份留存在本版installer，均2.4.1.0、产品labflow、发布者HotLL；大小/哈希见本版安装包说明和test-artifacts/v2.4.1/packages/manifest.json。隔离数据库已删、56640/57641已停；v2.4.0历史输入保持，未操作生产库和8000。
-- 正在推送源码并发布递增v2.4.1，不覆盖旧标签。未做浏览器视觉/手机实机、现场覆盖升级、开机登录/UAC或容器运行；未重复完整备份专项/桌面进程测试。原.workbuddy/、rebuild-output/和未跟踪UI方案保留，不提交。
+- 源码及递增v2.4.1正式版本已发布，不覆盖旧标签。未做浏览器视觉/手机实机、现场覆盖升级、开机登录/UAC或容器运行；未重复完整备份专项/桌面进程测试。原.workbuddy/、rebuild-output/和未跟踪UI方案保留，不提交。
+
+### v2.4.1 正式发布核验
+
+- 发布准备提交a1b1018302a2ce0703688f4f327819d0b0532036，注释标签对象a04866fbc6ae8892bd853e7660dbc2c38b25a276解引用为该源码。仅推GitHub，未推Gitee；旧v2.4.0标签及受控输入保持不变。
+- Windows41319567674与Docker41319567677均success，Release430670284为公开正式最新v2.4.1。CI回写提交d6eb3a2b023a71ba778d043c30fcc842cf83b398已快进本地，根installers保存两类正式包，本版installer继续保存独立本地包。
+- 正式完整包79462881字节，SHA-256 1f783cb8b1945d985351017d21347170bad9a6e42f643f904311c5e7acc7b4aa；热更新29016018字节，SHA-256 75d38a808a57d0502e180e0e24a52ceb35ae6a7c24f92beb01980f1463519a15。两包产品/文件版本2.4.1.0、产品labflow、发布者HotLL，Release服务端摘要、manifest、SHA256SUMS、本地实际文件及origin/main Git blob均一致。
+- 三份交付文件字节/摘要已核验，manifest绑定干净标签源码；CI为All Build的12项passed、5项not_run，未运行数据库测试。CI输入f0083009848e13b8320062aed760a8438f84220dbc2cf441209c24ab2ce5d419，CI可执行文件SHA-256 4e489225569763eb576bc652b8a343760bf2bd58d68091469a8df760dc28ea27；Windows静态7b606f4313cc19fb18123e9fc55a24b67707a477dde6462724cb40fc6bc2647b与本地/本版backend/static一致。
+- GHCR2.4.1/latest同索引sha256:dd49b99d310b9bf808fd50f75f40806e28b34600f5bda7f9070d4ad834145c01；索引、amd64 manifest及config字节核验，入口/app/labflow、用户labflow、发布者HotLL、版本2.4.1。额外只下载1468717字节的前端层，实际10文件树d4a77e18e077497e979cbfd3b92a315e7fd524e0b07ef95a1b1744508efae6cc与Linux CI报告一致。两平台JS/CSS/图标字节相同，gzip解压内容相同，HTML与manifest仅行尾CR差异；不宣称两平台原始压缩树哈希相同。未实际启动容器。
+- 证据test-artifacts/v2.4.1/ci-delivery-verification.json、ci-final-status.json、github-release-final.json、ghcr-final.json、image-frontend-provenance.json及image-frontend-content-verification.json。收尾仅更新发布事实文档并以skip-ci提交同步，不更改标签源码或重复构建。
