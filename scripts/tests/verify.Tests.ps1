@@ -27,6 +27,7 @@ function New-Fixture {
     Copy-Item -LiteralPath (Join-Path $originalScripts 'lib/labflow-automation.psm1') -Destination (Join-Path $scripts 'lib')
     Set-Content -LiteralPath (Join-Path $scripts 'check-version.ps1') -Value 'param([string]$SourceDir) [pscustomobject]@{version="9.9.9"}'
     Set-Content -LiteralPath (Join-Path $source 'VERSION') -Value '9.9.9'
+    Set-Content -LiteralPath (Join-Path $source 'Cargo.toml') -Value "[package]`nname = `"workload-tool`"`nversion = `"9.9.9`""
     Set-Content -LiteralPath (Join-Path $source 'src/lib.rs') -Value '// fixture only'
     Set-Content -LiteralPath (Join-Path $source 'frontend/src/example.test.mjs') -Value '// discovery fixture; node is mocked'
     $global:LabFlowVerifyTestMock = @{Calls=[Collections.Generic.List[string]]::new(); Fail=''; Target=(Join-Path $root 'target')}

@@ -72,7 +72,8 @@ try {
             # cargo metadata accounts for CARGO_TARGET_DIR, config and shared junctions.
             Push-Location $source
             try { $metadataText = & cargo metadata --no-deps --format-version 1 --locked; if ($LASTEXITCODE) { throw 'cargo metadata failed' }; $metadata=$metadataText | ConvertFrom-Json } finally { Pop-Location }
-            $exe = Join-Path $metadata.target_directory ('release/workload-tool' + $(if ($IsWindows) {'.exe'} else {''}))
+            $identity = Get-LabFlowIdentity -SourceDir $source
+            $exe = Join-Path $metadata.target_directory ("release/$($identity.binary_name)" + $(if ($IsWindows) {'.exe'} else {''}))
             if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) { throw 'Release executable missing.' }
             # Snapshot the shared Cargo output: later builds must not overwrite verified evidence.
             $binaryDir=Join-Path $out ('binary-' + [guid]::NewGuid().ToString('N'))

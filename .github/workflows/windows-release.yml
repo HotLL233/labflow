@@ -38,6 +38,10 @@ jobs:
           $release = & ./scripts/resolve-release.ps1 @arguments
           "source_dir=$($release.source_dir)" >> $env:GITHUB_OUTPUT
           "version=$($release.version)" >> $env:GITHUB_OUTPUT
+          Import-Module ./scripts/lib/labflow-automation.psm1 -Force
+          $identity = Get-LabFlowIdentity -SourceDir $release.source_dir
+          "full_installer=$($identity.installer_names[0])" >> $env:GITHUB_OUTPUT
+          "hot_installer=$($identity.installer_names[1])" >> $env:GITHUB_OUTPUT
       - name: Verify all Build inputs (database tests not run)
         shell: pwsh
         run: |
@@ -59,18 +63,19 @@ jobs:
         shell: pwsh
         run: |
           $version = '${{ steps.version.outputs.version }}'
-          $artifacts = @("$env:GITHUB_WORKSPACE/ci-artifacts/windows/installers/LabFlow-v$version.exe", "$env:GITHUB_WORKSPACE/ci-artifacts/windows/installers/LabFlow-v$version-HotUpdate.exe")
+          $artifacts = @("$env:GITHUB_WORKSPACE/ci-artifacts/windows/installers/${{ steps.version.outputs.full_installer }}", "$env:GITHUB_WORKSPACE/ci-artifacts/windows/installers/${{ steps.version.outputs.hot_installer }}")
           & ./scripts/write-delivery-manifest.ps1 -SourceDir '${{ steps.version.outputs.source_dir }}' -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/windows/delivery" -ArtifactPath $artifacts -RequireWindowsInstallers -VerificationReport "$env:GITHUB_WORKSPACE/ci-artifacts/windows/verification/verification.json"
+          Copy-Item -LiteralPath "$env:GITHUB_WORKSPACE/ci-artifacts/windows/delivery/交付清单.md" -Destination "$env:GITHUB_WORKSPACE/ci-artifacts/windows/delivery/DELIVERY-CHECKLIST.md"
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: labflow-${{ github.ref_name }}-windows
           path: |
-            ci-artifacts/windows/installers/LabFlow-v${{ steps.version.outputs.version }}.exe
-            ci-artifacts/windows/installers/LabFlow-v${{ steps.version.outputs.version }}-HotUpdate.exe
+            ci-artifacts/windows/installers/${{ steps.version.outputs.full_installer }}
+            ci-artifacts/windows/installers/${{ steps.version.outputs.hot_installer }}
             ci-artifacts/windows/delivery/manifest.json
             ci-artifacts/windows/delivery/SHA256SUMS
-            ci-artifacts/windows/delivery/交付清单.md
+            ci-artifacts/windows/delivery/DELIVERY-CHECKLIST.md
           if-no-files-found: error
       - name: Upload verification logs
         if: always()
@@ -89,8 +94,8 @@ jobs:
         run: |
           $version = "${{ steps.version.outputs.version }}"
           New-Item -ItemType Directory -Path 'installers' -Force | Out-Null
-          Copy-Item "ci-artifacts/windows/installers/LabFlow-v$version.exe" 'installers/' -Force
-          Copy-Item "ci-artifacts/windows/installers/LabFlow-v$version-HotUpdate.exe" 'installers/' -Force
+          Copy-Item "ci-artifacts/windows/installers/${{ steps.version.outputs.full_installer }}" 'installers/' -Force
+          Copy-Item "ci-artifacts/windows/installers/${{ steps.version.outputs.hot_installer }}" 'installers/' -Force
           function Assert-Git([string]$Action) { if ($LASTEXITCODE -ne 0) { "status=failed" >> $env:GITHUB_OUTPUT; throw "Git $Action failed (exit $LASTEXITCODE)." } }
           git add installers
           Assert-Git 'add'
@@ -121,10 +126,11 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          name: labflow v${{ steps.version.outputs.version }}
           generate_release_notes: true
           files: |
-            ci-artifacts/windows/installers/LabFlow-v${{ steps.version.outputs.version }}.exe
-            ci-artifacts/windows/installers/LabFlow-v${{ steps.version.outputs.version }}-HotUpdate.exe
+            ci-artifacts/windows/installers/${{ steps.version.outputs.full_installer }}
+            ci-artifacts/windows/installers/${{ steps.version.outputs.hot_installer }}
             ci-artifacts/windows/delivery/manifest.json
             ci-artifacts/windows/delivery/SHA256SUMS
-            ci-artifacts/windows/delivery/交付清单.md
+            ci-artifacts/windows/delivery/DELIVERY-CHECKLIST.md

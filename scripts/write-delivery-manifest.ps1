@@ -84,7 +84,7 @@ try {
     $version = (Get-Content -LiteralPath (Join-Path $source 'VERSION') -Raw).Trim()
     if ($version -cnotmatch '^\d+\.\d+\.\d+$') { throw 'VERSION must contain X.Y.Z.' }
     $paths = @($ArtifactPath)
-    $expected = @("LabFlow-v$version.exe", "LabFlow-v$version-HotUpdate.exe")
+    $expected = @((Get-LabFlowIdentity -SourceDir $source).installer_names)
     if ($RequireWindowsInstallers -and $paths.Count -eq 0) {
         $paths = @($expected | ForEach-Object { Join-Path $source "installer/$_" })
     }

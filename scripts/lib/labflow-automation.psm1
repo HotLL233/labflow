@@ -1,6 +1,30 @@
 #requires -Version 7.0
 Set-StrictMode -Version Latest
 
+function Get-LabFlowIdentity {
+    param([Parameter(Mandatory)][string]$SourceDir)
+    $text = [IO.File]::ReadAllText((Join-Path $SourceDir 'Cargo.toml'))
+    $tables = [regex]::Matches($text, '(?ms)^[ \t]*\[package\][ \t]*(?:#[^\r\n]*)?\r?\n(?<body>.*?)(?=^[ \t]*\[|\z)')
+    if ($tables.Count -ne 1) { throw 'Expected exactly one workload-tool package or labflow package.' }
+    $names = [regex]::Matches($tables[0].Groups['body'].Value, '(?m)^[ \t]*name[ \t]*=[ \t]*["''](?<name>[^"''\r\n]*)["''][ \t]*(?:#[^\r\n]*)?\r?$')
+    if ($names.Count -ne 1 -or $names[0].Groups['name'].Value -cnotin @('labflow','workload-tool')) {
+        throw 'Expected exactly one workload-tool package or labflow package.'
+    }
+    $name = $names[0].Groups['name'].Value
+    $version = [IO.File]::ReadAllText((Join-Path $SourceDir 'VERSION')).Trim()
+    $installers = if ($name -ceq 'labflow') {
+        @("labflow-v$version.exe", "labflow-v$version-hotupdate.exe")
+    } else {
+        @("LabFlow-v$version.exe", "LabFlow-v$version-HotUpdate.exe")
+    }
+    [pscustomobject]@{
+        package_name=$name
+        binary_name=$name
+        installer_names=$installers
+        compose_image=$(if ($name -ceq 'labflow') {'labflow/labflow:'} else {'labflow/workload-tool:'})
+    }
+}
+
 function Assert-LabFlowOutputPath {
     param([Parameter(Mandatory)][string]$OutputDir, [Parameter(Mandatory)][string]$SourceDir)
     $out = [IO.Path]::GetFullPath($OutputDir).TrimEnd([IO.Path]::DirectorySeparatorChar)
@@ -93,4 +117,4 @@ function Invoke-LabFlowCommand {
         if ($code -ne 0) { throw "Command failed (exit $code): $Command; see $LogPath" }
     } finally { Pop-Location }
 }
-Export-ModuleMember -Function Assert-LabFlowOutputPath,Get-LabFlowFiles,Get-LabFlowTreeHash,Get-LabFlowInputFingerprint,Get-LabFlowRevision,Invoke-LabFlowCommand
+Export-ModuleMember -Function Get-LabFlowIdentity,Assert-LabFlowOutputPath,Get-LabFlowFiles,Get-LabFlowTreeHash,Get-LabFlowInputFingerprint,Get-LabFlowRevision,Invoke-LabFlowCommand

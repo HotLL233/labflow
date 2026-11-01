@@ -24,6 +24,9 @@ try {
     New-Item -ItemType Directory -Path (Join-Path $fixture 'scripts') | Out-Null
     $validator = Join-Path $fixture 'scripts/check-version.ps1'
     Copy-Item -LiteralPath (Join-Path (Split-Path -Parent $PSScriptRoot) 'check-version.ps1') -Destination $validator
+    New-Item -ItemType Directory -Path (Join-Path $fixture 'scripts/lib') | Out-Null
+    Copy-Item -LiteralPath (Join-Path (Split-Path -Parent $PSScriptRoot) 'lib/labflow-automation.psm1') -Destination (Join-Path $fixture 'scripts/lib')
+    Import-Module (Join-Path $fixture 'scripts/lib/labflow-automation.psm1') -Force
     $source = Join-Path $fixture 'source/LabFlow-PostgreSQL-v9.8.7'
     New-Item -ItemType Directory -Path (Join-Path $source 'frontend') -Force | Out-Null
     $baseline = [ordered]@{
@@ -59,6 +62,16 @@ services:
     Assert ($result.version -ceq '9.8.7' -and $result.source_dir -ceq $source) 'Wrong version or absolute path.'
     Assert ($result.checks.Count -eq 15) 'Expected twelve file-field checks plus directory and two expectations.'
     $passed++
+    foreach ($file in @('Cargo.toml','Cargo.lock')) {
+        Replace-Fixture $file 'name = "workload-tool"' 'name = "labflow"'
+    }
+    Replace-Fixture 'docker-compose.yml' 'labflow/workload-tool:' 'labflow/labflow:'
+    $branded = & $validator -SourceDir $source
+    Assert ($branded.checks.Contains('Cargo.toml labflow.version')) 'New labflow package was not validated.'
+    $identity = Get-LabFlowIdentity -SourceDir $source
+    Assert (($identity.installer_names -join ',') -ceq 'labflow-v9.8.7.exe,labflow-v9.8.7-hotupdate.exe') 'New installer names are not canonical.'
+    $passed++
+    Reset-Fixture
     # A different current directory must not affect relative SourceDir resolution.
     Push-Location ([IO.Path]::GetTempPath())
     try { $relative = & $validator -SourceDir 'source/LabFlow-PostgreSQL-v9.8.7' } finally { Pop-Location }

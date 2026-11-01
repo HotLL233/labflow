@@ -1,0 +1,63 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import test from 'node:test';
+import ts from 'typescript';
+
+function handler(name, environment) {
+  const file = ts.createSourceFile('panel.tsx', readFileSync(new URL('./BackupCloudPanel.tsx', import.meta.url), 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let expression;
+  function visit(node) {
+    if (ts.isVariableDeclaration(node) && node.name.getText(file) === name) expression = node.initializer.getText(file);
+    if (!expression) ts.forEachChild(node, visit);
+  }
+  visit(file);
+  assert.ok(expression, name);
+  const code = ts.transpileModule(`const tested = (${expression});`, { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS } }).outputText;
+  return new Function(...Object.keys(environment), code + '\nreturn tested;')(...Object.values(environment));
+}
+
+test('cloud action reports an error and always releases controls without a false success', async () => {
+  const state = { busy: '', message: null, refreshed: 0 };
+  const act = handler('act', {
+    busy: '', setBusy: value => { state.busy = value; }, setMessage: value => { state.message = value; },
+    load: async () => { state.refreshed++; },
+  });
+  await act('upload', async () => { throw Error('quota exceeded'); }, 'should not appear');
+  assert.equal(state.message.error, true);
+  assert.equal(state.message.text, 'quota exceeded');
+  assert.equal(state.busy, '');
+  assert.equal(state.refreshed, 0);
+  let called = false;
+  const blocked = handler('act', { busy: 'running', setBusy() {}, setMessage() {}, load() {} });
+  await blocked('again', async () => { called = true; }, 'done');
+  assert.equal(called, false);
+});
+
+test('saving existing cloud settings does not echo a masked password or erase the stored password', async () => {
+  let saved, closed = false, cleared = false;
+  const save = handler('saveSettings', {
+    draft: { enabled: true, auto_upload: true, endpoint: 'https://example.com/backups/', username: 'operator', has_password: true },
+    password: '', act: async (_, operation) => operation(),
+    saveBackupCloud: async value => { saved = value; }, setEditing: value => { closed = !value; },
+    setPassword: value => { cleared = value === ''; }, setRemote() {}, setRemoteLoaded() {},
+  });
+  await save();
+  assert.equal(saved.password, undefined);
+  assert.equal(saved.has_password, undefined);
+  assert.equal(saved.username, 'operator');
+  assert.ok(closed && cleared);
+});
+
+test('local status polling refreshes the heavy backup list only when a transfer newly succeeds', async () => {
+  const completed = { current: null };
+  let refreshes = 0, transfers = [{ id: 'one', status: 'queued' }];
+  const load = handler('load', {
+    useCallback: value => value, getBackupCloud: async () => ({ settings: {}, transfers }),
+    setStatus() {}, completed, changed: { current: async () => { refreshes++; } }, setRemoteLoaded() {},
+  });
+  await load(); await load();
+  assert.equal(refreshes, 0);
+  transfers = [{ id: 'one', status: 'succeeded' }];
+  await load(); await load();
+  assert.equal(refreshes, 1);
+});

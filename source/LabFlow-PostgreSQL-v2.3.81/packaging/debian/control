@@ -1,0 +1,9 @@
+Package: labflow
+Version: 2.3.11
+Section: science
+Priority: optional
+Architecture: amd64
+Maintainer: LabFlow
+Depends: ca-certificates, libssl3, systemd
+Description: LabFlow PostgreSQL workload management server
+ LabFlow v2.3.11 server for Ubuntu/Debian. PostgreSQL is configured as an external service.

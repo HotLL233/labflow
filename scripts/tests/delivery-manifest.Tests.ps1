@@ -28,6 +28,7 @@ try {
     $script = Join-Path $fixture 'scripts/write-delivery-manifest.ps1'
     Import-Module (Join-Path $fixture 'scripts/lib/labflow-automation.psm1') -Force
     Set-Content -LiteralPath (Join-Path $source 'VERSION') -Value '9.8.7'
+    Set-Content -LiteralPath (Join-Path $source 'Cargo.toml') -Value "[package]`nname = `"workload-tool`"`nversion = `"9.8.7`""
     $sourceSentinel = Join-Path $source 'manifest.json'
     Set-Content -LiteralPath $sourceSentinel -Value 'published sentinel'
     foreach ($unsafe in @($source,(Join-Path $source 'nested'))) {

@@ -1,12 +1,18 @@
-# LabFlow 项目统一记忆
+# labflow 项目统一记忆
 
-> 最后更新：2026-10-30
+> 最后更新：2026-11-01
 >
 > 当前正式版本：`v2.3.79`；源码、两类CI正式安装包、交付清单及GHCR镜像均已发布并核验。
 >
-> 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.3.79/`（承接v2.3.78，修复研发送样配置字段已填写仍无法提交）。
+> 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.4.0/`（承接v82，统一名称、发布者、图标及Windows启动/退出管理；开发验证与发布进行中）。
 >
-> 当前开发状态：v79正式发布完成。Windows 40994166760、Docker 40994166807均成功，正式两包与Release/origin/main一致，CI安装包提交78ab5fa6b已快进；GHCR 2.3.79/latest同摘要。本地193项前端、324项后端（3项既有ignore）及21项HTTP通过，CI为All Build的12项passed/5项not_run，不冒充数据库测试。隔离测试库已删、56579/57579已停，临时PG目录删除被审批拒绝并保留；未操作现场库、8000服务或真实群，未实际安装或启动容器。
+> 当前开发状态：v2.4.0本地All Integration通过205项前端、342项后端及生产构建；另有3项恢复专项、同一Release的65项隔离HTTP和13项Windows进程生命周期检查通过。两类本地包2.4.0.0已完成，名称labflow、发布者HotLL、图标已嵌入并提取核对；正式发布准备中，当前正式版仍v79。computer-use原生通道三次连接均失败，窗口点击/截图、UAC、开机登录、现场覆盖安装和Ubuntu容器启动未验收，未连接真实网盘。
+>
+> v81本地交付记录：最终All Integration通过（204项前端、336项后端，3项备份专用ignore已在最终二进制另行通过），同一最终Release通过57项本机模拟网盘HTTP，Graph协议测试覆盖令牌隐私、下载跳转及分片断点续传。初次完整回归缺少私有人员字段夹具，补齐后单项及全部通过，未改通知业务代码。两类本地包均2.3.81.0，位于v81/installer，清单在test-artifacts/v2.3.81/packages，最终报告为verified-clean。专用测试库已删、56581/57581/57681已停；未连接真实网盘/微软账号，未操作现场数据库和8000服务，未做浏览器/手机、Ubuntu容器或现场升级。v81尚未提交、推送、打标签或发布，正式版仍v79。
+>
+> v80本地交付记录：最终All Integration通过199项前端、330项后端，3项备份专项另行通过；同一Release通过43项模拟网盘HTTP，本地完整/热更新均2.3.80.0。产物在v80/installer，报告test-artifacts/v2.3.80；56580/57580/57680与专用库已收尾，未连接真实网盘或操作现场服务，未发布。
+>
+> v79正式交付记录：Windows 40994166760、Docker 40994166807均成功，正式两包与Release/origin/main一致，CI安装包提交78ab5fa6b已快进；GHCR 2.3.79/latest同摘要。本地193项前端、324项后端（3项既有ignore）及21项HTTP通过，CI为All Build的12项passed/5项not_run，不冒充数据库测试。隔离测试库已删、56579/57579已停，临时PG目录删除被审批拒绝并保留；未操作现场库、8000服务或真实群，未实际安装或启动容器。
 
 ## 1. 文件定位与强制维护规则
 
@@ -28,7 +34,7 @@
 3. 核对 `git status`、当前 tag、最新提交和远端状态，再开始修改。
 4. 使用 PowerShell 7（`pwsh`）执行 Windows 命令，不使用 Windows PowerShell 5.1。
 5. 后端使用 Rust stable MSVC；前端使用 Node.js、npm、Vite、TypeScript，依赖以 `frontend/package-lock.json` 为准。
-6. 安装包使用 Inno Setup 6。本机参考路径为 `D:\APP\Inno Setup 6\ISCC.exe`；换设备后应先确认实际安装路径，不能假设该路径永久存在。
+6. 安装包使用 Inno Setup 6。本机2026-11-01核实路径为 `C:\Program Files (x86)\Inno Setup 6\ISCC.exe`；换设备后应先确认实际安装路径，不能假设该路径永久存在。
 7. 每次迭代创建递增版本目录，只做需求相关的局部修改；完成后执行相关测试、生产构建、安装包制作和发布检查。
 8. 不从历史交接文档恢复旧规则；历史资料仅用于追溯设计背景。
 
@@ -69,7 +75,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 1. `VERSION`
 2. `Cargo.toml`
-3. `Cargo.lock` 中 `workload-tool` 包版本
+3. `Cargo.lock` 中应用包版本（v2.4.0起为`labflow`，旧版本为`workload-tool`）
 4. `frontend/package.json`
 5. `frontend/package-lock.json`
 6. `build_server_installer.iss`
@@ -98,6 +104,21 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - Git：`git diff --check`，提交前检查暂存清单，禁止纳入 `target`、`node_modules`、版本目录 `installer`、运行数据或本机配置。
 - 涉及真实业务流程时优先做实际场景验证，不能只用接口或编译通过代替功能验收。
 - PostgreSQL 集成测试需要 `WORKLOAD_TEST_DATABASE_URL`；Windows 下测试运行时与数据目录使用纯 ASCII 路径，中文路径可能导致 `initdb` UTF-8 错误。
+- 数据库回归同时设置私有 `WORKLOAD_CONFIG_PATH`、测试 `JWT_SECRET`，不要依赖现场配置。人员通知模板测试还依赖 `PERSONNEL_CHANGE_DATA_DIR/fields.json`：应在ignored测试目录准备标准字段夹具并显式设置环境变量，缺失时会出现字段配置读取失败，不得用现场文件补齐。
+
+### 4.5 备份与云端副本（v2.3.80—v2.3.82）
+
+- v80保持原`.dump`/全量ZIP、自动备份、同步目录和覆盖恢复，新增原生浏览器流式下载与短时文件授权；授权请求及文件读取均核查当前账号和`manage:backup`，URL不包含登录JWT。
+- 首期云端通道为HTTPS WebDAV，回环HTTP只用于隔离测试。云端连接和传输任务存于数据目录`cloud-backup/`，不加入全量ZIP，也不随旧数据库恢复回退；Windows私有目录ACL、Unix凭据文件0600。响应/审计不输出应用密码，更换目标或账号须重新输入密码。
+- 任务落盘、后台串行传输，最多自动尝试3次；失败可重试/取消，待传及失败任务保护本地来源。任务绑定目标指纹，不能随配置修改悄悄发送到另一网盘；取消不删文件，首期不自动删远端。
+- 上传核对远端大小后发布SHA-256清单，不把上传成功写作全量校验通过；云端同名不同内容拒绝覆盖，相同内容复用。取回先流式暂存、校验大小/摘要/包内容，成功后才发布到本地列表，不自动恢复。
+- 下载最新包仅选择全量ZIP，没有全量时明确提示。原浏览器恢复仍限制2GiB，服务器云端取回不经此上传入口。最终迁移备份仍需暂停写入，数据库与磁盘文件不是同一事务快照。
+- 实际验证和发布状态须以v80交付报告为准；本机模拟WebDAV不能替代真实服务商配额、大文件和Ubuntu Docker验收。
+- v81承接v80本地版：增加OneDrive全球版官方设备授权、Nextcloud/ownCloud及明确标注的OpenList网关类型；百度/阿里/夸克仅经已授权网关接入，不宣传原生账号直连。OneDrive需用户自己的公共客户端Client ID和委托权限，不借用第三方应用凭据；世纪互联版未适配。
+- 微软访问/刷新令牌、设备码和分片会话均私有存储并排除备份，接口不回显。授权绑定程序操作者和目标配置，轮询遵守服务间隔；刷新不得复活断开或覆盖更新后的授权。10MiB分片查询服务端断点续传，预认证上传URL和下载CDN不接收Graph Bearer。
+- WebDAV测试可使用当前输入而不保存，先鉴权、必要时创建最后一级目录，再做小文件读写删除。坚果云专用类型使用具体子目录，旧根入口仍可读但不直接PUT。错误按HTTP401/403/404/413/429/507区分；读取可跟随安全HTTPS跳转，跨域不转发Basic凭据，拒绝TLS降级和非WebDAV网页响应。
+- 切换接入类型不提交隐藏的其他类型字段；旧WebDAV配置无provider时保留原目标指纹。切换真实目的地仍须新凭据，旧任务取消后可从本地重新上传，不能静默改投另一账号/目录。v81实际验证与交付状态见本版报告，开发过程中的失败和中断报告不作为最终通过依据。
+- v82新备份名移除32位随机标识，例如`workload_full_20261101_103637.zip`；沿用各类型前缀和本机日期时间。已有同名文件或`.part`占用时自动追加`_2`、`_3`，仍由原维护互斥锁串行执行。旧备份不重命名，文件格式、校验、保留策略、云端传输和恢复识别保持兼容。
 
 ## 5. 版本与发布规范
 
@@ -119,8 +140,8 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 从 `v2.3.13` 起固定为：
 
-- 完整服务器包：`LabFlow-v<版本>.exe`
-- 热更新包：`LabFlow-v<版本>-HotUpdate.exe`
+- v2.4.0起完整服务器包：`labflow-v<版本>.exe`；旧版本保持`LabFlow-v<版本>.exe`。
+- v2.4.0起热更新包：`labflow-v<版本>-hotupdate.exe`；旧版本保持`LabFlow-v<版本>-HotUpdate.exe`。
 
 三处留存：
 
@@ -134,7 +155,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 完整包必须包含：
 
-- `target/release/workload-tool.exe`
+- v2.4.0起`target/release/labflow.exe`；旧版本为`target/release/workload-tool.exe`。
 - `backend/static/*`
 - `pdf-runtime/*`
 - `postgres-runtime/bin/*`
@@ -1224,3 +1245,25 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 三份小交付文档原始字节/哈希及manifest中的准确标签源码、干净状态、构建指纹和验证范围已校验。GitHub将中文清单命名default.md，核对版本/源码/字节后只重命名为DELIVERY-CHECKLIST.md，资产ID690754345及SHA-256 8e5055083a127b3adab2345c11fe5846a52394f1710a8625b7150defa11a5bd8不变。
 - GHCR 2.3.79与latest索引摘要均为sha256:81fef30b0a2202367bb9b328e824b02396f9a61e73cd1078f8567aa1b96215d8；linux/amd64 manifest为sha256:55f7aaf6e0ae4c9fda85d6c6ff7e6f5cf9dbead7868bd470462ae70838669d2e，config为sha256:f8fee03cc38c1cc46a2873364e88aa4bf0a891b84edc1516293173cd46cdb45c。匿名读取原始字节和版本/架构/入口/用户/端口等元数据核验通过；未下载完整镜像层或启动容器。
 - 证据在ignored的test-artifacts/v2.3.79：ci-final-status、ci-packages-sha256、ci-delivery-verification、ghcr-final、release-checklist-asset及GitHub最终Release记录。正式发布说明与根README/本版安装包说明同步后以[skip ci]文档提交收尾；不改业务源码或受控更新说明，不重构或重跑本地Build。未实际安装、访问生产数据或发送真实群消息；原.workbuddy/与rebuild-output/保留不提交。
+
+## v2.3.82 备份文件名简化（2026-11-01，本地交付，未发布）
+
+- 承接v81，将新备份的32位随机标识移除，保留手动/自动、数据库/全量的原类型前缀及日期时间；同秒名称已被文件或`.part`占用时依次追加`_2`、`_3`。沿用维护互斥锁，旧备份不改名；清单、校验、下载、云端传输、保留策略和恢复入口保持兼容。
+- 只修改备份服务和云端名称校验两份应用源码，不新增依赖、配置项或数据库迁移；前端业务、工作量及用户自定义配置不变。v81输入和静态哈希已验证保持。新版本的9个版本文件12字段检查通过。
+- 本地All Build通过204项前端测试、类型/生产构建/gzip及Rust格式/check/Release；另有13项备份后端回归和3项隔离PostgreSQL备份恢复专项通过。专项使用独立Rust测试可执行文件，不冒充Release HTTP；未运行全量后端数据库回归。报告位于test-artifacts/v2.3.82/verified-build，专项和最终状态在同级目录。
+- 输入指纹879909700c4c1c563400b0a2343b8bfd5f22f9f131c4c590e62f1a471d6289d6；Release SHA-256 decfff5d3c7853546f34569fcfcdd09a346e5a977e9862e7e9c13b2bdf8e5690；生产静态树8abb37ce9e5e3b7b89f209b08e3d4414c0fede185670df5257b4fcde14da344f，与本版backend/static一致。
+- 两类本地包单份存于本版installer，产品/文件版本2.3.82.0。完整包80135541字节，SHA-256 6c968204545736a7e7599e380720c256b9c9cddd47dd7f5b8e4123abc2186553；热更新29649886字节，SHA-256 7f76d452dda4f5c89119533ac5dcedca941323d66098c4d035dbfaf3cec9d4ab。manifest/SHA256SUMS在test-artifacts/v2.3.82/packages，已回写真实包路径；不是CI正式包。
+- 最初Windows测试控制进程因子进程继承输出句柄而等待，停止本轮控制进程后完成独立测试；测试库已删、56582已停，未操作生产集群或8000服务。临时集群数据目录的删除被自动审批拒绝，仅返回blocked by policy，目录及日志保留，未换方式重试。最初ISCC路径不存在，核实当前C盘Inno Setup 6路径后重试成功，失败日志保留。
+- 尚未提交、推送、打标签或发布，正式版仍v79；未做新的Release HTTP、真实网盘、浏览器/手机、现场覆盖升级或容器运行验收。原.workbuddy/、rebuild-output/及既有未跟踪UI方案原样保留。
+
+## v2.4.0 名称统一与Windows桌面管理（2026-11-01，本地完成，远端发布准备）
+
+- 承接v82和v80/v81未发布功能，应用包、程序和安装文件统一为labflow，发布者HotLL；历史版本源码、数据库身份、备份内部格式和会话键不全局替换。新外部备份名前缀为labflow，兼容旧自动备份间隔识别。
+- Windows主程序、安装器/卸载信息、托盘、桌面/开始菜单、原生设置/关于、浏览器和手机主屏使用同一图标。主程序使用已有winresource嵌入图标、版本及CompanyName；未提供代码签名证书，不把发布者元数据宣传为Windows已验证签名。
+- 快捷方式启动程序和本机控制窗口，网页另有明确入口；开机自启是当前Windows用户登录后启动。旧后台/托盘独立计划任务迁移为桌面程序管理后台；进程组只包含其后台及派生子进程，浏览器和独立数据库服务不随托盘退出结束。
+- 端口1—65535、占用检查、仅修改端口并保留未知配置字段；受保护目录通过受控的管理员辅助命令保存。持有配置路径稳定单实例标识，重复启动唤起已有窗口，退出信号在设置对话框中也能处理；服务关闭和进程组释放均有界等待。
+- 恢复重启通过所属后台的私有事件交给桌面控制器；非托盘Windows实例仍支持等待旧PID退出后重启，Linux保留服务模式和终止信号处理。安装器保留原AppId与旧配置/数据路径识别，并只为桌面用户迁移旧云端凭据和标准附件预览缓存权限。
+- v2.4.0重建卸载日志以消除旧版自动删除数据规则；卸载停止程序与私有数据库服务并保留业务数据/配置。共享发布工具从Cargo应用身份识别新旧程序和包名，历史版本构建兼容；GitHub交付清单改用ASCII名称DELIVERY-CHECKLIST.md。
+- 本地最终All Integration通过205项前端、342项后端，3项原ignore已另行通过；同一Release有65项模拟WebDAV/备份/图标HTTP和13项真实Windows进程检查通过。专项首次错误使用集成测试多schema数据库导致pg_dump锁表额度不足，换本轮独立备份数据库后通过，不修改生产配置；失败报告保留。
+- 原生Computer Use通道三次报native pipe不存在，未绕过到其他UI自动化；窗口点击、窗口截图、UAC同意、开机登录、实际安装/现场覆盖升级未验收。实际程序图标可从PE提取，进程退出与端口/恢复链路通过CLI/HTTP证明，不冒充视觉验收。
+- 本地证据位于test-artifacts/v2.4.0/verified-integration及同级专项JSON；本地两包位于本版installer，是独立验收包，不冒充待发布的CI正式包。当前正在同步源码并准备v2.4.0正式标签；旧.workbuddy、rebuild-output及未跟踪UI方案保留，不纳入提交。

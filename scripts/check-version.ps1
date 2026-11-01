@@ -37,12 +37,12 @@ function Get-TomlPackageVersion([string]$Text, [string]$Header, [string]$Label) 
     # Only direct fields of the named package table, never dependency versions.
     $sections = [regex]::Matches($Text, '(?ms)^[ 	]*' + [regex]::Escape($Header) + '[ 	]*(?:#[^\r\n]*)?\r?\n(?<value>.*?)(?=^[ 	]*\[|\z)')
     $packages = @($sections | Where-Object {
-        $_.Groups['value'].Value -cmatch '(?m)^[ 	]*name[ 	]*=[ 	]*["'']workload-tool["''][ 	]*(?:#[^\r\n]*)?\r?$'
+        $_.Groups['value'].Value -cmatch ('(?m)^[ 	]*name[ 	]*=[ 	]*["'']' + [regex]::Escape($identity.package_name) + '["''][ 	]*(?:#[^\r\n]*)?\r?$')
     })
-    if ($packages.Count -ne 1) { throw "$Label must contain exactly one workload-tool package." }
+    if ($packages.Count -ne 1) { throw "$Label must contain exactly one $($identity.package_name) package." }
     $body = $packages[0].Groups['value'].Value
     $null = Get-OneValue $body '(?m)^[ 	]*name[ 	]*=[ 	]*["''](?<value>[^"''\r\n]*)["''][ 	]*(?:#[^\r\n]*)?\r?$' "$Label package.name"
-    return Get-OneValue $body '(?m)^[ 	]*version[ 	]*=[ 	]*["''](?<value>[^"''\r\n]*)["''][ 	]*(?:#[^\r\n]*)?\r?$' "$Label workload-tool.version"
+    return Get-OneValue $body '(?m)^[ 	]*version[ 	]*=[ 	]*["''](?<value>[^"''\r\n]*)["''][ 	]*(?:#[^\r\n]*)?\r?$' "$Label $($identity.package_name).version"
 }
 function Get-JsonVersion([object]$Object, [string]$Label) {
     if ($Object -isnot [System.Collections.IDictionary] -or -not $Object.Contains('version')) { throw "Missing required field: $Label" }
@@ -58,7 +58,7 @@ function Get-AppImageVersion([string]$Text, [string]$Label) {
         if ($image.Length -lt 2 -or $image[-1] -cne $image[0]) { throw "Invalid image quoting: $Label" }
         $image = $image.Substring(1, $image.Length - 2)
     }
-    $prefix = if ($Label -eq 'docker-compose.yml') { 'labflow/workload-tool:' } else { '${LABFLOW_IMAGE:-${LABFLOW_GHCR_IMAGE:-ghcr.io/hotll233/labflow}}:' }
+    $prefix = if ($Label -eq 'docker-compose.yml') { $identity.compose_image } else { '${LABFLOW_IMAGE:-${LABFLOW_GHCR_IMAGE:-ghcr.io/hotll233/labflow}}:' }
     return Get-OneValue $image ('\A' + [regex]::Escape($prefix) + '\$\{LABFLOW_VERSION:-(?<value>[^}]+)\}\z') "$Label LabFlow image version"
 }
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
@@ -67,6 +67,9 @@ $sourceRoot = [IO.Path]::GetFullPath($sourcePath)
 if (-not (Test-Path -LiteralPath $sourceRoot -PathType Container)) { throw "Source directory does not exist: $sourceRoot" }
 $sourceRoot = (Get-Item -LiteralPath $sourceRoot).FullName
 $version = (Read-RequiredFile 'VERSION').Trim()
+Import-Module (Join-Path $PSScriptRoot 'lib/labflow-automation.psm1') -Force
+$null = Read-RequiredFile 'Cargo.toml'
+$identity = Get-LabFlowIdentity -SourceDir $sourceRoot
 Confirm-Version 'VERSION' $version
 if ($PSBoundParameters.ContainsKey('ExpectedVersion')) { Confirm-Version 'ExpectedVersion' $ExpectedVersion }
 if ($PSBoundParameters.ContainsKey('ExpectedTag')) {
@@ -78,8 +81,8 @@ if ($directoryName -imatch '^LabFlow-PostgreSQL-') {
     if ($directoryName -cne "LabFlow-PostgreSQL-v$version") { throw "Version directory name must be exactly LabFlow-PostgreSQL-v$version; received '$directoryName'." }
     $checks['directory'] = $directoryName
 }
-Confirm-Version 'Cargo.toml workload-tool.version' (Get-TomlPackageVersion (Read-RequiredFile 'Cargo.toml') '[package]' 'Cargo.toml')
-Confirm-Version 'Cargo.lock workload-tool.version' (Get-TomlPackageVersion (Read-RequiredFile 'Cargo.lock') '[[package]]' 'Cargo.lock')
+Confirm-Version "Cargo.toml $($identity.package_name).version" (Get-TomlPackageVersion (Read-RequiredFile 'Cargo.toml') '[package]' 'Cargo.toml')
+Confirm-Version "Cargo.lock $($identity.package_name).version" (Get-TomlPackageVersion (Read-RequiredFile 'Cargo.lock') '[[package]]' 'Cargo.lock')
 $package = ConvertFrom-Json -InputObject (Read-RequiredFile 'frontend/package.json') -AsHashtable
 Confirm-Version 'frontend/package.json version' (Get-JsonVersion $package 'frontend/package.json version')
 $lock = ConvertFrom-Json -InputObject (Read-RequiredFile 'frontend/package-lock.json') -AsHashtable

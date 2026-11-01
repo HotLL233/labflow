@@ -31,7 +31,8 @@ if (-not $IsccPath) {
     if (-not $IsccPath) { $cmd=Get-Command ISCC.exe -ErrorAction SilentlyContinue; if ($cmd) {$IsccPath=$cmd.Source} }
 }
 if (-not $IsccPath -or -not (Test-Path -LiteralPath $IsccPath -PathType Leaf)) { throw 'Inno Setup 6 not found; set -IsccPath or INNO_SETUP_ISCC.' }
-$names=@("LabFlow-v$version.exe","LabFlow-v$version-HotUpdate.exe")
+$names=@((Get-LabFlowIdentity -SourceDir $source).installer_names)
+$executableName = Split-Path -Leaf $r.artifacts.executable_path
 foreach ($name in $names) { if (Test-Path -LiteralPath (Join-Path $out $name)) { throw 'Output installer already exists; use a fresh OutputDir to prevent stale artifacts.' } }
 $stage=Join-Path $out ('stage-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $stage,(Join-Path $stage 'target/release'),(Join-Path $stage 'backend') -Force | Out-Null
@@ -40,7 +41,7 @@ foreach ($name in @('build_server_installer.iss','build_hot_update_installer.iss
 }
 Copy-Item -LiteralPath (Join-Path $source 'tools') -Destination $stage -Recurse
 Copy-Item -LiteralPath $r.artifacts.static_path -Destination (Join-Path $stage 'backend/static') -Recurse
-Copy-Item -LiteralPath $r.artifacts.executable_path -Destination (Join-Path $stage 'target/release/workload-tool.exe')
+Copy-Item -LiteralPath $r.artifacts.executable_path -Destination (Join-Path $stage "target/release/$executableName")
 foreach ($name in @('pdf-runtime','postgres-runtime','installer-languages')) {
     $resource=Join-Path $repo "build-resources/$name"
     if (-not (Test-Path -LiteralPath $resource -PathType Container)) { throw "Build resource missing: $name" }
@@ -49,7 +50,7 @@ foreach ($name in @('pdf-runtime','postgres-runtime','installer-languages')) {
 foreach ($name in @('pdf-runtime/pdftoppm.exe','pdf-runtime/pdfinfo.exe','postgres-runtime/bin/postgres.exe','postgres-runtime/installer/vcredist_x64.exe','installer-languages/ChineseSimplified.isl')) {
     if (-not (Test-Path -LiteralPath (Join-Path $stage $name) -PathType Leaf)) { throw "Installer prerequisite missing: $name" }
 }
-if ((Get-LabFlowTreeHash (Join-Path $stage 'backend/static')) -cne $r.artifacts.static_sha256 -or (Get-FileHash -LiteralPath (Join-Path $stage 'target/release/workload-tool.exe')).Hash.ToLowerInvariant() -cne $r.artifacts.executable_sha256) { throw 'Staged artifacts differ from verified outputs.' }
+if ((Get-LabFlowTreeHash (Join-Path $stage 'backend/static')) -cne $r.artifacts.static_sha256 -or (Get-FileHash -LiteralPath (Join-Path $stage "target/release/$executableName")).Hash.ToLowerInvariant() -cne $r.artifacts.executable_sha256) { throw 'Staged artifacts differ from verified outputs.' }
 foreach ($name in @('build_server_installer.iss','build_hot_update_installer.iss')) {
     Invoke-LabFlowCommand -Command $IsccPath -Arguments @("/O$out",$name) -WorkingDirectory $stage -LogPath (Join-Path $out "$name.log")
 }

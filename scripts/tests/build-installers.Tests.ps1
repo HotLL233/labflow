@@ -94,6 +94,8 @@ $name=if($iss -eq 'build_server_installer.iss'){'LabFlow-v9.8.7.exe'}else{'LabFl
 $global:LASTEXITCODE=0
 '@
     $source = Join-Path $fixture 'source/LabFlow-PostgreSQL-v9.8.7'
+    Write-Text (Join-Path $source 'VERSION') '9.8.7'
+    Write-Text (Join-Path $source 'Cargo.toml') "[package]`nname = `"workload-tool`"`nversion = `"9.8.7`""
     foreach ($name in @('build_server_installer.iss','build_hot_update_installer.iss','icon.ico','server-start.cmd','config.example.toml','更新说明.md','tools/install-libreoffice.ps1')) {
         Write-Text (Join-Path $source $name) ('fixture ' + $name)
     }
