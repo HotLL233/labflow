@@ -9,6 +9,11 @@ on:
         description: "Explicit release version (X.Y.Z)"
         required: true
         type: string
+      compile_backend_tests:
+        description: "Build a test harness for isolated database acceptance (does not run tests)"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -46,6 +51,39 @@ jobs:
         shell: pwsh
         run: |
           & ./scripts/verify.ps1 -SourceDir '${{ steps.version.outputs.source_dir }}' -Profile Build -Component All -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/windows/verification" -InstallDependencies
+      - name: Build isolated acceptance test harness
+        if: github.event_name == 'workflow_dispatch' && inputs.compile_backend_tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = '${{ steps.version.outputs.source_dir }}'
+          $out = "$env:GITHUB_WORKSPACE/ci-artifacts/windows/backend-tests"
+          New-Item -ItemType Directory -Path $out -Force | Out-Null
+          $env:CARGO_BUILD_JOBS = '1'
+          Push-Location $source
+          try {
+            & cargo test --locked --lib --no-run --message-format=json --config 'profile.test.debug=0' --config 'profile.test.codegen-units=1' --config 'profile.test.incremental=false' --config 'profile.test.package.labflow.codegen-units=16' > "$out/compiler.jsonl" 2> "$out/compiler.log"
+            if ($LASTEXITCODE -ne 0) { throw 'Test harness compilation failed.' }
+            $artifacts = @([IO.File]::ReadLines("$out/compiler.jsonl") | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object { $_.reason -eq 'compiler-artifact' -and $_.profile.test -and $_.executable -and $_.target.kind -contains 'lib' })
+            if ($artifacts.Count -ne 1) { throw 'Expected exactly one application library test harness.' }
+            Copy-Item -LiteralPath $artifacts[0].executable -Destination "$out/labflow-tests.exe"
+            $verification = Get-Content "$env:GITHUB_WORKSPACE/ci-artifacts/windows/verification/verification.json" -Raw | ConvertFrom-Json
+            Copy-Item -LiteralPath $verification.artifacts.executable_path -Destination "$out/labflow.exe"
+            Copy-Item -LiteralPath $verification.artifacts.static_path -Destination "$out/static" -Recurse
+            Copy-Item -LiteralPath "$env:GITHUB_WORKSPACE/ci-artifacts/windows/verification/verification.json" -Destination "$out/build-verification.json"
+            $applicationHash = (Get-FileHash "$out/labflow.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($applicationHash -ne $verification.artifacts.executable_sha256) { throw 'Application snapshot differs from the verified Build.' }
+            Import-Module "$env:GITHUB_WORKSPACE/scripts/lib/labflow-automation.psm1" -Force
+            if ((Get-LabFlowTreeHash "$out/static") -ne $verification.artifacts.static_sha256) { throw 'Frontend snapshot differs from the verified Build.' }
+            @{ version='${{ steps.version.outputs.version }}'; source_commit=$env:GITHUB_SHA; input_fingerprint=(Get-LabFlowInputFingerprint $source); executable_sha256=(Get-FileHash "$out/labflow-tests.exe" -Algorithm SHA256).Hash.ToLowerInvariant(); application_sha256=$applicationHash; tests_executed=$false; production_release_profile_unchanged=$true } | ConvertTo-Json | Set-Content "$out/provenance.json" -Encoding utf8
+          } finally { Pop-Location }
+      - name: Upload isolated acceptance test harness
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.compile_backend_tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: labflow-backend-tests-${{ github.run_id }}
+          path: ci-artifacts/windows/backend-tests
+          if-no-files-found: error
       - name: Prepare VC++ runtime
         shell: pwsh
         run: |

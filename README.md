@@ -1,6 +1,6 @@
-# labflow v2.4.2：修复工作量记录、日期和人员归属
+# labflow：v2.4.3 日志与通知修复开发中
 
-当前正式版本为 **v2.4.2**，源码目录为 `source/LabFlow-PostgreSQL-v2.4.2/`。本版修复手动/按钮工作量时间精度、历史分钟记录查询、跨日编辑查看范围及稳定账号ID归属，保留原网页名称、自定义配置和历史系数。本地All Build通过208项前端测试，另有345项后端及34项真实HTTP通过；源码、两类CI正式安装包、GitHub Release及GHCR镜像均已发布并核验。
+当前开发源码为 `source/LabFlow-PostgreSQL-v2.4.3/`，正在验证日志归档与备份、通知事务、驳回回执和历史查询修复，尚未发布。当前正式版本仍为 **v2.4.2**，正式源码目录为 `source/LabFlow-PostgreSQL-v2.4.2/`。本版修复手动/按钮工作量时间精度、历史分钟记录查询、跨日编辑查看范围及稳定账号ID归属，保留原网页名称、自定义配置和历史系数。本地All Build通过208项前端测试，另有345项后端及34项真实HTTP通过；源码、两类CI正式安装包、GitHub Release及GHCR镜像均已发布并核验。
 
 v2.4.2正式交付：标签源码 `89a418618d564c6ab76f442ef140ca463ddce1c8`；Windows41385276182、Docker41385276203均成功，Release431062768为最新正式版本。CI安装包回写提交 `4a179315d794d78a11b131f8719ebaf215d41530` 已快进本地；根 `installers/` 两包均2.4.2.0，与Release、manifest及远端Git字节/摘要一致，本版 `installer/` 继续独立保留本地验收包。CI仅All Build的12项通过、5项未运行，独立后端及HTTP验收为本地证据。GHCR `2.4.2`/`latest` 同摘要 `sha256:9f7f9f0efae512676ce3e15f99d33c1345bedec438b62f9b474bb8522c798d8a`，linux/amd64；未实际启动容器。历史缺失人员ID需管理员核对，不自动按姓名重绑。未做浏览器视觉/手机实机或现场覆盖安装验收；详情见本版《安装包说明.md》。
 
@@ -51,7 +51,7 @@ GitHub Release 的 `manifest.json`、`SHA256SUMS`、`DELIVERY-CHECKLIST.md` 已�
 - 不再新增或维护按日期记忆、`历史记忆_*.md`、`开发交接_*.md`、`续接提示词_*.md` 或 `HANDOFF.md`；旧版本目录中的同类文件只作历史归档，不得作为当前规则来源或复制到新版本。
 - 版本 `更新说明.md` 和专项文档仍按用途维护，但不得复制一套长期记忆。规则冲突时以当前用户要求、当前源码与工作流、`PROJECT_MEMORY.md` 的顺序为准。
 
-1. 当前源码目录及正式版本：`source/LabFlow-PostgreSQL-v2.4.2/`、v2.4.2，已完成正式发布与核验。行为、验证与交付状态见对应版本 `更新说明.md`、`安装包说明.md` 与根 `PROJECT_MEMORY.md`。
+1. 当前开发源码：`source/LabFlow-PostgreSQL-v2.4.3/`，待最终验证；当前正式版本v2.4.2，已完成发布与核验。行为、验证与交付状态见对应版本 `更新说明.md`、`安装包说明.md` 与根 `PROJECT_MEMORY.md`。
 2. Gitee 源码仓库：`https://gitee.com/HotLL233/labflow`（自 v2.3.18 起暂停向 Gitee 推送，仅保留历史仓库）。
 3. Docker 部署使用 `docker-compose.deploy.yml`，推荐执行 `scripts/pull-labflow-image.ps1`（Windows）或 `scripts/pull-labflow-image.sh`（Ubuntu）。
 4. 脚本按 `LABFLOW_IMAGE_PRIORITY` 依次尝试已配置的镜像地址，成功后再启动 Compose；Gitee 镜像地址未配置时跳过，目前发布仅使用 GHCR。
