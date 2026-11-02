@@ -298,8 +298,14 @@ fn rejection_without_rules_reaches_stable_owners_but_not_unrelated_disabled_or_p
         .unwrap();
     }
     conn.execute(
-        "INSERT INTO projects(name) VALUES('rejection-source-project')",
+        "INSERT INTO project_groups(name) VALUES('rejection-source-lab')",
         [],
+    )
+    .unwrap();
+    let group = conn.last_insert_rowid();
+    conn.execute(
+        "INSERT INTO projects(name,group_id) VALUES('rejection-source-project',?1)",
+        [group],
     )
     .unwrap();
     let project = conn.last_insert_rowid();
@@ -454,8 +460,14 @@ fn deleted_returned_or_sampled_sources_cancel_pending_group_notifications() {
     .unwrap();
     notification_repo::create_rule(&pool,&rule_input(json!({"name":"all sources","channel_id":channel,"targets":[{"target_kind":"sample_info"},{"target_kind":"rd_work_record"}]}))).unwrap();
     conn.execute(
-        "INSERT INTO projects(name) VALUES('stale-source-project')",
+        "INSERT INTO project_groups(name) VALUES('stale-source-lab')",
         [],
+    )
+    .unwrap();
+    let group = conn.last_insert_rowid();
+    conn.execute(
+        "INSERT INTO projects(name,group_id) VALUES('stale-source-project',?1)",
+        [group],
     )
     .unwrap();
     let project = conn.last_insert_rowid();

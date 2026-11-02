@@ -76,6 +76,12 @@ fn default_backup_mode() -> String {
     "full".to_string()
 }
 
+fn nonempty_data_path(value: Option<String>) -> Option<PathBuf> {
+    value
+        .filter(|value| !value.trim().is_empty())
+        .map(PathBuf::from)
+}
+
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
@@ -245,10 +251,10 @@ impl AppConfig {
 
     /// 数据目录：支持 WORKLOAD_DATA_DIR 环境变量（Docker/Linux），fallback 到 exe 同级目录下的 db_dir
     pub fn data_dir(&self) -> PathBuf {
-        if let Ok(d) =
-            std::env::var("LABFLOW_DATA_DIR").or_else(|_| std::env::var("WORKLOAD_DATA_DIR"))
+        if let Some(path) = nonempty_data_path(std::env::var("LABFLOW_DATA_DIR").ok())
+            .or_else(|| nonempty_data_path(std::env::var("WORKLOAD_DATA_DIR").ok()))
         {
-            PathBuf::from(d)
+            path
         } else {
             let configured = PathBuf::from(&self.db_dir);
             if configured.is_absolute() {
@@ -398,6 +404,23 @@ fn write_server_port(path: &std::path::Path, port: u16) -> Result<(), String> {
 
 #[cfg(test)]
 mod desktop_port_tests {
+    #[test]
+    fn empty_data_overrides_do_not_replace_explicit_paths_or_legacy_aliases() {
+        for value in [None, Some(""), Some(" \t\r\n")] {
+            assert!(super::nonempty_data_path(value.map(str::to_owned)).is_none());
+            let selected = super::nonempty_data_path(value.map(str::to_owned))
+                .or_else(|| super::nonempty_data_path(Some("C:/isolated/legacy-data".into())));
+            assert_eq!(
+                selected,
+                Some(std::path::PathBuf::from("C:/isolated/legacy-data"))
+            );
+        }
+        assert_eq!(
+            super::nonempty_data_path(Some("C:/isolated/primary-data".into())),
+            Some(std::path::PathBuf::from("C:/isolated/primary-data")),
+        );
+    }
+
     #[cfg(unix)]
     #[test]
     fn saving_config_keeps_private_unix_permissions() {

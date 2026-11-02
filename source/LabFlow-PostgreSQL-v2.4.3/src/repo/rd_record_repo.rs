@@ -1571,8 +1571,14 @@ mod tests {
         )
         .unwrap();
         let sender = conn.last_insert_rowid();
-        conn.execute("INSERT INTO projects(name) VALUES('outbox-project')", [])
+        conn.execute("INSERT INTO project_groups(name) VALUES('outbox-lab')", [])
             .unwrap();
+        let group = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO projects(name,group_id) VALUES('outbox-project',?1)",
+            [group],
+        )
+        .unwrap();
         let project = conn.last_insert_rowid();
         let body: RecordCreate = serde_json::from_value(serde_json::json!({
             "project_id":project,"user_name":"outbox-sender","sender_user_id":sender,
@@ -1659,8 +1665,17 @@ mod tests {
         let pool = crate::db::init_pool("postgres-test");
         crate::db::test_migrations::run(&pool.get().unwrap()).unwrap();
         let conn = pool.get().unwrap();
-        conn.execute("INSERT INTO projects(name) VALUES('rd-state-race')", [])
-            .unwrap();
+        conn.execute(
+            "INSERT INTO project_groups(name) VALUES('rd-state-race-lab')",
+            [],
+        )
+        .unwrap();
+        let group = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO projects(name,group_id) VALUES('rd-state-race',?1)",
+            [group],
+        )
+        .unwrap();
         let project = conn.last_insert_rowid();
         conn.execute("INSERT INTO rd_work_records(project_id,user_name,quantity,recorded_at,status) VALUES(?1,'sender',1,'2026-11-02T09:00:00','待取样')", [project]).unwrap();
         let id = conn.last_insert_rowid();

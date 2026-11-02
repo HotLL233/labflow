@@ -1460,8 +1460,14 @@ mod tests {
             crate::repo::notification_repo::create_rule(&pool, &input).unwrap();
         }
         conn.execute(
-            "INSERT INTO projects(name) VALUES('dingtalk-queue-source-project')",
+            "INSERT INTO project_groups(name) VALUES('dingtalk-queue-source-lab')",
             [],
+        )
+        .unwrap();
+        let source_group = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO projects(name,group_id) VALUES('dingtalk-queue-source-project',?1)",
+            [source_group],
         )
         .unwrap();
         let source_project = conn.last_insert_rowid();
@@ -2001,8 +2007,14 @@ mod tests {
         )
         .unwrap();
         conn.execute(
-            "INSERT INTO projects(name) VALUES('damaged-template-source-project')",
+            "INSERT INTO project_groups(name) VALUES('damaged-template-source-lab')",
             [],
+        )
+        .unwrap();
+        let source_group = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO projects(name,group_id) VALUES('damaged-template-source-project',?1)",
+            [source_group],
         )
         .unwrap();
         let source_project = conn.last_insert_rowid();

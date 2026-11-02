@@ -1605,11 +1605,16 @@ pub fn update_status(
     let current_idx = STATUS_ORDER
         .iter()
         .position(|&s| s == existing.status)
-        .unwrap_or(0);
+        .ok_or_else(|| {
+            AppError::Validation(format!(
+                "当前状态为「{}」，不能取样或完成检测，请先按退回流程处理",
+                existing.status
+            ))
+        })?;
     let target_idx = STATUS_ORDER
         .iter()
         .position(|&s| s == new_status)
-        .unwrap_or(0);
+        .ok_or_else(|| AppError::Validation("无效的样品目标状态".into()))?;
 
     if target_idx != current_idx + 1 {
         return Err(AppError::Validation(format!(
@@ -2138,6 +2143,49 @@ mod tests {
         assert_eq!(
             sources,
             ["sample_info", "sample_info_rejected", "sample_info"]
+        );
+    }
+
+    #[test]
+    fn returned_drafts_confirmed_returns_and_unknown_states_cannot_be_sampled() {
+        let pool = test_pool();
+        let original = create(&pool, &sample_data(), "sender01").unwrap();
+        return_record(&pool, original.id, "wrong batch", "analyst").unwrap();
+        assert!(matches!(
+            update_status(&pool, original.id, "待检测", "analyst"),
+            Err(AppError::Validation(_))
+        ));
+        assert_eq!(get_by_id(&pool, original.id).unwrap().status, "已退回");
+        let draft = confirm_return(&pool, original.id, "sender01").unwrap();
+        for (id, expected) in [(original.id, "已退回已确认"), (draft.id, "退回待修改")] {
+            assert!(matches!(
+                update_status(&pool, id, "待检测", "analyst"),
+                Err(AppError::Validation(_))
+            ));
+            let unchanged = get_by_id(&pool, id).unwrap();
+            assert_eq!(unchanged.status, expected);
+            assert!(unchanged.sampled_at.is_none());
+        }
+        pool.get()
+            .unwrap()
+            .execute(
+                "UPDATE sample_info_records SET status='未知状态' WHERE id=?1",
+                [draft.id],
+            )
+            .unwrap();
+        let trace_count = trace_repo::list(&pool, "sample_info_records", draft.id)
+            .unwrap()
+            .len();
+        assert!(matches!(
+            update_status(&pool, draft.id, "待检测", "analyst"),
+            Err(AppError::Validation(_))
+        ));
+        assert_eq!(get_by_id(&pool, draft.id).unwrap().status, "未知状态");
+        assert_eq!(
+            trace_repo::list(&pool, "sample_info_records", draft.id)
+                .unwrap()
+                .len(),
+            trace_count
         );
     }
 
