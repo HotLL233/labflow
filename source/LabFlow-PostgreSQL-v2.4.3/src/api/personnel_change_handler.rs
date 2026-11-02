@@ -317,6 +317,16 @@ fn default_feedback_fields() -> Vec<FeedbackFieldConfig> {
     .collect()
 }
 
+pub(crate) fn default_notification_fields() -> Result<Vec<serde_json::Value>> {
+    default_feedback_fields()
+        .into_iter()
+        .map(|field| {
+            serde_json::to_value(field)
+                .map_err(|error| AppError::Internal(format!("生成人员通知字段元数据失败: {error}")))
+        })
+        .collect()
+}
+
 fn load_feedback_config() -> Result<FeedbackConfig> {
     ensure_feature_dir()?;
     let types_path = change_types_path();

@@ -1677,9 +1677,28 @@ mod tests {
         )
         .unwrap();
         let project = conn.last_insert_rowid();
-        conn.execute("INSERT INTO rd_work_records(project_id,user_name,quantity,recorded_at,status) VALUES(?1,'sender',1,'2026-11-02T09:00:00','待取样')", [project]).unwrap();
-        let id = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO project_lab_links(project_id,group_id) VALUES(?1,?2)",
+            postgres_compat::params![project, group],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO users(username,password,group_id) VALUES('rd-race-sender','unused',?1)",
+            [group],
+        )
+        .unwrap();
+        let sender = conn.last_insert_rowid();
         drop(conn);
+        let body: RecordCreate = serde_json::from_value(serde_json::json!({
+            "project_id":project,"group_id":group,"user_name":"rd-race-sender","sender_user_id":sender,
+            "quantity":1,"recorded_at":"2026-11-02T09:00:00"
+        }))
+        .unwrap();
+        let source = create(&pool, &body, None, None, sender, "rd-race-sender").unwrap();
+        assert!(!source.business_no.is_empty());
+        assert_eq!(source.subject_user_id, Some(sender));
+        assert_eq!(source.created_by_user_id, Some(sender));
+        let id = source.id;
         let gate = std::sync::Arc::new(std::sync::Barrier::new(3));
         let workers: Vec<_> = [true, false]
             .into_iter()
@@ -1701,7 +1720,11 @@ mod tests {
             .into_iter()
             .map(|worker| worker.join().unwrap())
             .collect();
-        assert_eq!(results.iter().filter(|result| result.is_ok()).count(), 1);
+        assert_eq!(
+            results.iter().filter(|result| result.is_ok()).count(),
+            1,
+            "取样与驳回应只有一个成功：{results:?}"
+        );
         let final_record = get_by_id(&pool, id).unwrap();
         assert_eq!(
             final_record.status == "已取样",
@@ -1718,7 +1741,7 @@ mod tests {
                 let gate = gate.clone();
                 std::thread::spawn(move || {
                     gate.wait();
-                    confirm_return(&pool, id, "sender")
+                    confirm_return(&pool, id, "rd-race-sender")
                 })
             })
             .collect();
@@ -1727,7 +1750,11 @@ mod tests {
             .into_iter()
             .map(|worker| worker.join().unwrap())
             .collect();
-        assert_eq!(results.iter().filter(|result| result.is_ok()).count(), 1);
+        assert_eq!(
+            results.iter().filter(|result| result.is_ok()).count(),
+            1,
+            "确认退回应只有一个成功：{results:?}"
+        );
         assert_eq!(
             pool.get()
                 .unwrap()

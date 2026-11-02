@@ -7,7 +7,7 @@ use crate::models::notification::{
 };
 use serde_json::json;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub fn get_template(pool: &DbPool, event_key: &str) -> Result<(String, String, serde_json::Value)> {
     let conn = pool.get()?;
@@ -85,6 +85,19 @@ fn configured_notification_type_applies(source: &str, type_key: Option<&str>) ->
             .split([',', '，', '\n'])
             .map(str::trim)
             .any(|current| values.contains(&current))
+}
+
+fn read_personnel_fields(dir: &Path) -> Result<Vec<serde_json::Value>> {
+    match fs::read_to_string(dir.join("fields.json")) {
+        Ok(text) => serde_json::from_str(&text)
+            .map_err(|error| AppError::Internal(format!("人员变动字段配置解析失败: {error}"))),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            crate::api::personnel_change_handler::default_notification_fields()
+        }
+        Err(error) => Err(AppError::Internal(format!(
+            "人员变动字段配置读取失败: {error}"
+        ))),
+    }
 }
 
 /// Business candidates use the current record-column source, not obsolete form settings.
@@ -196,18 +209,15 @@ pub fn template_available_fields(
         append_template_field(&mut fields, "business_no", "送样编号");
     }
 
-    let feedback_dir = std::env::var("PERSONNEL_CHANGE_DATA_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| {
-            crate::config::AppConfig::load()
-                .data_dir()
-                .join("personnel-change-data")
-        });
     if personnel {
-        let text = fs::read_to_string(feedback_dir.join("fields.json"))
-            .map_err(|error| AppError::Internal(format!("人员变动字段配置读取失败: {error}")))?;
-        let items = serde_json::from_str::<Vec<serde_json::Value>>(&text)
-            .map_err(|error| AppError::Internal(format!("人员变动字段配置解析失败: {error}")))?;
+        let feedback_dir = std::env::var("PERSONNEL_CHANGE_DATA_DIR")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                crate::config::AppConfig::load()
+                    .data_dir()
+                    .join("personnel-change-data")
+            });
+        let items = read_personnel_fields(&feedback_dir)?;
         for item in items
             .into_iter()
             .filter(|item| {
@@ -1817,6 +1827,66 @@ mod tests {
     use crate::db::{self, DbPool};
     use crate::models::notification::NotificationRuleTargetInput;
     use serde_json::json;
+
+    #[test]
+    fn missing_personnel_fields_use_shared_defaults_without_creating_configuration() {
+        let dir = std::env::temp_dir().join(format!(
+            "labflow-missing-personnel-fields-{}",
+            uuid::Uuid::new_v4()
+        ));
+        assert!(!dir.exists());
+        let fields = read_personnel_fields(&dir).unwrap();
+        assert_eq!(
+            fields,
+            crate::api::personnel_change_handler::default_notification_fields().unwrap()
+        );
+        assert!(fields.iter().any(|field| field["key"] == "notes"
+            && field["enabled"] == true
+            && field["notify"] == true));
+        assert!(!dir.exists(), "读取通知模板不能创建人员变动配置目录或文件");
+    }
+
+    #[test]
+    fn personnel_notification_fields_preserve_custom_configuration_and_fail_closed_on_corruption() {
+        let dir = std::env::temp_dir().join(format!(
+            "labflow-personnel-field-read-{}",
+            uuid::Uuid::new_v4()
+        ));
+        fs::create_dir(&dir).unwrap();
+        let path = dir.join("fields.json");
+        let configured = json!([
+            {"key":"custom_notice","label":"自定义通知字段","enabled":true,"notify":false,"change_types":["custom-action"],"sort_order":7,"future_attribute":"keep"},
+            {"key":"notes","label":"管理员自定义备注","enabled":false,"notify":true,"sort_order":3}
+        ]);
+        let original = serde_json::to_vec_pretty(&configured).unwrap();
+        fs::write(&path, &original).unwrap();
+        assert_eq!(
+            read_personnel_fields(&dir).unwrap(),
+            configured.as_array().unwrap().clone()
+        );
+        assert_eq!(fs::read(&path).unwrap(), original);
+        fs::write(&path, b"[]").unwrap();
+        assert!(read_personnel_fields(&dir).unwrap().is_empty());
+        assert_eq!(fs::read(&path).unwrap(), b"[]");
+        for broken in [b"{broken".as_slice(), b"{}".as_slice(), b"".as_slice()] {
+            fs::write(&path, broken).unwrap();
+            assert!(read_personnel_fields(&dir).is_err());
+            assert_eq!(
+                fs::read(&path).unwrap(),
+                broken,
+                "无效配置不能被默认字段覆盖"
+            );
+        }
+        fs::remove_file(&path).unwrap();
+        fs::create_dir(&path).unwrap();
+        assert!(
+            read_personnel_fields(&dir).is_err(),
+            "非缺失的文件读取错误不能回退默认配置"
+        );
+        assert!(path.is_dir());
+        fs::remove_dir(path).unwrap();
+        fs::remove_dir(dir).unwrap();
+    }
 
     #[test]
     fn inbox_target_urls_are_precise_encoded_and_internal() {
