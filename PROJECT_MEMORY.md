@@ -2,11 +2,11 @@
 
 > 最后更新：2026-11-02
 >
-> 当前正式版本：`v2.4.1`；GitHub源码、两类CI正式安装包、交付清单及GHCR镜像均已发布并核验。
+> 当前正式版本：`v2.4.2`；GitHub源码、两类CI正式安装包、交付清单及GHCR镜像均已发布并核验。
 >
-> 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.4.2/`（工作量时间、日期查看及人员ID修复；正在验证和准备发布）。
+> 当前源码目录：`source/LabFlow-PostgreSQL-v2.4.2/`（工作量时间、日期查看及人员ID修复；正式发布完成）。
 >
-> 当前开发状态：v2.4.2本地All Build（208项前端、类型/静态/格式/check/默认Release）及独立345项后端、34项实际HTTP通过。HTTP先以v2.4.1复现旧记录漏显，再在同一隔离库升级v2.4.2，覆盖三种录入、跨日编辑、检测人记录/汇总/导出预览及角色边界。两类本地包已制作，正式版仍v2.4.1，正在同步并发布v2.4.2。历史源码不改，缺失人员ID不自动按姓名重绑；测试库和56640/57642已收尾，未操作生产库或8000。未做浏览器视觉/手机实机、现场覆盖安装或容器运行验收。
+> 当前交付状态：v2.4.2本地All Build（208项前端、类型/静态/格式/check/默认Release）及独立345项后端、34项实际HTTP通过。HTTP先以v2.4.1复现旧记录漏显，再在同一隔离库升级v2.4.2，覆盖三种录入、跨日编辑、检测人记录/汇总/导出预览及角色边界。Windows41385276182、Docker41385276203均成功，Release431062768为最新正式版本；正式两包与Release、manifest、SHA256SUMS及Git逐项一致，已快进CI回写提交4a179315d；GHCR2.4.2/latest同摘要。CI为All Build，未冒充本地独立数据库/HTTP验收。历史源码不改，缺失人员ID不自动按姓名重绑；测试库和56640/57642已收尾，未操作生产库或8000。未做浏览器视觉/手机实机、现场覆盖安装或容器运行验收。
 >
 > v81本地交付记录：最终All Integration通过（204项前端、336项后端，3项备份专用ignore已在最终二进制另行通过），同一最终Release通过57项本机模拟网盘HTTP，Graph协议测试覆盖令牌隐私、下载跳转及分片断点续传。初次完整回归缺少私有人员字段夹具，补齐后单项及全部通过，未改通知业务代码。两类本地包均2.3.81.0，位于v81/installer，清单在test-artifacts/v2.3.81/packages，最终报告为verified-clean。专用测试库已删、56581/57581/57681已停；未连接真实网盘/微软账号，未操作现场数据库和8000服务，未做浏览器/手机、Ubuntu容器或现场升级。v81当时未发布；源码现已随v2.4.0同步，未单独发布旧版本。
 >
@@ -56,7 +56,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 
 2026-11-02 工作量修复约定：手动、样品按钮及编辑使用同一时间校验，业务日期不能被当前时间替代；查询兼容已有分钟格式，不能靠重录/搬表或批量改历史日期解决。人员按账号ID区分检测人员与实际操作人，普通本人、公共账号部门范围、原授权代录边界分别保留；历史缺失人员ID不得按相似姓名自动重绑。
 
-本机2026-11-02资源/网络经验：Node多测试文件默认并行会耗尽提交内存，共享verify入口固定--test-concurrency=1；本地Rust库测试可用ignored目录内profile去掉调试信息并将labflow拆为16个codegen单元，正式Release不改构建配置。7897代理当前不可用，Git单次使用http.version=HTTP/1.1及空http.proxy可连接，GitHub API直接访问可用；不固化全局代理或关闭TLS校验。
+本机2026-11-02资源/网络经验：Node多测试文件默认并行会耗尽提交内存，共享verify入口固定--test-concurrency=1；本地Rust库测试可用ignored目录内profile去掉调试信息并将labflow拆为16个codegen单元，正式Release不改构建配置。早先代理未开，Git直连反复中断而API小请求可用；源码及标签经官方Git Database API逐对象校验同步。用户恢复7897后，显式代理GitHub API约0.98秒、ls-remote约1.15秒，正式两包fetch约22秒成功并完成哈希核验。系统ProxyEnable仍为0，本轮只使用单次http.proxy=http://127.0.0.1:7897及openssl/HTTP1.1参数，不固化全局代理或关闭TLS校验；换设备先实际探测。
 ### 4.1 版本隔离
 
 - 每个版本使用独立源码目录：`source/LabFlow-PostgreSQL-v<版本>/`。
@@ -1303,7 +1303,7 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - GHCR2.4.1/latest同索引sha256:dd49b99d310b9bf808fd50f75f40806e28b34600f5bda7f9070d4ad834145c01；索引、amd64 manifest及config字节核验，入口/app/labflow、用户labflow、发布者HotLL、版本2.4.1。额外只下载1468717字节的前端层，实际10文件树d4a77e18e077497e979cbfd3b92a315e7fd524e0b07ef95a1b1744508efae6cc与Linux CI报告一致。两平台JS/CSS/图标字节相同，gzip解压内容相同，HTML与manifest仅行尾CR差异；不宣称两平台原始压缩树哈希相同。未实际启动容器。
 - 证据test-artifacts/v2.4.1/ci-delivery-verification.json、ci-final-status.json、github-release-final.json、ghcr-final.json、image-frontend-provenance.json及image-frontend-content-verification.json。收尾仅更新发布事实文档并以skip-ci提交同步，不更改标签源码或重复构建。
 
-## v2.4.2 工作量记录、日期和人员归属修复（2026-11-02，本地交付完成，正在发布）
+## v2.4.2 工作量记录、日期和人员归属修复（2026-11-02，正式发布完成）
 
 - 从v2.4.1隔离递增开发。根因：手动datetime-local默认分钟精度，按钮会补秒；既有列表函数只接收带秒格式，导致合法手动记录按日期查询被排除。录入页和检测人记录还默认只看今天，跨日保存后仍查原日期。
 - 所有工作量新增/编辑复用workload_recorded_at，统一保存到秒并保留所选业务日期；空值/非法日期拒绝。新2.4.2-workload-timestamp-precision迁移在事务中整条execute替换共享PL/pgSQL函数，兼容已有合法分钟格式，不改历史文本、日期、记录ID或系数。旧迁移标记不改。
@@ -1315,4 +1315,13 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - 同一最终Release完成34项真实HTTP：实际v2.4.1保存分钟值并复现漏显，v2.4.2同库升级后原文本/ID/系数保留；手动、RD按钮、样品登记按钮均列入同一检测人记录，汇总数量/条数及Excel预览一致。覆盖普通越权拒绝、公共部门边界、管理员ID代录、ID-only修正及跨日编辑；导出返回有效工作簿。
 - 本地输入696002a6a356c124d4993b67cbfe3243f93c830d0dff447a32e39bd152278c6d，Release SHA-256 0823627e1c23fdefd4b2cfd3d0220dbfdd4fe7f715844e9f0d8af7d3575bda8e，静态树2d2555257e2c05b9c622dffd0092b16e649b741d85e8eb879ce013dfdf199999，与backend/static一致。证据test-artifacts/v2.4.2/verified-final及同级JSON/日志；库测试报告与Build报告分别记录，不冒充Integration。
 - 两类独立本地包已单份保留在本版installer，均2.4.2.0、产品labflow、发布者HotLL，大小/哈希见本版安装包说明。测试库已删、56640/57642已停；未访问生产库、8000或真实网盘/群，未做浏览器视觉/手机实机、现场覆盖升级或容器运行验收。
-- 正在推送GitHub并发布v2.4.2，不覆盖旧标签；原.workbuddy、rebuild-output及未跟踪UI方案保留，不提交。
+- 已同步GitHub并正式发布v2.4.2，不覆盖旧标签；原.workbuddy、rebuild-output及未跟踪UI方案保留，不提交。
+
+### v2.4.2 正式发布核验
+
+- 发布准备提交89a418618d564c6ab76f442ef140ca463ddce1c8，注释标签对象752b7257f95dee67fb23a7900c8012d1d1389399解引用为该源码。早先Git直连中断，改用官方Git Database API逐对象比对本地blob/tree/commit/tag后以force=false快进远端；没有修改全局Git配置、关闭TLS或覆盖标签，仅同步GitHub。
+- Windows41385276182、Docker41385276203均completed/success，head_sha均为标签源码。Release431062768为公开正式最新v2.4.2，含两包及三份交付文档。CI回写提交4a179315d794d78a11b131f8719ebaf215d41530已通过恢复后的7897代理正常fetch及ff-only拉回，两包留存根installers；版本目录installer继续保留独立本地验收包。
+- 正式完整包79463849字节，SHA-256 dfedcf2e44731d319a90356e83244288ba08dee313c466dbdad09623683cf1bc；热更新29020237字节，SHA-256 719c63e8ed006ebe92fa4406bccd86a325b9ea6defc057e8f3bfadd4a1a15774。均为产品labflow、发布者HotLL、文件/产品版本2.4.2.0；Release服务端digest、manifest、SHA256SUMS、本地实际文件与origin/main Git blob逐项一致。
+- 三份交付文档字节/摘要已核验，manifest绑定干净标签源码；CI为All Build的12项passed、5项not_run，未运行数据库库测试。CI输入fcdf1245c099aea1331782b981ae8d8f178f2982861cc951420385e8a5c14340，可执行文件SHA-256 2a2b72f80234e770b7c8678b44836217b1391aeb7f396a9c181d8c741dc0d9f1；Windows静态2d2555257e2c05b9c622dffd0092b16e649b741d85e8eb879ce013dfdf199999与本地及本版backend/static一致。本地208项前端、345项后端及34项HTTP分别有独立证据，不混同CI验收范围。
+- GHCR2.4.2/latest同索引sha256:9f7f9f0efae512676ce3e15f99d33c1345bedec438b62f9b474bb8522c798d8a；linux/amd64 manifest为sha256:dc3991303c7cb5d7c82a834ca1583f04eeb0baa27bc424d43c09e64079321162，config为sha256:c00eaa9068059ece0be1548b68ad148624a021abc3b9f303e802edade06e05f8。三类原始字节及摘要已核验，入口/app/labflow、用户labflow、发布者HotLL、版本2.4.2；本机无Docker，未实际启动容器。
+- 正式包证据test-artifacts/v2.4.2/ci-delivery-verification.json，发布记录github-release-postproxy.json，镜像ghcr-final.json，代理network-postproxy.json。收尾只更新根README、PROJECT_MEMORY及本版安装包说明，以skip-ci提交同步，不更改标签业务源码或受控更新说明，不重复构建。历史缺失人员ID仍需管理员核对；未进行浏览器视觉/手机实机、现场覆盖安装或Ubuntu运行验收。
