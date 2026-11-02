@@ -201,8 +201,41 @@ impl AppConfig {
         let text = toml::to_string_pretty(&value)
             .map_err(|error| format!("无法生成服务器配置: {error}"))?;
         let temporary = path.with_extension(format!("{}.tmp", uuid::Uuid::new_v4().simple()));
-        std::fs::write(&temporary, text)
+        let mut options = std::fs::OpenOptions::new();
+        options.write(true).create_new(true);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            options.mode(0o600);
+        }
+        let mut file = options
+            .open(&temporary)
             .map_err(|error| format!("无法写入服务器配置，请检查权限与可用空间: {error}"))?;
+        let result = (|| -> Result<(), String> {
+            #[cfg(unix)]
+            if path.exists() {
+                file.set_permissions(
+                    std::fs::metadata(path)
+                        .map_err(|error| error.to_string())?
+                        .permissions(),
+                )
+                .map_err(|error| format!("无法保留原配置权限: {error}"))?;
+            }
+            #[cfg(windows)]
+            if path.exists() {
+                copy_config_dacl(path, &temporary)?;
+            }
+            use std::io::Write;
+            file.write_all(text.as_bytes())
+                .and_then(|_| file.flush())
+                .and_then(|_| file.sync_all())
+                .map_err(|error| format!("配置写入失败，原配置已保留: {error}"))
+        })();
+        drop(file);
+        if let Err(error) = result {
+            let _ = std::fs::remove_file(&temporary);
+            return Err(error);
+        }
         if let Err(error) = std::fs::rename(&temporary, path) {
             let _ = std::fs::remove_file(temporary);
             return Err(format!("无法保存服务器配置，原配置已保留: {error}"));
@@ -264,6 +297,80 @@ impl AppConfig {
     }
 }
 
+#[cfg(windows)]
+fn config_security_descriptor(path: &std::path::Path) -> Result<Vec<u8>, String> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows::core::PCWSTR;
+    use windows::Win32::Security::{
+        GetFileSecurityW, DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR,
+    };
+    let name: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+    let mut needed = 0;
+    unsafe {
+        let _ = GetFileSecurityW(
+            PCWSTR(name.as_ptr()),
+            DACL_SECURITY_INFORMATION.0,
+            PSECURITY_DESCRIPTOR::default(),
+            0,
+            &mut needed,
+        );
+        if needed == 0 {
+            return Err(format!(
+                "无法读取原配置ACL: {}",
+                std::io::Error::last_os_error()
+            ));
+        }
+        let mut descriptor = vec![0_u8; needed as usize];
+        GetFileSecurityW(
+            PCWSTR(name.as_ptr()),
+            DACL_SECURITY_INFORMATION.0,
+            PSECURITY_DESCRIPTOR(descriptor.as_mut_ptr().cast()),
+            needed,
+            &mut needed,
+        )
+        .ok()
+        .map_err(|error| format!("无法读取原配置ACL: {error}"))?;
+        Ok(descriptor)
+    }
+}
+
+#[cfg(windows)]
+fn copy_config_dacl(source: &std::path::Path, destination: &std::path::Path) -> Result<(), String> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows::core::PCWSTR;
+    use windows::Win32::Security::{
+        GetSecurityDescriptorControl, SetFileSecurityW, DACL_SECURITY_INFORMATION,
+        PROTECTED_DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR, SE_DACL_PROTECTED,
+        UNPROTECTED_DACL_SECURITY_INFORMATION,
+    };
+    let mut descriptor = config_security_descriptor(source)?;
+    let name: Vec<u16> = destination
+        .as_os_str()
+        .encode_wide()
+        .chain(Some(0))
+        .collect();
+    let descriptor = PSECURITY_DESCRIPTOR(descriptor.as_mut_ptr().cast());
+    let mut control = 0_u16;
+    let mut revision = 0_u32;
+    unsafe {
+        GetSecurityDescriptorControl(descriptor, &mut control, &mut revision)
+            .map_err(|error| format!("无法读取原配置ACL继承状态: {error}"))?;
+        let inheritance = if control & SE_DACL_PROTECTED.0 != 0 {
+            PROTECTED_DACL_SECURITY_INFORMATION
+        } else {
+            UNPROTECTED_DACL_SECURITY_INFORMATION
+        };
+        // Apply the original DACL before writing credentials to the temporary file.
+        SetFileSecurityW(
+            PCWSTR(name.as_ptr()),
+            DACL_SECURITY_INFORMATION | inheritance,
+            descriptor,
+        )
+        .ok()
+        .map_err(|error| format!("无法保留原配置ACL: {error}"))
+    }
+}
+
 fn write_server_port(path: &std::path::Path, port: u16) -> Result<(), String> {
     if port == 0 {
         return Err("请输入1到65535之间的端口".into());
@@ -291,6 +398,80 @@ fn write_server_port(path: &std::path::Path, port: u16) -> Result<(), String> {
 
 #[cfg(test)]
 mod desktop_port_tests {
+    #[cfg(unix)]
+    #[test]
+    fn saving_config_keeps_private_unix_permissions() {
+        use std::os::unix::fs::PermissionsExt;
+        let path =
+            std::env::temp_dir().join(format!("labflow-private-{}.toml", uuid::Uuid::new_v4()));
+        let config = super::AppConfig::default();
+        config.try_save_to(&path).unwrap();
+        assert_eq!(
+            std::fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o640)).unwrap();
+        config.try_save_to(&path).unwrap();
+        assert_eq!(
+            std::fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+            0o640
+        );
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn saving_config_preserves_restricted_windows_dacl_and_cleans_failed_replacement() {
+        use std::os::windows::ffi::OsStrExt;
+        use windows::core::{w, PCWSTR};
+        use windows::Win32::Foundation::{LocalFree, HLOCAL};
+        use windows::Win32::Security::Authorization::{
+            ConvertStringSecurityDescriptorToSecurityDescriptorW, SDDL_REVISION_1,
+        };
+        use windows::Win32::Security::{
+            SetFileSecurityW, DACL_SECURITY_INFORMATION, PROTECTED_DACL_SECURITY_INFORMATION,
+            PSECURITY_DESCRIPTOR,
+        };
+        let root = std::env::temp_dir().join(format!("labflow-private-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let path = root.join("config.toml");
+        std::fs::write(&path, "custom_setting = \"private\"\n").unwrap();
+        let name: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+        unsafe {
+            let mut descriptor = PSECURITY_DESCRIPTOR::default();
+            ConvertStringSecurityDescriptorToSecurityDescriptorW(
+                w!("D:P(A;;FA;;;OW)"),
+                SDDL_REVISION_1,
+                &mut descriptor,
+                None,
+            )
+            .unwrap();
+            let result = SetFileSecurityW(
+                PCWSTR(name.as_ptr()),
+                DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,
+                descriptor,
+            )
+            .ok();
+            let _ = LocalFree(HLOCAL(descriptor.0));
+            result.unwrap();
+        }
+        let expected = super::config_security_descriptor(&path).unwrap();
+        let config = super::AppConfig::default();
+        config.try_save_to(&path).unwrap();
+        assert_eq!(super::config_security_descriptor(&path).unwrap(), expected);
+        let original = std::fs::read(&path).unwrap();
+        let mut permissions = std::fs::metadata(&path).unwrap().permissions();
+        permissions.set_readonly(true);
+        std::fs::set_permissions(&path, permissions).unwrap();
+        assert!(config.try_save_to(&path).is_err());
+        assert_eq!(std::fs::read(&path).unwrap(), original);
+        assert_eq!(std::fs::read_dir(&root).unwrap().count(), 1);
+        let mut permissions = std::fs::metadata(&path).unwrap().permissions();
+        permissions.set_readonly(false);
+        std::fs::set_permissions(&path, permissions).unwrap();
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
     #[test]
     fn saving_config_preserves_unknown_keys_and_reports_write_errors() {
         let root = std::env::temp_dir().join(format!("labflow-config-{}", uuid::Uuid::new_v4()));
