@@ -44,6 +44,7 @@ function node {
         elseif ($args[0] -match 'compress-static[.]mjs$') {'static-compress'}
         else {'static-verify'}
     $global:LabFlowVerifyTestMock.Calls.Add($label)
+    if ($label -eq 'frontend-tests' -and '--test-concurrency=1' -notin $args) { throw 'Frontend tests must bound parallel workers.' }
     "mock $label output"
     if ($global:LabFlowVerifyTestMock.Fail -eq $label) { $global:LASTEXITCODE=23; return }
     if ($label -eq 'frontend-build') {

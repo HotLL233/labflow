@@ -53,7 +53,7 @@ try {
             if (Test-Path -LiteralPath $p) { $testFiles += @(Get-LabFlowFiles $p | Where-Object Name -Like '*.test.mjs' | Sort-Object FullName | ForEach-Object FullName) }
         }
         Step 'test-discovery' { if (-not $testFiles.Count) { throw 'No frontend tests discovered.' } }
-        Native 'frontend-tests' 'node' (@('--test') + $testFiles) $frontend
+        Native 'frontend-tests' 'node' (@('--test','--test-concurrency=1') + $testFiles) $frontend
         Native 'frontend-typecheck' 'node' @((Join-Path $frontend 'node_modules/typescript/bin/tsc'),'--noEmit') $frontend
         if ($Profile -ne 'Quick') {
             $static = Join-Path $out ('static-' + [guid]::NewGuid().ToString('N'))
