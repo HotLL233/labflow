@@ -58,3 +58,37 @@ test('application write access never reaches PostgreSQL data and service ACLs fo
   const install = full.slice(full.indexOf('procedure CurStepChanged'), full.indexOf('function GetAppPort'));
   assert.ok(install.indexOf('ArchiveOrphanedData') < install.indexOf('RepairStoragePermissions'));
 });
+
+test('installer tool output uses the native logger after exact nonempty credential redaction', () => {
+  const callback = full.slice(full.indexOf('procedure LogCheckedOutput'), full.indexOf('function RunChecked'));
+  assert.match(callback, /const Error, FirstLine: Boolean/);
+  for (const credential of ['PostgresPassword', 'ApplicationPassword', 'AdminPassword']) {
+    assert.match(callback, new RegExp(`if ${credential} <> '' then StringChangeEx\\(SafeLine, ${credential}, '\\[已隐藏\\]', True\\)`));
+    assert.ok(callback.indexOf(`StringChangeEx(SafeLine, ${credential}`) < callback.indexOf('Log('));
+  }
+  assert.match(callback, /if Error then Log\('工具输出捕获失败：' \+ SafeLine\)/);
+  assert.doesNotMatch(callback, /Log\(\s*S\s*\)|stderr/i);
+  const runner = full.slice(full.indexOf('function RunChecked'), full.indexOf('function WaitForPostgres'));
+  assert.match(runner, /ExecAndLogOutput\(ProgramName, Parameters, WorkingDirectory, SW_HIDE, ewWaitUntilTerminated, ResultCode, @LogCheckedOutput\)/);
+  assert.doesNotMatch(runner, /Log\([^;\r\n]*Parameters/);
+  assert.match(runner, /if \(not Result\) or \(\(ResultCode <> 0\)/);
+});
+
+test('post-install failure supplies a nonzero custom exit without replacing built-in failures', () => {
+  assert.match(full, /InstallationFailed: Boolean/);
+  const failure = full.match(/procedure FailSetup\(const Description: String\);\s*begin([\s\S]*?)end;/)?.[1];
+  assert.ok(failure);
+  assert.ok(failure.indexOf('InstallationFailed := True') < failure.indexOf('RaiseException(Description)'));
+  const exitCode = full.slice(full.indexOf('function GetCustomSetupExitCode'), full.indexOf('procedure LogCheckedOutput'));
+  assert.match(exitCode, /if InstallationFailed then Result := 1 else Result := 0/);
+});
+
+test('initialization checks directory and password writes and always removes its temporary password', () => {
+  const initialize = full.slice(full.indexOf('procedure InitializePostgresCluster'), full.indexOf('function ReadConfiguredDatabaseUrl'));
+  assert.match(initialize, /if not ForceDirectories\(DataPath\) then FailSetup/);
+  assert.match(initialize, /PasswordFile := ExpandConstant\('\{tmp\}\\labflow-postgres-password\.txt'\)/);
+  assert.match(initialize, /try\s+if not SaveStringToFile\(PasswordFile, PostgresPassword, False\) then/);
+  assert.match(initialize, /try[\s\S]*RunChecked\(RuntimePath\('bin\\initdb\.exe'\)[\s\S]*finally\s+DeleteFile\(PasswordFile\);\s+end;/);
+  assert.ok(initialize.indexOf('finally') < initialize.indexOf('WritePostgresConfiguration'));
+  assert.ok(initialize.indexOf("RuntimePath('bin\\initdb.exe')") < initialize.indexOf('RepairPostgresPermissions'));
+});

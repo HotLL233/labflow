@@ -1,0 +1,68 @@
+name: Diagnose LabFlow Windows installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Explicit version (X.Y.Z)"
+        required: true
+        type: string
+      binary_run_id:
+        description: "Prior Windows run with a successful All Build and uploaded test harness"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  probe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Resolve source
+        id: source
+        shell: pwsh
+        env:
+          VERSION: ${{ inputs.version }}
+          BINARY_RUN_ID: ${{ inputs.binary_run_id }}
+        run: |
+          if ($env:BINARY_RUN_ID -notmatch '^[1-9][0-9]+$') { throw 'An explicit previous run ID is required.' }
+          $release = & ./scripts/resolve-release.ps1 -Version $env:VERSION
+          "directory=$($release.source_dir)" >> $env:GITHUB_OUTPUT
+      - uses: actions/download-artifact@v4
+        with:
+          name: labflow-backend-tests-${{ inputs.binary_run_id }}
+          path: ci-artifacts/installer-probe/binary
+          run-id: ${{ inputs.binary_run_id }}
+          github-token: ${{ github.token }}
+      - name: Prepare installer prerequisites
+        shell: pwsh
+        run: |
+          $directory = Join-Path $env:GITHUB_WORKSPACE 'build-resources/postgres-runtime/installer'
+          New-Item -ItemType Directory -Path $directory -Force | Out-Null
+          Invoke-WebRequest 'https://aka.ms/vs/17/release/vc_redist.x64.exe' -OutFile (Join-Path $directory 'vcredist_x64.exe')
+          choco install innosetup --no-progress -y
+          if ($LASTEXITCODE -ne 0) { throw 'Inno Setup preparation failed.' }
+      - name: Build and execute diagnostic installers
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BINARY_RUN_ID: ${{ inputs.binary_run_id }}
+        run: |
+          & ./scripts/probe-windows-installer-ci.ps1 -SourceDir '${{ steps.source.outputs.directory }}' -ArtifactDir "$env:GITHUB_WORKSPACE/ci-artifacts/installer-probe/binary" -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/installer-probe/output" -BinaryRunId $env:BINARY_RUN_ID
+      - name: Retain diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labflow-installer-probe-${{ github.run_id }}
+          path: |
+            ci-artifacts/installer-probe/output/*.json
+            ci-artifacts/installer-probe/output/*.log
+            ci-artifacts/installer-probe/output/lifecycle/*.json
+            ci-artifacts/installer-probe/output/lifecycle/*.log
+          if-no-files-found: warn

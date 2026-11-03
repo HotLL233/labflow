@@ -866,6 +866,80 @@ mod tests {
     use std::os::windows::process::CommandExt;
     use std::process::Command;
 
+    fn comparable_dacl(mut value: Vec<u8>) -> Vec<u8> {
+        use windows::Win32::Foundation::BOOL;
+        use windows::Win32::Security::{
+            GetAce, GetSecurityDescriptorDacl, SetSecurityDescriptorControl, ACE_HEADER,
+            INHERITED_ACE, PSECURITY_DESCRIPTOR, SECURITY_DESCRIPTOR_CONTROL,
+            SE_DACL_AUTO_INHERITED,
+        };
+
+        let descriptor = PSECURITY_DESCRIPTOR(value.as_mut_ptr().cast());
+        unsafe {
+            SetSecurityDescriptorControl(
+                descriptor,
+                SE_DACL_AUTO_INHERITED,
+                SECURITY_DESCRIPTOR_CONTROL(0),
+            )
+            .unwrap();
+            let mut present = BOOL::default();
+            let mut defaulted = BOOL::default();
+            let mut dacl = std::ptr::null_mut();
+            GetSecurityDescriptorDacl(descriptor, &mut present, &mut dacl, &mut defaulted).unwrap();
+            if present.as_bool() && !dacl.is_null() {
+                for index in 0..(*dacl).AceCount {
+                    let mut ace = std::ptr::null_mut();
+                    GetAce(dacl, u32::from(index), &mut ace).unwrap();
+                    (*ace.cast::<ACE_HEADER>()).AceFlags &= !(INHERITED_ACE.0 as u8);
+                }
+            }
+        }
+        value
+    }
+
+    #[test]
+    fn dacl_comparison_ignores_only_inheritance_origins_and_keeps_access_changes() {
+        use windows::Win32::Security::Authorization::{
+            ConvertStringSecurityDescriptorToSecurityDescriptorW, SDDL_REVISION_1,
+        };
+        use windows::Win32::Security::{GetSecurityDescriptorLength, PSECURITY_DESCRIPTOR};
+
+        let compare = |sddl: &str| {
+            let sddl = wide(sddl);
+            let mut descriptor = PSECURITY_DESCRIPTOR::default();
+            let bytes = unsafe {
+                ConvertStringSecurityDescriptorToSecurityDescriptorW(
+                    PCWSTR(sddl.as_ptr()),
+                    SDDL_REVISION_1,
+                    &mut descriptor,
+                    None,
+                )
+                .unwrap();
+                let bytes = std::slice::from_raw_parts(
+                    descriptor.0.cast::<u8>(),
+                    GetSecurityDescriptorLength(descriptor) as usize,
+                )
+                .to_vec();
+                LocalFree(HLOCAL(descriptor.0));
+                bytes
+            };
+            comparable_dacl(bytes)
+        };
+        let before = compare("D:(A;;FR;;;BU)(A;;FA;;;SY)");
+        assert_eq!(before, compare("D:AI(A;ID;FR;;;BU)(A;ID;FA;;;SY)"));
+        for changed in [
+            "D:(A;;FA;;;BU)(A;;FA;;;SY)",
+            "D:(A;;FR;;;BU)(A;;FA;;;SY)(A;;FW;;;AU)",
+            "D:(A;;FR;;;AU)(A;;FA;;;SY)",
+            "D:(A;;FA;;;SY)(A;;FR;;;BU)",
+            "D:(D;;FR;;;BU)(A;;FA;;;SY)",
+            "D:(A;OI;FR;;;BU)(A;;FA;;;SY)",
+            "D:P(A;;FR;;;BU)(A;;FA;;;SY)",
+        ] {
+            assert_ne!(before, compare(changed), "{changed}");
+        }
+    }
+
     #[test]
     fn installed_config_access_does_not_propagate_write_to_runtime_files() {
         let root = std::env::temp_dir().join(format!("labflow-access-{}", uuid::Uuid::new_v4()));
@@ -875,7 +949,8 @@ mod tests {
         std::fs::write(&runtime_file, b"runtime").unwrap();
         let config = root.join("server-config.toml");
         std::fs::write(&config, b"backup_mode = \"database\"\n").unwrap();
-        let acl = |path: &Path| crate::config::config_security_descriptor(path).unwrap();
+        let acl =
+            |path: &Path| comparable_dacl(crate::config::config_security_descriptor(path).unwrap());
         let before = acl(&runtime_file);
         let sid = process_user_sid(unsafe { GetCurrentProcess() }).unwrap();
         grant_installed_config_access(&system_tool("icacls.exe").unwrap(), &config, &sid).unwrap();

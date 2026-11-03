@@ -21,6 +21,7 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
 using System.Text;
 
 public static class LabFlowCiAcl {
@@ -60,6 +61,41 @@ public static class LabFlowCiAcl {
         byte[] value = new byte[needed];
         Check(GetFileSecurityW(path, 4, value, needed, out needed));
         return value;
+    }
+    public static string ComparableDescriptor(byte[] value) {
+        var descriptor = new RawSecurityDescriptor(value, 0);
+        descriptor.SetFlags(descriptor.ControlFlags & ~ControlFlags.DiscretionaryAclAutoInherited);
+        if (descriptor.DiscretionaryAcl != null) {
+            foreach (GenericAce ace in descriptor.DiscretionaryAcl) {
+                ace.AceFlags &= ~AceFlags.Inherited;
+            }
+        }
+        byte[] normalized = new byte[descriptor.BinaryLength];
+        descriptor.GetBinaryForm(normalized, 0);
+        return Convert.ToBase64String(normalized);
+    }
+    public static void CheckDescriptorComparison() {
+        Func<string,string> compare = sddl => {
+            var descriptor = new RawSecurityDescriptor(sddl);
+            byte[] bytes = new byte[descriptor.BinaryLength];
+            descriptor.GetBinaryForm(bytes, 0);
+            return ComparableDescriptor(bytes);
+        };
+        string original = compare("D:(A;;FR;;;BU)(A;;FA;;;SY)");
+        if (original != compare("D:AI(A;ID;FR;;;BU)(A;ID;FA;;;SY)"))
+            throw new InvalidOperationException("Inheritance origins must not change the ACL comparison.");
+        foreach (string changed in new[] {
+            "D:(A;;FA;;;BU)(A;;FA;;;SY)",
+            "D:(A;;FR;;;BU)(A;;FA;;;SY)(A;;FW;;;AU)",
+            "D:(A;;FR;;;AU)(A;;FA;;;SY)",
+            "D:(A;;FA;;;SY)(A;;FR;;;BU)",
+            "D:(D;;FR;;;BU)(A;;FA;;;SY)",
+            "D:(A;OI;FR;;;BU)(A;;FA;;;SY)",
+            "D:P(A;;FR;;;BU)(A;;FA;;;SY)"
+        }) {
+            if (original == compare(changed))
+                throw new InvalidOperationException("ACL comparison discarded an access change.");
+        }
     }
     public static void Restore(string path, byte[] value) {
         ushort control; uint revision;
@@ -108,12 +144,13 @@ public static class LabFlowCiAcl {
     }
 }
 '@
+[LabFlowCiAcl]::CheckDescriptorComparison()
 $report = [ordered]@{status='running';source_commit=$env:GITHUB_SHA;workflow_run=$env:GITHUB_RUN_ID;
     restricted_token_admin_group_disabled=$true;production_access=$false}
 $original = [LabFlowCiAcl]::Descriptor($Config)
 $hash = (Get-FileHash -LiteralPath $Config -Algorithm SHA256).Hash
 $runtime = Join-Path (Split-Path -Parent $Config) 'PostgreSQL18\runtime-v1.1.5\share\postgresql.conf.sample'
-$runtimeBefore = [Convert]::ToBase64String([LabFlowCiAcl]::Descriptor($runtime))
+$runtimeBefore = [LabFlowCiAcl]::ComparableDescriptor([LabFlowCiAcl]::Descriptor($runtime))
 try {
     [LabFlowCiAcl]::MakeReadOnlyForNormalUsers($Config)
     if ([LabFlowCiAcl]::AtomicReplaceWithoutAdminGroup($Config)) { throw 'The restrictive fixture unexpectedly permits an unprivileged replacement.' }
@@ -124,7 +161,7 @@ try {
     if ($process.ExitCode -ne 0) { throw 'Installed desktop permission preparation failed.' }
     if (-not [LabFlowCiAcl]::AtomicReplaceWithoutAdminGroup($Config)) { throw 'The desktop SID cannot atomically save after permission preparation.' }
     if ((Get-FileHash -LiteralPath $Config -Algorithm SHA256).Hash -ne $hash) { throw 'The ACL probe changed configuration contents.' }
-    if ([Convert]::ToBase64String([LabFlowCiAcl]::Descriptor($runtime)) -ne $runtimeBefore) { throw 'Configuration permission repair changed the runtime DACL.' }
+    if ([LabFlowCiAcl]::ComparableDescriptor([LabFlowCiAcl]::Descriptor($runtime)) -ne $runtimeBefore) { throw 'Configuration permission repair changed the runtime DACL.' }
     $report.restricted_config_replacement_succeeded = $true
     $report.config_contents_preserved = $true
     $report.runtime_acl_unchanged = $true

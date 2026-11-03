@@ -95,6 +95,7 @@ var
   UpgradeInstall: Boolean;
   LegacyUpgradeInstall: Boolean;
   LegacyStorageLayout: Boolean;
+  InstallationFailed: Boolean;
 
 #include "tools\installer-runtime.iss"
 
@@ -438,16 +439,34 @@ end;
 
 procedure FailSetup(const Description: String);
 begin
+  InstallationFailed := True;
   Log('labflow 安装失败：' + Description);
   SuppressibleMsgBox(Description, mbError, MB_OK, IDOK);
   RaiseException(Description);
+end;
+
+function GetCustomSetupExitCode: Integer;
+begin
+  if InstallationFailed then Result := 1 else Result := 0;
+end;
+
+procedure LogCheckedOutput(const S: String; const Error, FirstLine: Boolean);
+var
+  SafeLine: String;
+begin
+  SafeLine := S;
+  if PostgresPassword <> '' then StringChangeEx(SafeLine, PostgresPassword, '[已隐藏]', True);
+  if ApplicationPassword <> '' then StringChangeEx(SafeLine, ApplicationPassword, '[已隐藏]', True);
+  if AdminPassword <> '' then StringChangeEx(SafeLine, AdminPassword, '[已隐藏]', True);
+  if Error then Log('工具输出捕获失败：' + SafeLine)
+  else Log('工具输出：' + SafeLine);
 end;
 
 function RunChecked(const ProgramName, Parameters, WorkingDirectory, Description: String): Boolean;
 var
   ResultCode: Integer;
 begin
-  Result := Exec(ProgramName, Parameters, WorkingDirectory, SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Result := ExecAndLogOutput(ProgramName, Parameters, WorkingDirectory, SW_HIDE, ewWaitUntilTerminated, ResultCode, @LogCheckedOutput);
   if (not Result) or ((ResultCode <> 0) and (ResultCode <> 3010) and (ResultCode <> 1638)) then begin
     Log(Description + ' 退出代码：' + IntToStr(ResultCode));
     SuppressibleMsgBox(Description + #13#10 + '退出代码：' + IntToStr(ResultCode), mbError, MB_OK, IDOK);
@@ -585,12 +604,16 @@ var
 begin
   PostgresPassword := NewSecret('postgres');
   ApplicationPassword := NewSecret('labflow-app');
-  ForceDirectories(DataPath);
+  if not ForceDirectories(DataPath) then FailSetup('无法创建 PostgreSQL 数据目录。');
   PasswordFile := ExpandConstant('{tmp}\labflow-postgres-password.txt');
-  SaveStringToFile(PasswordFile, PostgresPassword, False);
-  Parameters := '-D "' + DataPath + '" -U postgres --auth=scram-sha-256 --pwfile="' + PasswordFile + '" -E UTF8';
-  if not RunChecked(RuntimePath('bin\initdb.exe'), Parameters, '', 'PostgreSQL 数据目录初始化失败。') then FailSetup('PostgreSQL 初始化失败。');
-  DeleteFile(PasswordFile);
+  try
+    if not SaveStringToFile(PasswordFile, PostgresPassword, False) then
+      FailSetup('无法写入 PostgreSQL 初始化密码文件。');
+    Parameters := '-D "' + DataPath + '" -U postgres --auth=scram-sha-256 --pwfile="' + PasswordFile + '" -E UTF8';
+    if not RunChecked(RuntimePath('bin\initdb.exe'), Parameters, '', 'PostgreSQL 数据目录初始化失败。') then FailSetup('PostgreSQL 初始化失败。');
+  finally
+    DeleteFile(PasswordFile);
+  end;
   WritePostgresConfiguration;
   if not RepairPostgresPermissions then
     FailSetup('数据库服务账户权限初始化失败，私有服务尚未注册或启动。');
