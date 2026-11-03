@@ -164,11 +164,19 @@ async function uninstall(name) {
   assert.notEqual(sc('query', 'WorkloadToolPostgreSQL18').status, 0);
   for (const value of [port, 57645, 54329]) await freePort(value);
   for (const file of [full, hot]) assert.ok(fs.statSync(file).isFile());
+  report.installers = [full, hot].map(file => ({
+    name: path.basename(file), bytes: fs.statSync(file).size, sha256: hash(file),
+  }));
   fs.mkdirSync(out, { recursive: true });
   fs.mkdirSync(shared);
   fs.writeFileSync(marker, owner);
   phase = 'fresh full installation';
   await install(full, 'fresh-full');
+  const build = JSON.parse(fs.readFileSync(path.join(installers, '../verification/verification.json'), 'utf8'));
+  report.installed_application_sha256 = hash(executable);
+  ok(build.version === version && build.git_revision === process.env.GITHUB_SHA
+    && build.artifacts.executable_sha256 === report.installed_application_sha256,
+  'installed application matches the exact verified Build');
   ok(configValue('admin_pass') === password, 'fresh configuration preserves the exact Unicode password as UTF-8');
   ok(path.resolve(configValue('db_dir')) === path.join(storage, 'app-data'), 'fresh installation respects the isolated data root');
   phase = 'restricted desktop token configuration permissions';

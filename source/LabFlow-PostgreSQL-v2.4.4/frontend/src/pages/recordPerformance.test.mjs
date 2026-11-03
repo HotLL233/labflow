@@ -563,6 +563,18 @@ test('person log keeps personal permission scope and rejects late responses afte
   assert.equal(env.userLogSeq.current, sequence);
 });
 
+test('RD statistics ignore the workload-only auxiliary card while keeping existing summary navigation', () => {
+  const { found, source } = findCode('./SampleStatsPage.tsx', node => ts.isJsxAttribute(node) && node.name.getText() === 'onCardClick');
+  const writes = [];
+  const select = bind(found.initializer.expression.getText(source), { setAc: value => writes.push(['tab', value]), setEr: value => writes.push(['error', value]) });
+  select('auxiliary-log');
+  assert.deepEqual(writes, []);
+  for (const tab of ['week', 'user-log', 'sheet6']) {
+    select(tab);
+    assert.deepEqual(writes.splice(0), [['tab', tab], ['error', '']]);
+  }
+});
+
 test('RD statistics person records and sender options pass whole-day dates without losing fractional final seconds', async () => {
   const requests = [];
   const env = {

@@ -2198,6 +2198,7 @@ const SampleStatsPage: React.FC = () => {
           variant="rd"
           themeColor={BUSINESS_COLORS.sample.main}
           onCardClick={(x) => {
+            if (x === "auxiliary-log") return;
             setAc(x);
             setEr("");
           }}

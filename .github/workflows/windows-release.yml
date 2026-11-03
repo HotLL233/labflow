@@ -60,6 +60,7 @@ jobs:
         run: |
           & ./scripts/verify.ps1 -SourceDir '${{ steps.version.outputs.source_dir }}' -Profile Build -Component All -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/windows/verification" -InstallDependencies
       - name: Build isolated acceptance test harness
+        id: backend_harness
         if: github.event_name == 'workflow_dispatch' && inputs.compile_backend_tests
         shell: pwsh
         run: |
@@ -86,7 +87,7 @@ jobs:
             @{ version='${{ steps.version.outputs.version }}'; source_commit=$env:GITHUB_SHA; input_fingerprint=(Get-LabFlowInputFingerprint $source); executable_sha256=(Get-FileHash "$out/labflow-tests.exe" -Algorithm SHA256).Hash.ToLowerInvariant(); application_sha256=$applicationHash; tests_executed=$false; production_release_profile_unchanged=$true } | ConvertTo-Json | Set-Content "$out/provenance.json" -Encoding utf8
           } finally { Pop-Location }
       - name: Upload isolated acceptance test harness
-        if: always() && github.event_name == 'workflow_dispatch' && inputs.compile_backend_tests
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.compile_backend_tests && steps.backend_harness.outcome != 'skipped'
         uses: actions/upload-artifact@v4
         with:
           name: labflow-backend-tests-${{ github.run_id }}
