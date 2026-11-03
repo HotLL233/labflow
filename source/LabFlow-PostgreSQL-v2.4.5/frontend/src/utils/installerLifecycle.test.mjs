@@ -184,6 +184,7 @@ test('existing clusters win over incomplete markers and missing database reset r
   assert.match(choice, /ResetInstall := ResetInstall and ResidualInstall/);
   assert.match(choice, /if ResidualInstall and not ResetInstall then begin[\s\S]*\/REINSTALL=NEW[\s\S]*exit;/);
   assert.match(choice, /if not StorageDirectoryIsEmpty\(StorageRoot\) then begin[\s\S]*exit;/);
+  assert.match(choice, /not NewStorageRootIsSafe\(AppDataRoot\)[\s\S]*PostgresRoot[\s\S]*ConfiguredApplicationData := AppDataRoot/);
   assert.match(full, /RecoveryPage\.SelectedValueIndex := 0/);
   assert.ok(full.includes("Uppercase(ExpandConstant('{param:REINSTALL|}')) = 'NEW'"));
 });

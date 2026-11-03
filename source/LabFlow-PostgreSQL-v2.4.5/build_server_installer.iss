@@ -103,6 +103,7 @@ var
   PreviousDataPath: String;
   DetectedStorageRoot: String;
   ReinstallArchive: String;
+  ConfiguredApplicationData: String;
 
 #include "tools\installer-storage.iss"
 #include "tools\installer-runtime.iss"
@@ -178,7 +179,7 @@ end;
 function ApplicationDataPath: String;
 begin
   if UpgradeInstall then begin
-    Result := LFS_ConfiguredAppData(SharedRoot);
+    Result := ConfiguredApplicationData;
     if Result <> '' then exit;
   end;
   if LegacyStorageLayout then
@@ -326,6 +327,9 @@ begin
   if Root = '' then exit;
   Root := Lowercase(AddBackslash(Root));
   if Root = Lowercase(AddBackslash(ExtractFileDrive(Path))) then exit;
+  if Pos(Lowercase(AddBackslash(ExpandConstant('{win}'))), Root) = 1 then exit;
+  if (Root = Lowercase(AddBackslash(ExpandConstant('{autopf}')))) or
+    (Root = Lowercase(AddBackslash(ExpandConstant('{pf32}')))) then exit;
   ProgramRoot := Lowercase(AddBackslash(ExpandConstant('{app}')));
   ConfigRoot := Lowercase(AddBackslash(SharedRoot));
   Result := (Pos(Root, ProgramRoot) <> 1) and (Pos(ProgramRoot, Root) <> 1) and
@@ -374,13 +378,14 @@ end;
 
 function ApplyInstallationChoice: String;
 var
-  RequestedRoot: String;
+  RequestedRoot, AppDataRoot, PostgresRoot: String;
 begin
   if ResetPrepared then begin
     Result := PreparedResetError;
     exit;
   end;
   DetectInstallation;
+  ConfiguredApplicationData := '';
   Result := LFS_StorageError;
   if Result <> '' then exit;
   ResetInstall := RecoveryPage.SelectedValueIndex = 1;
@@ -407,6 +412,19 @@ begin
       Result := '检测到数据库，但缺少原连接配置，安装已在修改文件前停止。请找回 server-config.toml；不会自动创建空库。';
     if FileExists(ConfigPath) and (LFS_ConfiguredAppData(SharedRoot) = '') then
       Result := '原配置的数据路径无法识别，安装已在修改文件前停止。请核对 server-config.toml 中的绝对 db_dir，原数据未初始化。';
+    if Result <> '' then exit;
+    if FileExists(ConfigPath) then begin
+      AppDataRoot := LFS_ConfiguredAppData(SharedRoot);
+      PostgresRoot := Lowercase(AddBackslash(DataPath));
+      if (not NewStorageRootIsSafe(AppDataRoot) and not
+        (LegacyStorageLayout and (Lowercase(AppDataRoot) = Lowercase(AddBackslash(StorageRoot) + 'data')))) or
+        (Pos(Lowercase(AddBackslash(AppDataRoot)), PostgresRoot) = 1) or
+        (Pos(PostgresRoot, Lowercase(AddBackslash(AppDataRoot))) = 1) then begin
+        Result := '原配置的业务文件目录与系统、程序或数据库目录重叠，安装已在修改权限或文件前停止。请核对 db_dir，原数据未修改。';
+        exit;
+      end;
+      ConfiguredApplicationData := AppDataRoot;
+    end;
     exit;
   end;
   if ResidualInstall and not ResetInstall then begin

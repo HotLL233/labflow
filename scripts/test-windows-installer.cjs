@@ -248,6 +248,19 @@ async function uninstall(name) {
   'installed application matches the exact verified Build');
   ok(configValue('admin_pass') === password, 'fresh configuration preserves the exact Unicode password as UTF-8');
   ok(path.resolve(configValue('db_dir')) === path.join(storage, 'app-data'), 'fresh installation respects the isolated data root');
+  phase = 'unsafe existing application path is refused before permissions or file changes';
+  const validConfig = fs.readFileSync(config);
+  try {
+    const unsafeConfig = validConfig.toString('utf8').replace(/^db_dir\s*=.*$/m,
+      `db_dir = ${JSON.stringify(path.parse(storage).root)}`);
+    fs.writeFileSync(config, unsafeConfig);
+    await assert.rejects(install(full, 'unsafe-app-data-refused'), /exited with code [1-9]\d*/);
+    ok(fs.readFileSync(config, 'utf8') === unsafeConfig
+      && hash(executable) === report.installed_application_sha256 && sc('query', service).status === 0,
+    'unsafe db_dir does not grant access to a drive root, replace files, or stop the existing database service');
+  } finally { fs.writeFileSync(config, validConfig); }
+  await ready();
+  admin = await login();
   phase = 'restricted desktop token configuration permissions';
   await run('pwsh', ['-NoProfile','-File',path.join(workspace, 'scripts/test-config-acl-ci.ps1'),
     '-Config',config,'-Executable',executable,'-OwnerMarker',marker,'-Owner',owner,
