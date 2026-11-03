@@ -897,6 +897,7 @@ var
   RuntimeError: String;
 begin
   if CurStep = ssPostInstall then begin
+    InstallationFailed := True;
     AppPort := Trim(AppPortPage.Values[0]);
     StorageRoot := Trim(DataRootPage.Values[0]);
     AdminPassword := AdminPage.Values[0];
@@ -940,6 +941,7 @@ begin
     if not SaveStringToFile(InstallMarkerPath, '{#MyAppVersion}', False) then
       FailSetup('程序已启动，但无法保存安装完成标记，请检查配置目录权限后重新安装。业务数据已保留。');
     DeleteFile(ExpandConstant('{app}\workload-tool.exe'));
+    InstallationFailed := False;
   end;
 end;
 

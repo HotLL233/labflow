@@ -71,6 +71,29 @@ async function waitFor(fn, timeout = 150000) {
   }
   throw Error(`Timed out during ${phase}`);
 }
+async function writeRedactedLogs(directory, secret) {
+  const destination = path.join(directory, 'redacted');
+  fs.mkdirSync(destination, { recursive: true });
+  for (const file of fs.readdirSync(directory).filter(name => name.endsWith('.log'))) {
+    const filename = path.join(directory, file);
+    try {
+      await waitFor(() => {
+        try {
+          const handle = fs.openSync(filename, 'r+');
+          fs.closeSync(handle);
+          return true;
+        } catch (error) {
+          if (['EBUSY', 'EPERM', 'EACCES'].includes(error.code)) return false;
+          throw error;
+        }
+      }, 30000);
+      fs.writeFileSync(path.join(destination, file),
+        fs.readFileSync(filename, 'utf8').replaceAll(secret, '[isolated-test-password]'));
+    } catch (error) {
+      throw Error(`Could not redact ${file}: ${error.message}`);
+    }
+  }
+}
 function run(file, args, name, timeout = 300000) {
   const stdout = fs.openSync(path.join(out, `${name}.stdout.log`), 'w');
   const stderr = fs.openSync(path.join(out, `${name}.stderr.log`), 'w');
@@ -269,14 +292,22 @@ async function uninstall(name) {
   report.error = String(error.message).replaceAll(password, '[isolated-test-password]');
   report.error_phase = phase;
   process.exitCode = 1;
-}).finally(() => {
+}).finally(async () => {
   if (fs.existsSync(out)) {
-    for (const file of fs.readdirSync(out).filter(name => name.endsWith('.log'))) {
-      const filename = path.join(out, file);
-      fs.writeFileSync(filename, fs.readFileSync(filename, 'utf8').replaceAll(password, '[isolated-test-password]'));
+    try {
+      await writeRedactedLogs(out, password);
+    } catch (error) {
+      report.status = 'failed';
+      report.log_redaction_error = String(error.message).replaceAll(password, '[isolated-test-password]');
+      if (!report.error) {
+        report.error = report.log_redaction_error;
+        report.error_phase = phase;
+      }
+      process.exitCode = 1;
+    } finally {
+      report.finished_at = new Date().toISOString();
+      fs.writeFileSync(path.join(out, 'installer-verification.json'), JSON.stringify(report, null, 2));
     }
-    report.finished_at = new Date().toISOString();
-    fs.writeFileSync(path.join(out, 'installer-verification.json'), JSON.stringify(report, null, 2));
   }
   console.log(JSON.stringify({ status: report.status, checks: checks.length, error_phase: report.error_phase }));
 });

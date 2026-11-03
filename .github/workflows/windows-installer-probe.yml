@@ -64,5 +64,5 @@ jobs:
             ci-artifacts/installer-probe/output/*.json
             ci-artifacts/installer-probe/output/*.log
             ci-artifacts/installer-probe/output/lifecycle/*.json
-            ci-artifacts/installer-probe/output/lifecycle/*.log
+            ci-artifacts/installer-probe/output/lifecycle/redacted/*.log
           if-no-files-found: warn

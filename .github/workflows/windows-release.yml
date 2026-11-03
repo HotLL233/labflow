@@ -164,7 +164,7 @@ jobs:
             ci-artifacts/windows/backend-acceptance/*.json
             ci-artifacts/windows/backend-acceptance/*.log
             ci-artifacts/windows/installer-acceptance/*.json
-            ci-artifacts/windows/installer-acceptance/*.log
+            ci-artifacts/windows/installer-acceptance/redacted/*.log
             ci-artifacts/windows/delivery/manifest.json
             ci-artifacts/windows/delivery/SHA256SUMS
             ci-artifacts/windows/delivery/DELIVERY-CHECKLIST.md
