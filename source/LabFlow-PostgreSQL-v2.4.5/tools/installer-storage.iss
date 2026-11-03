@@ -232,7 +232,11 @@ begin
     LFS_SelectedRoot := CurrentRoot;
     if CurrentValid and OldValid then
       LFS_SetStorageError('labflow 和 WorkloadTool 均发现 PostgreSQL 数据目录，已停止自动选择，请先确认要保留的安装。')
-    else if OldValid then LFS_SelectedRoot := OldRoot
+    else if OldValid then begin
+      LFS_SelectedRoot := OldRoot;
+      if FileExists(AddBackslash(CurrentRoot) + 'server-config.toml') then
+        LFS_SetStorageError('原数据库位于 WorkloadTool，但 labflow 目录仍有另一份配置，会影响后续普通启动。请先确认并保留正确配置，安装未修改文件。');
+    end
     else if not CurrentValid then begin
       if not LFS_HasState(CurrentRoot) and LFS_HasState(OldRoot) then LFS_SelectedRoot := OldRoot;
     end;

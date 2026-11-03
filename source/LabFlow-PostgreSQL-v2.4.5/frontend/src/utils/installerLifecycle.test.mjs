@@ -207,6 +207,7 @@ test('full hot-update and uninstall share Unicode storage resolution and stop am
   assert.match(storagePaths, /Ord\(Bytes\[1\]\) = \$EF[\s\S]*Ord\(Bytes\[2\]\) = \$BB[\s\S]*Ord\(Bytes\[3\]\) = \$BF/);
   assert.match(storagePaths, /Utf8Encode\(Decoded\) = Bytes/);
   assert.match(storagePaths, /if Count > 1 then[\s\S]*LFS_SetStorageError/);
+  assert.match(storagePaths, /else if OldValid then begin[\s\S]*FileExists\(AddBackslash\(CurrentRoot\) \+ 'server-config.toml'\)[\s\S]*LFS_SetStorageError/);
   assert.match(uninstall, /Root := LFS_ReadStorageRoot\(LFU_SharedRoot, LegacyLayout\)/);
   const hotPrepare = hot.slice(hot.indexOf('function PrepareToInstall'), hot.indexOf('procedure PrepareUpgrade'));
   assert.match(hotPrepare, /LFS_ConfiguredAppData\(Shared\)[\s\S]*LFS_HasCluster\(Storage, LegacyLayout\)/);
