@@ -593,6 +593,64 @@ begin
   end;
 end;
 
+function ValidInstallerAccountSid(const Value: String): Boolean;
+var
+  Index, SegmentLength, Separators: Integer;
+begin
+  Result := False;
+  if Copy(Value, 1, 4) <> 'S-1-' then exit;
+  SegmentLength := 0;
+  Separators := 0;
+  for Index := 5 to Length(Value) do begin
+    if (Value[Index] >= '0') and (Value[Index] <= '9') then
+      SegmentLength := SegmentLength + 1
+    else if Value[Index] = '-' then begin
+      if SegmentLength = 0 then exit;
+      Separators := Separators + 1;
+      SegmentLength := 0;
+    end else exit;
+  end;
+  Result := (SegmentLength > 0) and (Separators >= 1);
+end;
+
+function InstallerAccountSid: String;
+var
+  Capture: TExecOutput;
+  ResultCode, Index, Separator: Integer;
+  Line, SidField: String;
+begin
+  if not ExecAndCaptureOutput(ExpandConstant('{sys}\whoami.exe'), '/user /fo csv /nh', '',
+    SW_HIDE, ewWaitUntilTerminated, ResultCode, Capture) then
+    FailSetup('无法读取当前安装账户，数据库初始化已停止。');
+  if (ResultCode <> 0) or Capture.Error then
+    FailSetup('无法确认当前安装账户，数据库初始化已停止。');
+  Line := '';
+  for Index := 0 to GetArrayLength(Capture.StdOut) - 1 do begin
+    if Trim(Capture.StdOut[Index]) <> '' then begin
+      if Line <> '' then FailSetup('安装账户信息不唯一，数据库初始化已停止。');
+      Line := Trim(Capture.StdOut[Index]);
+    end;
+  end;
+  if (Length(Line) < 8) or (Copy(Line, 1, 1) <> '"') or
+    (Copy(Line, Length(Line), 1) <> '"') then
+    FailSetup('安装账户信息格式无效，数据库初始化已停止。');
+  Separator := 0;
+  for Index := Length(Line) downto 1 do begin
+    if Line[Index] = ',' then begin
+      Separator := Index;
+      break;
+    end;
+  end;
+  if Separator <= 2 then FailSetup('无法识别安装账户 SID，数据库初始化已停止。');
+  SidField := Trim(Copy(Line, Separator + 1, Length(Line) - Separator));
+  if (Length(SidField) < 2) or (Copy(SidField, 1, 1) <> '"') or
+    (Copy(SidField, Length(SidField), 1) <> '"') then
+    FailSetup('安装账户 SID 字段格式无效，数据库初始化已停止。');
+  Result := Copy(SidField, 2, Length(SidField) - 2);
+  if not ValidInstallerAccountSid(Result) then
+    FailSetup('安装账户 SID 无效，数据库初始化已停止。');
+end;
+
 procedure InitializePostgresCluster;
 var
   PasswordFile: String;
@@ -601,22 +659,38 @@ var
   ResultCode: Integer;
   DatabaseUrl: String;
   ApplicationDatabaseUrl: String;
+  AccountSid: String;
+  TemporaryAccessGranted: Boolean;
 begin
   PostgresPassword := NewSecret('postgres');
   ApplicationPassword := NewSecret('labflow-app');
+  if DirExists(DataPath) then FailSetup('新数据库目录已存在，安装已停止，原目录未修改。');
   if not ForceDirectories(DataPath) then FailSetup('无法创建 PostgreSQL 数据目录。');
   PasswordFile := ExpandConstant('{tmp}\labflow-postgres-password.txt');
+  TemporaryAccessGranted := False;
   try
+    AccountSid := InstallerAccountSid;
+    if AccountSid <> 'S-1-5-18' then begin
+      Parameters := '"' + DataPath + '" /grant:r "*' + AccountSid + ':(M)"';
+      if not RunChecked(ExpandConstant('{sys}\icacls.exe'), Parameters, '', '数据库初始化账户权限准备失败。') then
+        FailSetup('无法准备当前安装账户的临时目录权限。');
+      TemporaryAccessGranted := True;
+    end;
     if not SaveStringToFile(PasswordFile, PostgresPassword, False) then
       FailSetup('无法写入 PostgreSQL 初始化密码文件。');
     Parameters := '-D "' + DataPath + '" -U postgres --auth=scram-sha-256 --pwfile="' + PasswordFile + '" -E UTF8';
     if not RunChecked(RuntimePath('bin\initdb.exe'), Parameters, '', 'PostgreSQL 数据目录初始化失败。') then FailSetup('PostgreSQL 初始化失败。');
+    if not RepairPostgresPermissions then
+      FailSetup('数据库服务账户权限初始化失败，私有服务尚未注册或启动。');
   finally
     DeleteFile(PasswordFile);
+    if TemporaryAccessGranted then begin
+      Parameters := '"' + DataPath + '" /remove:g "*' + AccountSid + '"';
+      if not RunChecked(ExpandConstant('{sys}\icacls.exe'), Parameters, '', '数据库初始化临时权限撤销失败。') then
+        FailSetup('无法撤销数据库初始化临时权限，私有服务不会注册或启动。');
+    end;
   end;
   WritePostgresConfiguration;
-  if not RepairPostgresPermissions then
-    FailSetup('数据库服务账户权限初始化失败，私有服务尚未注册或启动。');
   Parameters := 'register -N "' + PostgresServiceName + '" -D "' + DataPath + '" -S auto';
   if not RunChecked(RuntimePath('bin\pg_ctl.exe'), Parameters, '', 'PostgreSQL 私有服务注册失败。') then FailSetup('PostgreSQL 私有服务注册失败。');
   Exec(ExpandConstant('{sys}\sc.exe'), 'start "' + PostgresServiceName + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);

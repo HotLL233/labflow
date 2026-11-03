@@ -87,8 +87,40 @@ test('initialization checks directory and password writes and always removes its
   const initialize = full.slice(full.indexOf('procedure InitializePostgresCluster'), full.indexOf('function ReadConfiguredDatabaseUrl'));
   assert.match(initialize, /if not ForceDirectories\(DataPath\) then FailSetup/);
   assert.match(initialize, /PasswordFile := ExpandConstant\('\{tmp\}\\labflow-postgres-password\.txt'\)/);
-  assert.match(initialize, /try\s+if not SaveStringToFile\(PasswordFile, PostgresPassword, False\) then/);
-  assert.match(initialize, /try[\s\S]*RunChecked\(RuntimePath\('bin\\initdb\.exe'\)[\s\S]*finally\s+DeleteFile\(PasswordFile\);\s+end;/);
+  assert.match(initialize, /try[\s\S]*if not SaveStringToFile\(PasswordFile, PostgresPassword, False\) then/);
+  assert.match(initialize, /try[\s\S]*RunChecked\(RuntimePath\('bin\\initdb\.exe'\)[\s\S]*finally\s+DeleteFile\(PasswordFile\);[\s\S]*end;/);
   assert.ok(initialize.indexOf('finally') < initialize.indexOf('WritePostgresConfiguration'));
   assert.ok(initialize.indexOf("RuntimePath('bin\\initdb.exe')") < initialize.indexOf('RepairPostgresPermissions'));
+});
+
+test('fresh cluster initialization obtains a validated current account SID without a broad-account fallback', () => {
+  const validator = full.slice(full.indexOf('function ValidInstallerAccountSid'), full.indexOf('function InstallerAccountSid'));
+  assert.match(validator, /Copy\(Value, 1, 4\) <> 'S-1-'/);
+  assert.match(validator, /Value\[Index\] >= '0'[\s\S]*Value\[Index\] <= '9'/);
+  assert.match(validator, /if SegmentLength = 0 then exit/);
+  assert.match(validator, /SegmentLength > 0[\s\S]*Separators >= 1/);
+  const account = full.slice(full.indexOf('function InstallerAccountSid'), full.indexOf('procedure InitializePostgresCluster'));
+  assert.match(account, /ExecAndCaptureOutput\(ExpandConstant\('\{sys\}\\whoami\.exe'\), '\/user \/fo csv \/nh', '',\s*SW_HIDE, ewWaitUntilTerminated, ResultCode, Capture\)/);
+  assert.match(account, /ResultCode <> 0[\s\S]*Capture\.Error/);
+  assert.match(account, /if Line <> '' then FailSetup/);
+  assert.match(account, /for Index := Length\(Line\) downto 1[\s\S]*Line\[Index\] = ','[\s\S]*Separator := Index/);
+  assert.match(account, /Result := Copy\(SidField, 2, Length\(SidField\) - 2\)/);
+  assert.match(account, /if not ValidInstallerAccountSid\(Result\) then\s+FailSetup/);
+  assert.doesNotMatch(account, /S-1-5-32-545|S-1-5-11|USERNAME|USERPROFILE|ExecAsOriginalUser/);
+});
+
+test('only the new PG root gets temporary noninheriting account Modify and cleanup precedes service startup', () => {
+  const initialize = full.slice(full.indexOf('procedure InitializePostgresCluster'), full.indexOf('function ReadConfiguredDatabaseUrl'));
+  assert.ok(initialize.indexOf('if DirExists(DataPath) then FailSetup') < initialize.indexOf('ForceDirectories(DataPath)'));
+  assert.match(initialize, /TemporaryAccessGranted := False/);
+  assert.match(initialize, /if AccountSid <> 'S-1-5-18' then begin[\s\S]*\/grant:r "\*' \+ AccountSid \+ ':\(M\)"'[\s\S]*TemporaryAccessGranted := True/);
+  assert.doesNotMatch(initialize, /\(OI\)|\(CI\)|S-1-5-32-545|S-1-5-11|takeown|\/T\b/);
+  assert.match(initialize, /finally[\s\S]*DeleteFile\(PasswordFile\)[\s\S]*if TemporaryAccessGranted then begin[\s\S]*\/remove:g "\*' \+ AccountSid/);
+  assert.match(initialize, /临时权限撤销失败[\s\S]*FailSetup/);
+  assert.ok(initialize.indexOf("RuntimePath('bin\\initdb.exe')") < initialize.indexOf('RepairPostgresPermissions'));
+  assert.ok(initialize.indexOf('RepairPostgresPermissions') < initialize.indexOf('/remove:g'));
+  assert.ok(initialize.indexOf('/remove:g') < initialize.indexOf('WritePostgresConfiguration'));
+  assert.ok(initialize.indexOf('/remove:g') < initialize.indexOf("Parameters := 'register"));
+  const upgrade = full.slice(full.indexOf('procedure StartExistingPostgres'), full.indexOf('function ReadConfiguredPort'));
+  assert.doesNotMatch(upgrade, /InstallerAccountSid|TemporaryAccessGranted|\/grant:r|\/remove:g/);
 });
