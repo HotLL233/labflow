@@ -1,8 +1,10 @@
-# labflow：v2.4.4 预验收通过，准备正式发布
+# labflow：v2.4.4 辅助记录、安装与备份修复
 
-当前开发源码为 `source/LabFlow-PostgreSQL-v2.4.4/`，已通过244项前端、382项后端、3项独立备份恢复专项及21项Windows安装生命周期检查。辅助工作记录、统计卡片、首次安装、卸载和全量备份设置修复已完成预验收，正在准备标签、正式安装包和镜像。当前正式版仍为 **v2.4.3**，v2.4.4尚未正式发布；保留历史数据、系数、权限及自定义配置。实际证据见本版《安装包说明.md》。
+当前正式版本为 **v2.4.4**，源码目录为 `source/LabFlow-PostgreSQL-v2.4.4/`。辅助记录已进入检测人记录，统计内新增辅助记录卡片；首次安装、卸载及全量备份保存问题已修复。244项前端、382项后端、3项独立备份恢复专项及21项Windows安装生命周期检查通过，源码、两类正式安装包、GitHub Release及GHCR镜像均已发布核验。保留程序内品牌、历史数据与系数、权限及自定义配置，详情见本版《安装包说明.md》。
 
-v2.4.3正式交付：标签源码`9c851282dfbe49f63836f29899bfa85d47ad27db`；Windows41441442942、Docker41441442681均成功，Release431430381为最新正式版本，五份资产及CI安装包回写提交`1886654b908e615a8779007b99c50509e8e4d28d`已核验并快进本地。根`installers/`两包均2.4.3.0，与Release、manifest、SHA256SUMS及Git字节一致；GHCR2.4.3/latest同摘要`sha256:d3f431168927d15dc6158ee606631204e6b048f9abdc3c789c4be32e84cca801`，linux/amd64。本机编译OOM，数据库/HTTP验收使用准确提交及SHA绑定的CI预验收程序，正式构建与其受控输入相同，二进制来源和哈希分别记录。测试库及56643/57643已收尾，未操作生产库或8000；未做真实群/网盘、浏览器视觉/手机实机、现场覆盖安装或容器运行验收。旧备份缺失的归档需从原机补齐。
+v2.4.4正式交付：标签源码`54ff8327337ab23da7ebc8368fb4fbd9b114a942`，Windows41600799518、Docker41600799699成功，Release432433941已确认为最新正式版本。CI安装包回写`cf8598aeef8781d5eaa33595b82d8213154096a1`已快进本地；根`installers/`两包均2.4.4.0，与Release、清单及Git字节一致，本版`installer/`硬链接留档且不重复占用包数据空间。GHCR2.4.4/latest同摘要`sha256:522ae6246ff50bab030196ca95781bb53ee0055110952198b09435ba762c6c50`，linux/amd64。正式构建与完整预验收受控输入及前端摘要一致；实际安装/数据库测试在一次性CI机器完成，未操作本机生产库或服务，未做现场覆盖安装、手机实机或容器运行验收。
+
+v2.4.3历史正式交付：标签源码`9c851282dfbe49f63836f29899bfa85d47ad27db`；Windows41441442942、Docker41441442681均成功，Release431430381为该版发布时的正式版本，五份资产及CI安装包回写提交`1886654b908e615a8779007b99c50509e8e4d28d`已核验并快进本地。根`installers/`两包均2.4.3.0，与Release、manifest、SHA256SUMS及Git字节一致；GHCR2.4.3/latest在该版发布时同摘要`sha256:d3f431168927d15dc6158ee606631204e6b048f9abdc3c789c4be32e84cca801`，linux/amd64。本机编译OOM，数据库/HTTP验收使用准确提交及SHA绑定的CI预验收程序，正式构建与其受控输入相同，二进制来源和哈希分别记录。测试库及56643/57643已收尾，未操作生产库或8000；未做真实群/网盘、浏览器视觉/手机实机、现场覆盖安装或容器运行验收。旧备份缺失的归档需从原机补齐。
 
 v2.4.2历史正式交付：标签源码 `89a418618d564c6ab76f442ef140ca463ddce1c8`；Windows41385276182、Docker41385276203均成功，Release431062768在该版发布时为最新正式版本。CI安装包回写提交 `4a179315d794d78a11b131f8719ebaf215d41530` 已快进本地；根 `installers/` 两包均2.4.2.0，与Release、manifest及远端Git字节/摘要一致，本版 `installer/` 继续独立保留本地验收包。CI仅All Build的12项通过、5项未运行，独立后端及HTTP验收为本地证据。GHCR `2.4.2`/`latest` 在该版发布时同摘要 `sha256:9f7f9f0efae512676ce3e15f99d33c1345bedec438b62f9b474bb8522c798d8a`，linux/amd64；未实际启动容器。历史缺失人员ID需管理员核对，不自动按姓名重绑。未做浏览器视觉/手机实机或现场覆盖安装验收；详情见本版《安装包说明.md》。
 
@@ -53,7 +55,7 @@ GitHub Release 的 `manifest.json`、`SHA256SUMS`、`DELIVERY-CHECKLIST.md` 已�
 - 不再新增或维护按日期记忆、`历史记忆_*.md`、`开发交接_*.md`、`续接提示词_*.md` 或 `HANDOFF.md`；旧版本目录中的同类文件只作历史归档，不得作为当前规则来源或复制到新版本。
 - 版本 `更新说明.md` 和专项文档仍按用途维护，但不得复制一套长期记忆。规则冲突时以当前用户要求、当前源码与工作流、`PROJECT_MEMORY.md` 的顺序为准。
 
-1. 当前正式源码：`source/LabFlow-PostgreSQL-v2.4.3/`，源码、两类CI安装包、Release及GHCR均已发布核验。行为、验证与交付状态见对应版本 `更新说明.md`、`安装包说明.md` 与根 `PROJECT_MEMORY.md`。
+1. 当前正式源码：`source/LabFlow-PostgreSQL-v2.4.4/`，源码、两类CI安装包、Release及GHCR均已发布核验。行为、验证与交付状态见对应版本 `更新说明.md`、`安装包说明.md` 与根 `PROJECT_MEMORY.md`。
 2. Gitee 源码仓库：`https://gitee.com/HotLL233/labflow`（自 v2.3.18 起暂停向 Gitee 推送，仅保留历史仓库）。
 3. Docker 部署使用 `docker-compose.deploy.yml`，推荐执行 `scripts/pull-labflow-image.ps1`（Windows）或 `scripts/pull-labflow-image.sh`（Ubuntu）。
 4. 脚本按 `LABFLOW_IMAGE_PRIORITY` 依次尝试已配置的镜像地址，成功后再启动 Compose；Gitee 镜像地址未配置时跳过，目前发布仅使用 GHCR。
