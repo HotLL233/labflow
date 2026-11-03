@@ -21,8 +21,10 @@ const owner = crypto.randomUUID();
 const shared = path.join(process.env.ProgramData, 'labflow');
 const config = path.join(shared, 'server-config.toml');
 const marker = path.join(shared, 'ci-lifecycle-owner.txt');
+const completionMarker = path.join(shared, 'install-complete.marker');
+const storageMarker = path.join(shared, 'storage-root.txt');
 const appDir = path.join(out, 'application with spaces');
-const storage = path.join(out, 'storage with spaces');
+let storage = path.join(out, 'storage with spaces');
 const executable = path.join(appDir, 'labflow.exe');
 const full = path.join(installers, `labflow-v${version}.exe`);
 const hot = path.join(installers, `labflow-v${version}-hotupdate.exe`);
@@ -42,6 +44,25 @@ const report = { version, status: 'running', source_commit: process.env.GITHUB_S
   browser_visual_tested: false, physical_machine_installation_tested: false };
 function ok(condition, name) { assert.ok(condition, name); checks.push(name); }
 function hash(file) { return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'); }
+function treeHash(directory) {
+  const entries = [];
+  const visit = current => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      assert.equal(entry.isSymbolicLink(), false, 'Preserved CI fixture must not contain links');
+      const filename = path.join(current, entry.name);
+      const relative = path.relative(directory, filename).split(path.sep).join('/');
+      if (entry.isDirectory()) {
+        entries.push([relative, 'directory']);
+        visit(filename);
+      } else {
+        assert.ok(entry.isFile(), 'Preserved CI fixture must contain only directories and files');
+        entries.push([relative, 'file', hash(filename)]);
+      }
+    }
+  };
+  visit(directory);
+  return crypto.createHash('sha256').update(JSON.stringify(entries)).digest('hex');
+}
 function sc(...args) {
   return cp.spawnSync(path.join(process.env.SystemRoot, 'System32/sc.exe'), args,
     { encoding: 'utf8', windowsHide: true, env });
@@ -159,24 +180,47 @@ function sql(query) {
   { encoding: 'utf8', windowsHide: true,
     env: { ...env, PGPASSWORD: decodeURIComponent(database.password), PGCLIENTENCODING: 'UTF8' } }).trim();
 }
-async function install(file, name) {
+async function install(file, name, extraArguments = []) {
   const log = path.join(out, `${name}.installer.log`);
   await run(file, ['/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',`/LOG=${log}`,
     `/DIR=${appDir}`, `/APPPORT=${port}`, `/DATAROOT=${storage}`,
-    `/ADMINPASSWORD=${password}`, '/TASKS='], name);
+    `/ADMINPASSWORD=${password}`, '/TASKS=', ...extraArguments], name);
   await ready();
   admin = await login();
   ok(true, `${name}: exact version and administrator login succeed`);
 }
+async function verifyStorageParser() {
+  const fixture = path.join(out, 'storage parser fixture');
+  fs.mkdirSync(fixture);
+  fs.writeFileSync(path.join(fixture, '.labflow-storage-probe-owner'), owner);
+  await run('C:\\Program Files (x86)\\Inno Setup 6\\ISCC.exe', [
+    `/DSTORAGE_HELPER=${path.join(source, 'tools/installer-storage.iss')}`,
+    `/O${installers}`, path.join(workspace, 'scripts/test-installer-storage.iss'),
+  ], 'storage-parser-compile');
+  await run(path.join(installers, 'labflow-installer-storage-probe.exe'), [
+    '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART',
+    `/FIXTURE_ROOT=${fixture}`, `/FIXTURE_OWNER=${owner}`,
+    `/LOG=${path.join(out, 'storage-parser.installer.log')}`,
+  ], 'storage-parser');
+  const result = JSON.parse(fs.readFileSync(path.join(fixture, 'verification.json'), 'utf8').replace(/^\uFEFF/, ''));
+  ok(result.status === 'passed' && result.checks === 6,
+    'actual Pascal storage parser passes six guarded encoding, recovery and ambiguity scenarios');
+  report.storage_parser_probe = result;
+}
 async function uninstall(name) {
   assertOwned();
+  const retained = [config, completionMarker, storageMarker].map(filename => [filename, hash(filename)]);
   await run(path.join(appDir, 'unins000.exe'),
     ['/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',`/LOG=${path.join(out, `${name}.installer.log`)}`], name);
   await waitForFreePort(port);
   await waitFor(() => sc('query', service).status !== 0, 30000);
+  // The launcher can exit before its worker finishes deleting files and closes the log.
+  await writeRedactedLogs(out, password);
   ok(true, `${name}: private PostgreSQL service is removed`);
   ok(fs.existsSync(config) && fs.existsSync(path.join(storage, 'postgresql/data/PG_VERSION')),
     `${name}: configuration and database storage remain`);
+  ok(retained.every(([filename, digest]) => fs.existsSync(filename) && hash(filename) === digest),
+    `${name}: configuration and both installation markers remain byte-for-byte unchanged`);
   assertOwned();
 }
 
@@ -191,6 +235,8 @@ async function uninstall(name) {
     name: path.basename(file), bytes: fs.statSync(file).size, sha256: hash(file),
   }));
   fs.mkdirSync(out, { recursive: true });
+  phase = 'guarded storage parser fixture';
+  await verifyStorageParser();
   fs.mkdirSync(shared);
   fs.writeFileSync(marker, owner);
   phase = 'fresh full installation';
@@ -273,19 +319,119 @@ async function uninstall(name) {
   ok(fs.readFileSync(backupFile).subarray(0, 2).equals(Buffer.from('PK')), 'default manual backup actually creates a full ZIP');
   const backupHash = hash(backupFile);
 
-  phase = 'hot update and uninstall';
-  await install(hot, 'hot-update');
-  ok((await api(query, admin)).items.some(row => row.origin === 'auxiliary_record' && row.id === auxiliary.id),
-    'hot update preserves the auxiliary history');
-  await uninstall('uninstall-after-hot');
-  ok(hash(backupFile) === backupHash, 'uninstall preserves the existing full backup bytes');
-
-  phase = 'reinstallation over retained data';
-  await install(full, 'retained-data-reinstall');
+  phase = 'direct full uninstall and reinstallation without a hot update';
+  await uninstall('direct-full-uninstall');
+  await install(full, 'direct-full-reinstall');
   ok((await api('/api/backup/config', admin)).mode === 'full'
     && (await api(query, admin)).items.some(row => row.origin === 'auxiliary_record' && row.id === auxiliary.id),
   'reinstallation retains login, backup mode and recorded auxiliary work');
-  await uninstall('final-uninstall');
+  ok(hash(backupFile) === backupHash, 'direct full uninstall and reinstallation preserve the existing full backup bytes');
+
+  for (const scenario of [
+    { name: 'missing-completion-marker', change: () => fs.unlinkSync(completionMarker) },
+    { name: 'missing-storage-marker', change: () => fs.unlinkSync(storageMarker) },
+    { name: 'malformed-storage-marker', change: () => fs.writeFileSync(storageMarker, 'invalid-ci-storage-marker\n', 'utf8') },
+  ]) {
+    phase = scenario.name;
+    assertOwned();
+    scenario.change();
+    await install(full, scenario.name);
+    const records = (await api(query, admin)).items;
+    ok((await api('/api/backup/config', admin)).mode === 'full'
+      && configValue('ci_preserved_setting') === 'keep' && configValue('server_port') === port
+      && records.some(row => row.origin === 'auxiliary_record' && row.id === auxiliary.id
+        && row.quantity === 3 && row.coefficient === 2.5)
+      && records.some(row => row.origin === 'work_record' && row.id === auxiliary.id
+        && row.normal_record?.high_item === 'CI high item')
+      && hash(backupFile) === backupHash,
+    `${scenario.name}: the existing records, configuration and backup survive repair`);
+    const savedRoot = fs.readFileSync(storageMarker, 'utf8').replace(/^\uFEFF/, '').trim();
+    ok(savedRoot === `v2|${storage}` && fs.readFileSync(completionMarker, 'utf8').trim() === version,
+      `${scenario.name}: installation markers identify the retained cluster after repair`);
+  }
+
+  phase = 'missing PostgreSQL data is preserved as a stopped CI fixture';
+  await uninstall('before-missing-pg');
+  assertOwned();
+  const originalStorage = storage;
+  const originalAppData = path.join(originalStorage, 'app-data');
+  const originalPg = path.join(originalStorage, 'postgresql/data');
+  const fixtureRoot = fs.realpathSync(out);
+  const parkedPg = path.join(fixtureRoot, 'preserved original PostgreSQL data');
+  assert.ok(fixtureRoot.toLowerCase().startsWith(workspace.toLowerCase() + path.sep));
+  const resolvedPg = fs.realpathSync(originalPg);
+  assert.ok(resolvedPg.toLowerCase().startsWith(fixtureRoot.toLowerCase() + path.sep));
+  assert.equal(fs.realpathSync(path.dirname(parkedPg)).toLowerCase(), fixtureRoot.toLowerCase());
+  assert.equal(fs.existsSync(parkedPg), false, 'Preserved PG destination must not already exist');
+  const oldPgDigest = treeHash(resolvedPg);
+  const oldAppDataDigest = treeHash(originalAppData);
+  const oldProgramDigest = fs.existsSync(appDir) ? treeHash(appDir) : null;
+  const oldSettings = [config, completionMarker, storageMarker].map(filename => [filename, hash(filename)]);
+  const archiveRoot = path.join(shared, 'reinstall-archive');
+  const archivesBefore = fs.existsSync(archiveRoot) ? fs.readdirSync(archiveRoot).sort() : [];
+  fs.renameSync(resolvedPg, parkedPg);
+  ok(!fs.existsSync(originalPg) && treeHash(parkedPg) === oldPgDigest,
+    'the missing-data fixture moves the stopped cluster only within its owned CI directory');
+  const checkRefusedInstall = name => {
+    ok(!fs.existsSync(executable) && !fs.existsSync(originalPg)
+      && oldSettings.every(([filename, digest]) => fs.existsSync(filename) && hash(filename) === digest)
+      && (fs.existsSync(appDir) ? treeHash(appDir) : null) === oldProgramDigest
+      && treeHash(originalAppData) === oldAppDataDigest && treeHash(parkedPg) === oldPgDigest,
+    `${name}: refusal leaves program files, configuration and preserved business data unchanged`);
+    assert.deepEqual(fs.existsSync(archiveRoot) ? fs.readdirSync(archiveRoot).sort() : [], archivesBefore);
+  };
+
+  phase = 'default reinstallation refuses genuinely missing PostgreSQL data';
+  await assert.rejects(install(full, 'missing-pg-default-refused'), /exited with code [1-9]\d*/);
+  checkRefusedInstall('missing-pg-default-refused');
+  phase = 'explicit fresh installation refuses the occupied old application data root';
+  await assert.rejects(install(full, 'occupied-root-new-refused', ['/REINSTALL=NEW']), /exited with code [1-9]\d*/);
+  checkRefusedInstall('occupied-root-new-refused');
+
+  phase = 'explicit new installation archives retained configuration and uses a different empty root';
+  storage = path.join(fixtureRoot, 'new empty storage with spaces');
+  assert.equal(fs.existsSync(storage), false);
+  fs.mkdirSync(storage);
+  await install(full, 'explicit-new-empty-root', ['/REINSTALL=NEW']);
+  const newArchives = fs.readdirSync(archiveRoot, { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && !archivesBefore.includes(entry.name));
+  assert.equal(newArchives.length, 1, 'Explicit new installation must create one configuration archive');
+  const archive = path.join(archiveRoot, newArchives[0].name);
+  ok(oldSettings.every(([filename, digest]) => hash(path.join(archive, path.basename(filename))) === digest),
+    'explicit new installation archives the exact previous configuration and installation markers');
+  ok(path.resolve(configValue('db_dir')) === path.join(storage, 'app-data')
+    && Number(sql('SELECT COUNT(*) FROM auxiliary_work_records')) === 0
+    && Number(sql('SELECT COUNT(*) FROM work_records')) === 0,
+  'explicit new installation creates an empty database only in the selected new storage root');
+  ok(treeHash(originalAppData) === oldAppDataDigest && treeHash(parkedPg) === oldPgDigest
+    && hash(backupFile) === backupHash,
+  'explicit new installation preserves all old application files, full backup bytes and the isolated original PG cluster');
+  report.reinstall_archive = path.relative(shared, archive);
+  report.preserved_original_pg = path.relative(fixtureRoot, parkedPg);
+
+  sql(`INSERT INTO divisions(name) VALUES('ci-new-installation') ON CONFLICT(name) DO NOTHING;
+    UPDATE users SET division_id=(SELECT id FROM divisions WHERE name='ci-new-installation') WHERE username='admin';`);
+  const newUserId = Number(sql("SELECT id FROM users WHERE username='admin'"));
+  const newArea = await api('/api/auxiliary/areas', admin, 'POST', { name: 'CI new area', enabled: true, sort_order: 0 });
+  const newItem = await api('/api/auxiliary/items', admin, 'POST', { name: 'CI new item', coefficient: 2.5,
+    category: 'CI category', area_type_id: newArea.id, enabled: true, sort_order: 0, notes: '' });
+  const newAuxiliary = await api('/api/auxiliary/records', admin, 'POST', {
+    auxiliary_work_item_id: newItem.id, expected_item_updated_at: newItem.updated_at,
+    user_id: newUserId, quantity: 4, recorded_at: '2026-11-01T09:30:00', notes: 'CI explicit new installation record',
+  });
+  const newQuery = `/api/stats/person-records?start=2026-11-01&end=2026-11-01&subject_user_id=${newUserId}&page_size=200`;
+  await api('/api/backup/config', admin, 'PUT', backupSettings);
+  phase = 'hot update and uninstall after explicit new installation';
+  await install(hot, 'hot-update');
+  ok((await api(newQuery, admin)).items.some(row => row.origin === 'auxiliary_record'
+    && row.id === newAuxiliary.id && row.quantity === 4)
+    && (await api('/api/backup/config', admin)).mode === 'full',
+  'hot update preserves the auxiliary history');
+  await uninstall('uninstall-after-hot');
+  ok(hash(backupFile) === backupHash, 'uninstall preserves the existing full backup bytes');
+  ok(treeHash(originalAppData) === oldAppDataDigest && treeHash(parkedPg) === oldPgDigest
+    && oldSettings.every(([filename, digest]) => hash(path.join(archive, path.basename(filename))) === digest),
+  'final uninstall preserves the old business-data tree, isolated PG cluster and archived configuration');
   report.status = 'passed';
 })().catch(error => {
   report.status = 'failed';
