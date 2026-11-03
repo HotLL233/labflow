@@ -308,7 +308,7 @@ fn write_config_text(path: &std::path::Path, text: &str) -> Result<(), String> {
 }
 
 #[cfg(windows)]
-fn config_security_descriptor(path: &std::path::Path) -> Result<Vec<u8>, String> {
+pub(crate) fn config_security_descriptor(path: &std::path::Path) -> Result<Vec<u8>, String> {
     use std::os::windows::ffi::OsStrExt;
     use windows::core::PCWSTR;
     use windows::Win32::Security::{

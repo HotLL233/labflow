@@ -1327,7 +1327,27 @@ mod tests {
 
     #[test]
     fn mapped_history_list_preserves_original_access_and_is_read_only() {
-        let (pool, admin, person, department, foreign) = fixture();
+        #[derive(Debug)]
+        struct BeijingSession;
+        impl r2d2::CustomizeConnection<postgres_compat::Connection, postgres_compat::Error>
+            for BeijingSession
+        {
+            fn on_acquire(
+                &self,
+                conn: &mut postgres_compat::Connection,
+            ) -> std::result::Result<(), postgres_compat::Error> {
+                conn.execute_batch("SET TIME ZONE 'Asia/Shanghai'")
+            }
+        }
+        // The date-only assertions below describe a Beijing day, independent of the CI host.
+        let pool = r2d2::Pool::builder()
+            .max_size(4)
+            .min_idle(Some(1))
+            .connection_timeout(std::time::Duration::from_secs(10))
+            .connection_customizer(Box::new(BeijingSession))
+            .build(postgres_compat::ConnectionManager::test_database().unwrap())
+            .unwrap();
+        let (pool, admin, person, department, foreign) = fixture_on(pool);
         let item = write_item(&pool, &admin, None, &item_body(999.0)).unwrap();
         create_for(&pool, &person, &entry(&item, department)).unwrap();
         let conn = pool.get().unwrap();

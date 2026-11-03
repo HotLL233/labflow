@@ -93,6 +93,16 @@ jobs:
           name: labflow-backend-tests-${{ github.run_id }}
           path: ci-artifacts/windows/backend-tests
           if-no-files-found: error
+      - name: Upload frontend acceptance snapshot
+        if: github.event_name == 'workflow_dispatch' && inputs.run_acceptance
+        uses: actions/upload-artifact@v4
+        with:
+          name: labflow-static-${{ github.run_id }}
+          path: |
+            ci-artifacts/windows/backend-tests/static
+            ci-artifacts/windows/backend-tests/build-verification.json
+            ci-artifacts/windows/backend-tests/provenance.json
+          if-no-files-found: error
       - name: Prepare VC++ runtime
         shell: pwsh
         run: |
@@ -103,6 +113,7 @@ jobs:
         shell: pwsh
         run: choco install innosetup --no-progress -y
       - name: Build installers from verified artifacts
+        id: installer_build
         shell: pwsh
         run: |
           & ./scripts/build-installers.ps1 -SourceDir '${{ steps.version.outputs.source_dir }}' -VerificationReport "$env:GITHUB_WORKSPACE/ci-artifacts/windows/verification/verification.json" -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/windows/installers" -IsccPath 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
@@ -112,7 +123,7 @@ jobs:
         run: |
           & ./scripts/test-backend-ci.ps1 -SourceDir '${{ steps.version.outputs.source_dir }}' -ArtifactDir "$env:GITHUB_WORKSPACE/ci-artifacts/windows/backend-tests" -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/windows/backend-acceptance"
       - name: Run Windows installer lifecycle acceptance
-        if: github.event_name == 'workflow_dispatch' && inputs.run_acceptance
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.run_acceptance && steps.installer_build.outcome == 'success'
         shell: pwsh
         run: |
           node ./scripts/test-windows-installer.cjs '${{ steps.version.outputs.source_dir }}' 'ci-artifacts/windows/installers' 'ci-artifacts/windows/installer-acceptance'
@@ -154,6 +165,9 @@ jobs:
             ci-artifacts/windows/backend-acceptance/*.log
             ci-artifacts/windows/installer-acceptance/*.json
             ci-artifacts/windows/installer-acceptance/*.log
+            ci-artifacts/windows/delivery/manifest.json
+            ci-artifacts/windows/delivery/SHA256SUMS
+            ci-artifacts/windows/delivery/DELIVERY-CHECKLIST.md
           if-no-files-found: warn
       - name: Publish installers into repository
         id: repository_publish

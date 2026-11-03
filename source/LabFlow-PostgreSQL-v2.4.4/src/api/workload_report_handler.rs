@@ -1540,7 +1540,7 @@ mod tests {
     {
         let (pool, a, _, alice, _, _) = fixture();
         let conn = pool.get().unwrap();
-        conn.execute("INSERT INTO auxiliary_work_items(name,coefficient,enabled) VALUES('person-record-disabled-item',999,0)",[]).unwrap();
+        conn.execute("INSERT INTO auxiliary_work_items(name,coefficient,enabled) VALUES('person-record-disabled-item',999,FALSE)",[]).unwrap();
         let item = conn.last_insert_rowid();
         conn.execute("UPDATE auxiliary_work_records SET auxiliary_work_item_id=?1,coefficient_snapshot=0,area_name_snapshot='historical area',notes='disabled item historical note',created_by=?2 WHERE user_id=?2 AND detection_division_id=?3 AND auxiliary_work_name_snapshot='report_aux'",postgres_compat::params![item,alice,a]).unwrap();
         let scope = report_scope(Some(vec![a]), Some(alice));

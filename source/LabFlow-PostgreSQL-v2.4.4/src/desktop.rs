@@ -875,22 +875,7 @@ mod tests {
         std::fs::write(&runtime_file, b"runtime").unwrap();
         let config = root.join("server-config.toml");
         std::fs::write(&config, b"backup_mode = \"database\"\n").unwrap();
-        let powershell = system_tool(r"WindowsPowerShell\v1.0\powershell.exe").unwrap();
-        let acl = |path: &Path| {
-            let literal = path.to_string_lossy().replace('\'', "''");
-            let output = Command::new(&powershell)
-                .args([
-                    "-NoProfile",
-                    "-NonInteractive",
-                    "-Command",
-                    &format!("(Get-Acl -LiteralPath '{literal}').Sddl"),
-                ])
-                .creation_flags(CREATE_NO_WINDOW.0)
-                .output()
-                .unwrap();
-            assert!(output.status.success());
-            output.stdout
-        };
+        let acl = |path: &Path| crate::config::config_security_descriptor(path).unwrap();
         let before = acl(&runtime_file);
         let sid = process_user_sid(unsafe { GetCurrentProcess() }).unwrap();
         grant_installed_config_access(&system_tool("icacls.exe").unwrap(), &config, &sid).unwrap();

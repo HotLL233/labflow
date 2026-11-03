@@ -54,7 +54,7 @@ if ($ExpectedVersion -eq '8.8.9') { return [pscustomobject]@{version=$ExpectedVe
     Assert ($windows -match 'build-installers[.]ps1' -and $windows -notmatch 'cargo build|ISCC[.]exe.*build_') 'Windows bypasses artifact-reuse installer builder.'
     Assert ($windows -match 'non_fast_forward' -and $windows -match 'continue-on-error: true' -and $windows -match 'Create GitHub release' -and $windows -match 'git push origin') 'Windows changed retention/write-back contract.'
     Assert ($windows -match 'write-delivery-manifest[.]ps1[^\r\n]*-ArtifactPath \$artifacts -RequireWindowsInstallers -VerificationReport') 'Windows delivery must explicitly validate both installers.'
-    Assert (([regex]::Matches($windows, 'delivery/manifest[.]json')).Count -eq 2) 'Windows manifest must be uploaded as artifact and release asset.'
+    Assert (([regex]::Matches($windows, 'delivery/manifest[.]json')).Count -eq 3) 'Windows manifest must be retained in package artifacts, acceptance evidence and release assets.'
     $docker = Get-Content -LiteralPath (Join-Path $repo '.github/workflows/docker-publish.yml') -Raw
     Assert ($docker -match 'report[.]artifacts[.]static_path' -and $docker -match 'Get-LabFlowTreeHash' -and $docker -match 'backend/static') 'Docker must validate/copy report static.'
     Assert ($docker -match 'id: ghcr' -and $docker -match 'steps[.]ghcr[.]outputs[.]digest' -and $docker -match '-ImageDigest' -and $docker -notmatch 'action-gh-release|ArtifactPath') 'Docker image evidence contract changed.'
