@@ -28,9 +28,6 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          # 完整历史用于把安装包提交回仓库（Publish installers into repository 步骤）。
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: "24"

@@ -126,6 +126,9 @@ test('silent fresh installation validates its input and writes UTF8 configuratio
   assert.match(full.slice(full.indexOf('function ApplyInstallationChoice'), full.indexOf('function NewSecret')), /NewStorageRootIsSafe/);
   assert.match(full, /SaveStringToFile\(ConfigPath, Utf8Encode\(Content\), False\)/);
   assert.match(full, /if WizardSilent then[\s\S]*Log\('可选组件 LibreOffice/);
+  const next = full.slice(full.indexOf('function NextButtonClick'), full.indexOf('procedure CurPageChanged'));
+  assert.doesNotMatch(next, /\bMsgBox\(/);
+  assert.match(next, /SuppressibleMsgBox\(Error, mbError, MB_OK, IDOK\)/);
 });
 
 test('uninstall uses owned paths and services while preserving account data', () => {

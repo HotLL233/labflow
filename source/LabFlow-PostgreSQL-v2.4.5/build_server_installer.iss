@@ -988,20 +988,20 @@ begin
   Result := True;
   if CurPageID = AppPortPage.ID then begin
     if (StrToIntDef(Trim(AppPortPage.Values[0]), 0) < 1) or (StrToIntDef(Trim(AppPortPage.Values[0]), 0) > 65535) or (StrToIntDef(Trim(AppPortPage.Values[0]), 0) = StrToIntDef(InternalPostgresPort, 0)) then begin
-      MsgBox('请输入 1 到 65535 之间的有效端口。', mbError, MB_OK);
+      SuppressibleMsgBox('请输入 1 到 65535 之间的有效端口。', mbError, MB_OK, IDOK);
       Result := False;
     end;
   end;
   if CurPageID = DataRootPage.ID then begin
     Error := ApplyInstallationChoice;
     if Error <> '' then begin
-      MsgBox(Error, mbError, MB_OK);
+      SuppressibleMsgBox(Error, mbError, MB_OK, IDOK);
       Result := False;
       exit;
     end;
   end;
   if (CurPageID = AdminPage.ID) and (not UpgradeInstall) and (Length(Trim(AdminPage.Values[0])) < 8) then begin
-    MsgBox('全新安装的管理员密码至少需要 8 个字符。', mbError, MB_OK);
+    SuppressibleMsgBox('全新安装的管理员密码至少需要 8 个字符。', mbError, MB_OK, IDOK);
     Result := False;
   end;
 end;
