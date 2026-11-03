@@ -28,6 +28,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github
+            scripts
+            build-resources
+            docs
+            source/LabFlow-PostgreSQL-${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:

@@ -21,6 +21,13 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github
+            scripts
+            build-resources
+            docs
+            source/LabFlow-PostgreSQL-v${{ inputs.version }}
       - uses: actions/setup-node@v4
         with:
           node-version: "24"

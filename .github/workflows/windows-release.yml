@@ -28,6 +28,13 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github
+            scripts
+            build-resources
+            docs
+            source/LabFlow-PostgreSQL-${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || github.ref_name }}
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
@@ -177,7 +184,7 @@ jobs:
           Copy-Item "ci-artifacts/windows/installers/${{ steps.version.outputs.full_installer }}" 'installers/' -Force
           Copy-Item "ci-artifacts/windows/installers/${{ steps.version.outputs.hot_installer }}" 'installers/' -Force
           function Assert-Git([string]$Action) { if ($LASTEXITCODE -ne 0) { "status=failed" >> $env:GITHUB_OUTPUT; throw "Git $Action failed (exit $LASTEXITCODE)." } }
-          git add installers
+          git add --sparse "installers/${{ steps.version.outputs.full_installer }}" "installers/${{ steps.version.outputs.hot_installer }}"
           Assert-Git 'add'
           git diff --cached --quiet
           if ($LASTEXITCODE -eq 0) { "status=unchanged" >> $env:GITHUB_OUTPUT; Write-Host 'installers already up to date'; exit 0 }

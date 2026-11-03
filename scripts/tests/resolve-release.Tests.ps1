@@ -49,10 +49,12 @@ if ($ExpectedVersion -eq '8.8.9') { return [pscustomobject]@{version=$ExpectedVe
         Assert ($yaml -match 'resolve-release[.]ps1' -and $yaml -notmatch 'Select-Object -Last|sort -V|shell: powershell|shell: bash') "$name bypasses shared resolver/pwsh."
         Assert ($yaml -match 'node-version: "24"' -and $yaml -match '-Profile Build -Component (All|Frontend)') "$name missing Build verification/setup."
         Assert ($yaml -match 'if: always\(\)' -and $yaml -match 'verification/verification[.]json' -and $yaml -match 'verification/\*\*/\*[.]log') "$name missing always diagnostics."
+        Assert ($yaml.Contains('sparse-checkout:') -and $yaml.Contains('source/LabFlow-PostgreSQL-${{')) "$name must fetch the explicitly selected version without historical installers."
     }
     $windows = Get-Content -LiteralPath (Join-Path $repo '.github/workflows/windows-release.yml') -Raw
     Assert ($windows -match 'build-installers[.]ps1' -and $windows -notmatch 'cargo build|ISCC[.]exe.*build_') 'Windows bypasses artifact-reuse installer builder.'
     Assert ($windows -match 'non_fast_forward' -and $windows -match 'continue-on-error: true' -and $windows -match 'Create GitHub release' -and $windows -match 'git push origin') 'Windows changed retention/write-back contract.'
+    Assert ($windows.Contains('git add --sparse "installers/${{ steps.version.outputs.full_installer }}" "installers/${{ steps.version.outputs.hot_installer }}"') -and $windows -notmatch '(?m)^\s*git add installers\s*$') 'Sparse write-back must stage only the two new packages and retain historical files.'
     Assert ($windows -match 'write-delivery-manifest[.]ps1[^\r\n]*-ArtifactPath \$artifacts -RequireWindowsInstallers -VerificationReport') 'Windows delivery must explicitly validate both installers.'
     Assert (([regex]::Matches($windows, 'delivery/manifest[.]json')).Count -eq 3) 'Windows manifest must be retained in package artifacts, acceptance evidence and release assets.'
     $docker = Get-Content -LiteralPath (Join-Path $repo '.github/workflows/docker-publish.yml') -Raw
