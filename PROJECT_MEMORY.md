@@ -1,10 +1,10 @@
 # labflow 项目统一记忆
 
-> 最后更新：2026-11-02
+> 最后更新：2026-11-03
 >
 > 当前正式版本：`v2.4.3`；GitHub源码、两类CI正式安装包、交付清单及GHCR镜像均已发布并核验。
 >
-> 当前源码目录：`source/LabFlow-PostgreSQL-v2.4.3/`（日志与通知修复，正式发布完成）。
+> 当前开发源码目录：`source/LabFlow-PostgreSQL-v2.4.4/`；当前正式版本仍v2.4.3。
 >
 > 当前交付状态：v2.4.3的219项前端、374项完整后端、3项独立备份恢复专项及47项真实HTTP全部通过。本机编译OOM，使用准确Git及SHA-256绑定的CI预验收程序在私有56643执行数据库/HTTP；正式构建与预验收受控输入相同，二进制哈希分别记录，不混同执行范围。标签源码9c851282d；Windows41441442942、Docker41441442681成功，Release431430381为最新正式版本，CI安装包回写1886654b9已快进本地，两包与Release/清单/Git一致，GHCR2.4.3/latest同摘要。已验证v2.4.2原库升级、无人员配置新部署、历史ID/系数/模板/已读保持、事务/并发/权限/分页及归档。历史源码、品牌、自定义、方法/辅助配置与统计算法未改；全部测试库已删、56643/57643已停，生产库和8000未操作。未做真实群/网盘、浏览器视觉/手机实机、现场覆盖安装或容器运行验收，旧备份缺失的归档仍需原机补齐。
 >
@@ -1369,3 +1369,10 @@ LabFlow 是本地部署的样品信息、研发送样、分析检测、工作量
 - GHCR2.4.3/latest同索引sha256:d3f431168927d15dc6158ee606631204e6b048f9abdc3c789c4be32e84cca801；linux/amd64平台212e55396320f08a202a618075aa77b527b2ec0838e452077f6be4bb9fc3acfc，config f79a72a6e7e27b17f4471d8b0106d40369be7d888fcdc3d569f8d7e71a79acea。原始字节摘要链、版本/source/发布者、/app/labflow入口和labflow用户均核验；Docker专用artifact13140423053的原ZIP/manifest绑定标签源码及同一镜像摘要。未实际拉层或启动容器。
 - 发布核验脚本最初将Release assets的octet-stream请求头复用于Actions ZIP，服务返回HTTP415；只调整ignored验收脚本按端点选择application/json后全部通过，失败证据保留，正式源码与包不变。正式证据为ci-delivery-verification.json、ghcr-final.json及docker-delivery/原始文件。
 - 核对准确私有集群目录/角色、全部测试进程退出和连接为空后，删除labflow_test_v243、labflow_backup_v243、labflow_restore_v243；HTTP脚本已删自身库。56643/57643均无监听，PG目录、日志和证据保留；不重试此前旧版本目录删除。原.workbuddy、rebuild-output及未跟踪布局方案原样保留。收尾仅修改根README、PROJECT_MEMORY及本版安装包说明，以skip-ci提交同步，不改受控源码或更新说明，不重新打标签。
+
+## v2.4.4 辅助记录与安装修复（2026-11-03，开发中）
+
+- 用户要求独立辅助录入进入检测人记录，统计内新增辅助工作记录卡片；随后补充首次安装异常、卸载ExecAsOriginalUser运行错误及新装无法设置全量备份。
+- 从v2.4.3正式基线隔离新版本，不改已发布目录、不复制数据/缓存，不重算历史系数或将辅助工作分配至实验室/金额。
+- 已定位明细只读work_records而辅助写入auxiliary_work_records；应复用统一读模型、稳定人员范围、来源加ID及历史去重，避免前端拼分页、复制业务数据或误用检测写接口。
+- 已定位卸载共享脚本调用安装期专用ExecAsOriginalUser；首装运行库准备晚于停服helper执行，且生成配置未显式UTF8编码。全量备份设置正在核对保存权限，实际修复、回归和发布状态后补。

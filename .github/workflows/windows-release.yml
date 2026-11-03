@@ -14,6 +14,11 @@ on:
         required: false
         default: false
         type: boolean
+      run_acceptance:
+        description: "Run isolated database and Windows installer acceptance (requires test harness)"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -38,7 +43,10 @@ jobs:
         shell: pwsh
         env:
           DISPATCH_VERSION: ${{ inputs.version }}
+          RUN_ACCEPTANCE: ${{ inputs.run_acceptance }}
+          COMPILE_BACKEND_TESTS: ${{ inputs.compile_backend_tests }}
         run: |
+          if ($env:RUN_ACCEPTANCE -eq 'true' -and $env:COMPILE_BACKEND_TESTS -ne 'true') { throw 'Acceptance requires compile_backend_tests.' }
           $arguments = if ($env:GITHUB_EVENT_NAME -eq 'workflow_dispatch') { @{ Version = $env:DISPATCH_VERSION } } else { @{ Tag = $env:GITHUB_REF_NAME } }
           $release = & ./scripts/resolve-release.ps1 @arguments
           "source_dir=$($release.source_dir)" >> $env:GITHUB_OUTPUT
@@ -97,6 +105,17 @@ jobs:
         shell: pwsh
         run: |
           & ./scripts/build-installers.ps1 -SourceDir '${{ steps.version.outputs.source_dir }}' -VerificationReport "$env:GITHUB_WORKSPACE/ci-artifacts/windows/verification/verification.json" -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/windows/installers" -IsccPath 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+      - name: Run isolated backend acceptance
+        if: github.event_name == 'workflow_dispatch' && inputs.run_acceptance
+        shell: pwsh
+        run: |
+          & ./scripts/test-backend-ci.ps1 -SourceDir '${{ steps.version.outputs.source_dir }}' -ArtifactDir "$env:GITHUB_WORKSPACE/ci-artifacts/windows/backend-tests" -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/windows/backend-acceptance"
+      - name: Run Windows installer lifecycle acceptance
+        if: github.event_name == 'workflow_dispatch' && inputs.run_acceptance
+        shell: pwsh
+        run: |
+          node ./scripts/test-windows-installer.cjs '${{ steps.version.outputs.source_dir }}' 'ci-artifacts/windows/installers' 'ci-artifacts/windows/installer-acceptance'
+          if ($LASTEXITCODE -ne 0) { throw 'Windows installer lifecycle acceptance failed.' }
       - name: Write Windows delivery manifest
         shell: pwsh
         run: |
@@ -123,6 +142,17 @@ jobs:
           path: |
             ci-artifacts/windows/verification/verification.json
             ci-artifacts/windows/verification/**/*.log
+          if-no-files-found: warn
+      - name: Upload isolated acceptance logs
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.run_acceptance
+        uses: actions/upload-artifact@v4
+        with:
+          name: labflow-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ci-artifacts/windows/backend-acceptance/*.json
+            ci-artifacts/windows/backend-acceptance/*.log
+            ci-artifacts/windows/installer-acceptance/*.json
+            ci-artifacts/windows/installer-acceptance/*.log
           if-no-files-found: warn
       - name: Publish installers into repository
         id: repository_publish
