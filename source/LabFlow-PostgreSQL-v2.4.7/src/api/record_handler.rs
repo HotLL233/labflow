@@ -736,9 +736,9 @@ mod filter_tests {
             (Some(owner), Some(owner), None, Some(group)),
         ] {
             ids.push(conn.query_row(
-                "INSERT INTO work_records(project_id,group_id,user_name,subject_user_id,created_by_user_id,quantity,recorded_at,detection_division_id,method_name_snapshot,instrument_type_snapshot,updated_at)
-                 VALUES(?1,?2,'snapshot-name',?3,?4,1,'2091-01-31T12:00:00',?5,'流动相瓶','辅助工作','') RETURNING id",
-                postgres_compat::params![project,group_id,subject,creator,division], |row| row.get::<_,i64>(0),
+                "INSERT INTO work_records(project_id,group_id,user_name,subject_user_id,created_by_user_id,quantity,recorded_at,detection_division_id,method_name_snapshot,instrument_type_snapshot,updated_at,business_no)
+                 VALUES(?1,?2,'snapshot-name',?3,?4,1,'2091-01-31T12:00:00',?5,'流动相瓶','辅助工作','',?6) RETURNING id",
+                postgres_compat::params![project,group_id,subject,creator,division,format!("delete-target-{}",ids.len())], |row| row.get::<_,i64>(0),
             ).unwrap());
         }
         let user = crate::repo::user_repo::find_by_id(&pool, owner)

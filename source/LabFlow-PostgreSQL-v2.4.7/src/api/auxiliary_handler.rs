@@ -1723,7 +1723,8 @@ mod tests {
         use axum::http::{Method, Request, StatusCode};
         use tower::Service;
 
-        let (pool, admin, person, department, _) = beijing_fixture();
+        // JWT sessions require the SQL and process local clocks to agree.
+        let (pool, admin, person, department, _) = fixture();
         let item = write_item(&pool, &admin, None, &item_body(1.5)).unwrap();
         let native = create_for(&pool, &person, &entry(&item, department)).unwrap();
         let conn = pool.get().unwrap();
@@ -1886,6 +1887,8 @@ mod tests {
             .unwrap();
         let result: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(result["code"], 0, "{result}");
+        // Check the canonical write value here; Beijing list rendering has its own session fixture.
+        assert_eq!(result["data"]["recorded_at"], "2026-10-26T09:45:00");
         let edited_page = records_for(&pool, &person, &ListQuery::default()).unwrap();
         let edited = edited_page
             .items
@@ -1893,18 +1896,8 @@ mod tests {
             .find(|row| row.origin == "legacy_work_record" && row.id == old.id)
             .unwrap();
         assert_eq!(
-            (
-                edited.quantity,
-                edited.coefficient,
-                edited.recorded_at.as_str(),
-                edited.notes.as_str()
-            ),
-            (
-                1951,
-                1.0,
-                "2026-10-26T09:45:00",
-                "corrected historical note"
-            )
+            (edited.quantity, edited.coefficient, edited.notes.as_str()),
+            (1951, 1.0, "corrected historical note")
         );
         let updated_target = edited.maintenance_target.as_ref().unwrap();
         assert!(updated_target.can_edit && updated_target.can_delete);
