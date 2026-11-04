@@ -1,4 +1,6 @@
-# labflow：v2.4.5 卸载后重装修复
+# labflow：v2.4.6 辅助记录删除修复（开发中）
+
+当前开发源码为 `source/LabFlow-PostgreSQL-v2.4.6/`，补齐检测人记录和辅助工作统计的独立辅助记录删除入口，沿用辅助权限、记录版本校验、删除原因及软删除审计。v2.4.6 尚未发布，当前正式版本仍为 v2.4.5。
 
 当前正式版本为 **v2.4.5**，源码目录为 `source/LabFlow-PostgreSQL-v2.4.5/`。修复卸载后重装的残留配置、数据库定位及明确新建流程；有效原库默认保留，原库缺失时可在空目录新建并先保护旧配置。源码、两类正式安装包、GitHub Release与GHCR镜像均已发布并核验，保留业务功能、历史数据、权限、自定义与程序内品牌。卸载后重装使用根 `installers/labflow-v2.4.5.exe` 完整包，详情见本版《安装包说明.md》。
 
@@ -57,7 +59,7 @@ GitHub Release 的 `manifest.json`、`SHA256SUMS`、`DELIVERY-CHECKLIST.md` 已�
 - 不再新增或维护按日期记忆、`历史记忆_*.md`、`开发交接_*.md`、`续接提示词_*.md` 或 `HANDOFF.md`；旧版本目录中的同类文件只作历史归档，不得作为当前规则来源或复制到新版本。
 - 版本 `更新说明.md` 和专项文档仍按用途维护，但不得复制一套长期记忆。规则冲突时以当前用户要求、当前源码与工作流、`PROJECT_MEMORY.md` 的顺序为准。
 
-1. 当前正式源码：`source/LabFlow-PostgreSQL-v2.4.4/`，源码、两类CI安装包、Release及GHCR均已发布核验。行为、验证与交付状态见对应版本 `更新说明.md`、`安装包说明.md` 与根 `PROJECT_MEMORY.md`。
+1. 当前正式源码：`source/LabFlow-PostgreSQL-v2.4.5/`；开发源码为 `source/LabFlow-PostgreSQL-v2.4.6/`。行为、验证与交付状态见对应版本 `更新说明.md`、`安装包说明.md` 与根 `PROJECT_MEMORY.md`。
 2. Gitee 源码仓库：`https://gitee.com/HotLL233/labflow`（自 v2.3.18 起暂停向 Gitee 推送，仅保留历史仓库）。
 3. Docker 部署使用 `docker-compose.deploy.yml`，推荐执行 `scripts/pull-labflow-image.ps1`（Windows）或 `scripts/pull-labflow-image.sh`（Ubuntu）。
 4. 脚本按 `LABFLOW_IMAGE_PRIORITY` 依次尝试已配置的镜像地址，成功后再启动 Compose；Gitee 镜像地址未配置时跳过，目前发布仅使用 GHCR。
