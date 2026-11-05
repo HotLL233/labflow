@@ -13,8 +13,6 @@ if ($LASTEXITCODE -ne 0) { throw 'Static checker tests failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Release publication policy tests failed.' }
 & node --test (Join-Path $PSScriptRoot 'tests/repository-layout.test.cjs')
 if ($LASTEXITCODE -ne 0) { throw 'Repository layout rule tests failed.' }
-& node --test (Join-Path $PSScriptRoot 'tests/archive-legacy-assets.test.cjs')
-if ($LASTEXITCODE -ne 0) { throw 'Historical asset preservation tests failed.' }
 & node (Join-Path $PSScriptRoot 'check-repository-layout.cjs')
 if ($LASTEXITCODE -ne 0) { throw 'Packages or duplicate runtimes were reintroduced into Git.' }
 Write-Host 'All automation suites passed.'

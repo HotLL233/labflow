@@ -17,7 +17,7 @@ v2.3.5,LabFlow-PostgreSQL-v2.3.5,True,True,published,
 v2.3.6,LabFlow-PostgreSQL-v2.3.6,True,True,published,
 v2.3.7,LabFlow-PostgreSQL-v2.3.7,True,True,published,
 v2.3.8,LabFlow-PostgreSQL-v2.3.8,True,True,published,
-v2.3.9,LabFlow-PostgreSQL-v2.3.9,True,True,published,两个错标v2.3.8历史变体待经SHA-256保护转入archive/legacy-binaries-20261105
+v2.3.9,LabFlow-PostgreSQL-v2.3.9,True,True,published,2026-11-05：两个错标变体按SHA-256转存非正式历史归档；本页只保留v2.3.9双包
 v2.3.10,LabFlow-PostgreSQL-v2.3.10,True,True,published,
 v2.3.11,LabFlow-PostgreSQL-v2.3.11,True,True,published,
 v2.3.12,LabFlow-PostgreSQL-v2.3.12,True,True,published,
@@ -99,3 +99,4 @@ v2.4.4,LabFlow-PostgreSQL-v2.4.4,True,True,published,
 v2.4.5,LabFlow-PostgreSQL-v2.4.5,True,True,published,
 v2.4.6,LabFlow-PostgreSQL-v2.4.6,True,True,published,
 v2.4.7,LabFlow-PostgreSQL-v2.4.7,True,True,current-official,正式软件基线；本轮仓库治理不重打
+archive/legacy-binaries-20261105,,True,True,historical-assets-archive,4份唯一历史字节及校验清单；非软件版本，不更新latest

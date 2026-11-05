@@ -2,7 +2,7 @@
   "source_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
   "historical_file_count": 111,
   "index_only_no_binary_payload": true,
-  "archive_migration_status": "pending",
+  "archive_migration_status": "verified",
   "software_latest": "v2.4.7",
   "files": [
     {
@@ -1847,10 +1847,12 @@
       "bytes": 78630716,
       "sha256": "a909ac33976a21a86d99ae8709de9fb31f1c81011e1f084b3ae10031dc6f8ada",
       "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
-      "retention": "archive-migration-pending",
+      "retention": "archive-release-sha256-verified",
       "archive_tag": "archive/legacy-binaries-20261105",
       "archive_alias": "labflow-legacy-git-v2.2.18-a909ac33976a.exe",
-      "recoverable_from_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c"
+      "recoverable_from_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "archive_asset_id": 712993930,
+      "archive_url": "https://github.com/HotLL233/labflow/releases/download/archive/legacy-binaries-20261105/labflow-legacy-git-v2.2.18-a909ac33976a.exe"
     },
     {
       "path": "installers/样品管理系统_v2.2.19_PostgreSQL服务器版_Setup.exe",
@@ -1875,10 +1877,40 @@
       "bytes": 78687410,
       "sha256": "df7f54622612a37a587f17e898260f1e83ddb92bdfa5a88acfb6bdb876d10004",
       "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
-      "retention": "archive-migration-pending",
+      "retention": "archive-release-sha256-verified",
       "archive_tag": "archive/legacy-binaries-20261105",
       "archive_alias": "labflow-legacy-git-v2.2.20-df7f54622612.exe",
-      "recoverable_from_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c"
+      "recoverable_from_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "archive_asset_id": 713023054,
+      "archive_url": "https://github.com/HotLL233/labflow/releases/download/archive/legacy-binaries-20261105/labflow-legacy-git-v2.2.20-df7f54622612.exe"
+    }
+  ],
+  "archive_release_id": 435053650,
+  "migration_run": 42012051842,
+  "preserved_mislabelled_variants": [
+    {
+      "origin": "release",
+      "original_release": "v2.3.9",
+      "original_release_id": 391251257,
+      "original_asset_id": 571956273,
+      "original_name": "LabFlow-v2.3.8-HotUpdate.exe",
+      "bytes": 28165977,
+      "sha256": "94ad3f94d2f8f4b11b8c39337e5b914c524303f2f8080635f0dfed4672364307",
+      "alias": "labflow-legacy-from-v2.3.9-v2.3.8-hotupdate-94ad3f94d2f8.exe",
+      "archive_asset_id": 713023275,
+      "archive_url": "https://github.com/HotLL233/labflow/releases/download/archive/legacy-binaries-20261105/labflow-legacy-from-v2.3.9-v2.3.8-hotupdate-94ad3f94d2f8.exe"
+    },
+    {
+      "origin": "release",
+      "original_release": "v2.3.9",
+      "original_release_id": 391251257,
+      "original_asset_id": 571956272,
+      "original_name": "LabFlow-v2.3.8.exe",
+      "bytes": 78668101,
+      "sha256": "9433f75ab0a585f3231dc81cda1f638170efdd61840f0c4d4a3c2d0d482694b0",
+      "alias": "labflow-legacy-from-v2.3.9-v2.3.8-server-9433f75ab0a5.exe",
+      "archive_asset_id": 713023431,
+      "archive_url": "https://github.com/HotLL233/labflow/releases/download/archive/legacy-binaries-20261105/labflow-legacy-from-v2.3.9-v2.3.8-server-9433f75ab0a5.exe"
     }
   ]
 }
