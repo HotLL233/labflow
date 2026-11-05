@@ -50,10 +50,14 @@ async function migrate(plan) {
     else {
       let bytes;
       if (item.origin === 'git') {
-        if (!/^[a-f0-9]{40}$/.test(item.git_blob)) throw new Error('Invalid original Git blob.');
-        const blob = await api(`git/blobs/${item.git_blob}`);
-        if (blob.encoding !== 'base64' || blob.size !== item.bytes) throw new Error('Original Git blob metadata differs.');
-        bytes = Buffer.from(blob.content, 'base64');
+        if (!/^[a-f0-9]{40}$/.test(item.git_blob) || item.source_commit !== BASE ||
+            !/^installers\/[^/]+\.exe$/.test(item.original_path)) throw new Error('Invalid original Git source.');
+        // Large base64 blob responses can time out; immutable raw content is still checked byte-for-byte.
+        const encoded = item.original_path.split('/').map(encodeURIComponent).join('/');
+        const reply = await fetch(`https://raw.githubusercontent.com/${REPOSITORY}/${BASE}/${encoded}`,
+          { signal: AbortSignal.timeout(180000) });
+        if (!reply.ok) throw new Error(`Pinned Git content download failed: HTTP ${reply.status}`);
+        bytes = Buffer.from(await reply.arrayBuffer());
       } else {
         if (item.original_release !== 'v2.3.9' || ![571956272, 571956273].includes(item.original_asset_id)) {
           throw new Error('The release source is outside the reviewed allowlist.');
