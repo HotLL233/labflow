@@ -72,6 +72,9 @@ services:
     Assert (($identity.installer_names -join ',') -ceq 'labflow-v9.8.7.exe,labflow-v9.8.7-hotupdate.exe') 'New installer names are not canonical.'
     $passed++
     Reset-Fixture
+    Replace-Fixture 'VERSION' '9.8.7' '65536.0.0'
+    Expect-Failure { & $validator -SourceDir $source } 'Windows file-version range'
+    Reset-Fixture
     # A different current directory must not affect relative SourceDir resolution.
     Push-Location ([IO.Path]::GetTempPath())
     try { $relative = & $validator -SourceDir 'source/LabFlow-PostgreSQL-v9.8.7' } finally { Pop-Location }

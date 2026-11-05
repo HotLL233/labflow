@@ -53,14 +53,15 @@ if ($ExpectedVersion -eq '8.8.9') { return [pscustomobject]@{version=$ExpectedVe
     }
     $windows = Get-Content -LiteralPath (Join-Path $repo '.github/workflows/windows-release.yml') -Raw
     Assert ($windows -match 'build-installers[.]ps1' -and $windows -notmatch 'cargo build|ISCC[.]exe.*build_') 'Windows bypasses artifact-reuse installer builder.'
-    Assert ($windows -match 'non_fast_forward' -and $windows -match 'continue-on-error: true' -and $windows -match 'Create GitHub release' -and $windows -match 'git push origin') 'Windows changed retention/write-back contract.'
-    Assert ($windows.Contains('git add --sparse "installers/${{ steps.version.outputs.full_installer }}" "installers/${{ steps.version.outputs.hot_installer }}"') -and $windows -notmatch '(?m)^\s*git add installers\s*$') 'Sparse write-back must stage only the two new packages and retain historical files.'
+    Assert ($windows -match 'Create GitHub release' -and $windows -match 'Upload artifacts' -and $windows -notmatch 'git push origin|repository_publish|git add --sparse') 'Windows must retain Release/artifacts without committing binary installers.'
+    Assert ($windows -match 'overwrite_files: false' -and $windows -match 'release-policy[.]cjs windows' -and $windows -match 'group: labflow-windows-release') 'Windows must guard immutable versions and serialize publication.'
     Assert ($windows -match 'write-delivery-manifest[.]ps1[^\r\n]*-ArtifactPath \$artifacts -RequireWindowsInstallers -VerificationReport') 'Windows delivery must explicitly validate both installers.'
     Assert (([regex]::Matches($windows, 'delivery/manifest[.]json')).Count -eq 3) 'Windows manifest must be retained in package artifacts, acceptance evidence and release assets.'
     $docker = Get-Content -LiteralPath (Join-Path $repo '.github/workflows/docker-publish.yml') -Raw
     Assert ($docker -match 'report[.]artifacts[.]static_path' -and $docker -match 'Get-LabFlowTreeHash' -and $docker -match 'backend/static') 'Docker must validate/copy report static.'
     Assert ($docker -match 'id: ghcr' -and $docker -match 'steps[.]ghcr[.]outputs[.]digest' -and $docker -match '-ImageDigest' -and $docker -notmatch 'action-gh-release|ArtifactPath') 'Docker image evidence contract changed.'
-    Assert (([regex]::Matches($docker, "env[.]GITEE_REGISTRY != '' && env[.]GITEE_IMAGE_NAME != '' && env[.]GITEE_USERNAME != '' && env[.]GITEE_TOKEN != ''")).Count -eq 2) 'Gitee gating changed.'
+    Assert ($docker -notmatch 'GITEE_|gitee.com' -and $docker -match 'release-policy[.]cjs docker' -and $docker -match 'group: labflow-docker-release') 'Docker must use the guarded GHCR-only publishing contract.'
+    Assert ($windows -match "github.event_name == 'push' && startsWith" -and $docker -match "push:.*github.event_name == 'push'") 'Manual validation must not publish official assets or images.'
     Write-Host "PASS: $passed resolver and read-only workflow assertions. No builds, database tests, pushes or CI triggers executed."
 } finally {
     # Only the exact uniquely named fixture root created above is removed.

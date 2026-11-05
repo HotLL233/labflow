@@ -15,12 +15,12 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: labflow-docker-release
+  cancel-in-progress: false
+
 env:
   IMAGE_NAME: ghcr.io/hotll233/labflow
-  GITEE_REGISTRY: ${{ secrets.GITEE_REGISTRY }}
-  GITEE_IMAGE_NAME: ${{ secrets.GITEE_IMAGE_NAME }}
-  GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
-  GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
 
 jobs:
   build-and-push:
@@ -52,6 +52,11 @@ jobs:
           $release = & ./scripts/resolve-release.ps1 @arguments
           "source_dir=$($release.source_dir)" >> $env:GITHUB_OUTPUT
           "version=$($release.version)" >> $env:GITHUB_OUTPUT
+      - name: Check release publication policy
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node ./scripts/release-policy.cjs docker '${{ steps.version.outputs.version }}'
       - name: Verify Frontend Build
         shell: pwsh
         run: |
@@ -85,6 +90,7 @@ jobs:
         with:
           name: labflow-docker-verification-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            ci-artifacts/release-policy-docker.json
             ci-artifacts/docker/verification/verification.json
             ci-artifacts/docker/verification/**/*.log
           if-no-files-found: warn
@@ -93,19 +99,12 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GHCR
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Login to Gitee container registry
-        if: ${{ env.GITEE_REGISTRY != '' && env.GITEE_IMAGE_NAME != '' && env.GITEE_USERNAME != '' && env.GITEE_TOKEN != '' }}
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.GITEE_REGISTRY }}
-          username: ${{ env.GITEE_USERNAME }}
-          password: ${{ env.GITEE_TOKEN }}
 
       - name: Build and push GHCR image
         id: ghcr
@@ -115,7 +114,7 @@ jobs:
           file: ${{ steps.version.outputs.source_dir }}/Dockerfile
           # Build on the native GitHub-hosted runner for a predictable completion time.
           platforms: linux/amd64
-          push: true
+          push: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
             ${{ env.IMAGE_NAME }}:latest
@@ -123,8 +122,10 @@ jobs:
             org.opencontainers.image.title=labflow
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.source=https://github.com/HotLL233/labflow
+            org.opencontainers.image.revision=${{ github.sha }}
 
       - name: Write image-only delivery manifest
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         shell: pwsh
         env:
           IMAGE_DIGEST: ${{ steps.ghcr.outputs.digest }}
@@ -132,6 +133,7 @@ jobs:
           if (-not $env:IMAGE_DIGEST) { throw 'Build push returned no GHCR image digest.' }
           & ./scripts/write-delivery-manifest.ps1 -SourceDir '${{ steps.version.outputs.source_dir }}' -OutputDir "$env:GITHUB_WORKSPACE/ci-artifacts/docker/delivery" -VerificationReport "$env:GITHUB_WORKSPACE/ci-artifacts/docker/verification/verification.json" -ImageReference "$($env:IMAGE_NAME):${{ steps.version.outputs.version }}" -ImageDigest $env:IMAGE_DIGEST
       - name: Upload image delivery evidence (not release assets)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:
           name: labflow-${{ steps.version.outputs.version }}-docker-delivery
@@ -140,22 +142,3 @@ jobs:
             ci-artifacts/docker/delivery/SHA256SUMS
             ci-artifacts/docker/delivery/交付清单.md
           if-no-files-found: error
-
-      - name: Build and push Gitee image
-        id: gitee
-        if: ${{ env.GITEE_REGISTRY != '' && env.GITEE_IMAGE_NAME != '' && env.GITEE_USERNAME != '' && env.GITEE_TOKEN != '' }}
-        uses: docker/build-push-action@v6
-        with:
-          context: ${{ steps.version.outputs.source_dir }}
-          file: ${{ steps.version.outputs.source_dir }}/Dockerfile
-          platforms: linux/amd64
-          push: true
-          tags: |
-            ${{ env.GITEE_REGISTRY }}/${{ env.GITEE_IMAGE_NAME }}:${{ steps.version.outputs.version }}
-            ${{ env.GITEE_REGISTRY }}/${{ env.GITEE_IMAGE_NAME }}:latest
-          labels: |
-            org.opencontainers.image.title=labflow
-            org.opencontainers.image.version=${{ steps.version.outputs.version }}
-            org.opencontainers.image.source=https://gitee.com/HotLL233/labflow
-
-

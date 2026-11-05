@@ -30,6 +30,12 @@ function Get-OneValue([string]$Text, [string]$Pattern, [string]$Label) {
 }
 function Confirm-Version([string]$Label, [object]$Value) {
     if ($Value -isnot [string] -or $Value -cnotmatch "\A$versionPattern\z") { throw "Invalid three-part numeric version at $($Label): '$Value'." }
+    foreach ($part in $Value.Split('.')) {
+        $number = 0
+        if (-not [int]::TryParse($part, [ref]$number) -or $number -gt 65535) {
+            throw "Version component exceeds Windows file-version range at $Label (0..65535)."
+        }
+    }
     if ($Value -cne $version) { throw "Version mismatch at $($Label): expected '$version', received '$Value'." }
     $checks[$Label] = $Value
 }

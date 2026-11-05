@@ -23,6 +23,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: labflow-windows-release
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: windows-latest
@@ -59,6 +63,11 @@ jobs:
           $identity = Get-LabFlowIdentity -SourceDir $release.source_dir
           "full_installer=$($identity.installer_names[0])" >> $env:GITHUB_OUTPUT
           "hot_installer=$($identity.installer_names[1])" >> $env:GITHUB_OUTPUT
+      - name: Check release publication policy
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node ./scripts/release-policy.cjs windows '${{ steps.version.outputs.version }}'
       - name: Verify all Build inputs (database tests not run)
         shell: pwsh
         run: |
@@ -150,15 +159,6 @@ jobs:
             ci-artifacts/windows/delivery/SHA256SUMS
             ci-artifacts/windows/delivery/DELIVERY-CHECKLIST.md
           if-no-files-found: error
-      - name: Upload verification logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: labflow-windows-verification-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            ci-artifacts/windows/verification/verification.json
-            ci-artifacts/windows/verification/**/*.log
-          if-no-files-found: warn
       - name: Upload isolated acceptance logs
         if: always() && github.event_name == 'workflow_dispatch' && inputs.run_acceptance
         uses: actions/upload-artifact@v4
@@ -173,51 +173,34 @@ jobs:
             ci-artifacts/windows/delivery/SHA256SUMS
             ci-artifacts/windows/delivery/DELIVERY-CHECKLIST.md
           if-no-files-found: warn
-      - name: Publish installers into repository
-        id: repository_publish
-        if: startsWith(github.ref, 'refs/tags/')
-        continue-on-error: true
-        shell: pwsh
-        run: |
-          $version = "${{ steps.version.outputs.version }}"
-          New-Item -ItemType Directory -Path 'installers' -Force | Out-Null
-          Copy-Item "ci-artifacts/windows/installers/${{ steps.version.outputs.full_installer }}" 'installers/' -Force
-          Copy-Item "ci-artifacts/windows/installers/${{ steps.version.outputs.hot_installer }}" 'installers/' -Force
-          function Assert-Git([string]$Action) { if ($LASTEXITCODE -ne 0) { "status=failed" >> $env:GITHUB_OUTPUT; throw "Git $Action failed (exit $LASTEXITCODE)." } }
-          git add --sparse "installers/${{ steps.version.outputs.full_installer }}" "installers/${{ steps.version.outputs.hot_installer }}"
-          Assert-Git 'add'
-          git diff --cached --quiet
-          if ($LASTEXITCODE -eq 0) { "status=unchanged" >> $env:GITHUB_OUTPUT; Write-Host 'installers already up to date'; exit 0 }
-          if ($LASTEXITCODE -ne 1) { Assert-Git 'diff' }
-          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "build: add LabFlow v$version Windows installers [skip ci]"
-          Assert-Git 'commit'
-          git fetch origin main
-          Assert-Git 'fetch main'
-          git merge-base --is-ancestor origin/main HEAD
-          if ($LASTEXITCODE -eq 1) { "status=non_fast_forward" >> $env:GITHUB_OUTPUT; throw 'Repository publish would be non-fast-forward; no force push attempted.' }
-          Assert-Git 'ancestry check'
-          git push origin 'HEAD:main'
-          Assert-Git 'push (remote rejection, including a concurrent non-fast-forward, is a failure)'
-          "status=published" >> $env:GITHUB_OUTPUT
-      - name: Record repository publish status
-        if: always() && startsWith(github.ref, 'refs/tags/')
+      - name: Recheck publication policy before release creation
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         shell: pwsh
         env:
-          PUBLISH_STATUS: ${{ steps.repository_publish.outputs.status }}
-          PUBLISH_OUTCOME: ${{ steps.repository_publish.outcome }}
-        run: |
-          "Repository installer write-back: status=$env:PUBLISH_STATUS; outcome=$env:PUBLISH_OUTCOME (non-blocking; artifact and release retention remain enabled)." >> $env:GITHUB_STEP_SUMMARY
-          if ($env:PUBLISH_OUTCOME -eq 'failure') { Write-Host '::warning::Installer repository write-back failed. See explicit status and Git logs; no force push was used.' }
-
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node ./scripts/release-policy.cjs windows '${{ steps.version.outputs.version }}'
       - name: Create GitHub release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           name: labflow v${{ steps.version.outputs.version }}
           generate_release_notes: true
+          overwrite_files: false
+          make_latest: true
+          fail_on_unmatched_files: true
           files: |
             ci-artifacts/windows/installers/${{ steps.version.outputs.full_installer }}
             ci-artifacts/windows/installers/${{ steps.version.outputs.hot_installer }}
             ci-artifacts/windows/delivery/manifest.json
             ci-artifacts/windows/delivery/SHA256SUMS
             ci-artifacts/windows/delivery/DELIVERY-CHECKLIST.md
+      - name: Upload verification logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labflow-windows-verification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ci-artifacts/release-policy-windows.json
+            ci-artifacts/windows/verification/verification.json
+            ci-artifacts/windows/verification/**/*.log
+          if-no-files-found: warn

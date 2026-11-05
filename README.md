@@ -1,86 +1,62 @@
-# labflow：v2.4.7 历史辅助记录编辑与删除修复（正式发布）
+# labflow
 
-当前正式版本为 **v2.4.7**，源码为 `source/LabFlow-PostgreSQL-v2.4.7/`。修复 v2.4.6 遗漏的历史辅助维护：旧方法/仪器辅助、已关联及撤销关联历史、兼容主记录均按原工作量权限和明确来源维护，覆盖检测人记录、辅助统计及辅助录入列表。可编辑数量、业务时间、备注并软删除，保留原事项、归属、系数、关系链、回收站、自定义显示和独立辅助功能；旧方法停用或原实验室未绑定不阻止获授权的元数据维护。
+当前正式应用版本：**v2.4.7**。当前业务源码：`source/LabFlow-PostgreSQL-v2.4.7/`。
+本轮为仓库治理，不改变应用版本、不重打安装包，业务源码与原正式标签保持一致。
 
-v2.4.7 源码、正式标签、完整/热更新安装包、GitHub Release 与 GHCR 镜像均已发布并核验。已有安装使用根 `installers/labflow-v2.4.7-hotupdate.exe`，首次安装使用 `installers/labflow-v2.4.7.exe`；本版 `installer/` 通过硬链接留档，不重复占用包数据空间。完整预验收 41786404173 通过 266 项前端、391 项后端、3 项独立备份恢复、46 项 Windows 生命周期/HTTP 及 6 项原生解析与受限 token ACL 检查。
+## 开始开发
 
-v2.4.7 正式标签源码 `8572c1d6406e197078cc2c66db1e02dbd8bd8c56`，Windows 41791202612、Docker 41791202757 成功，Release 433626532 已确认为最新正式版本，五份资产均实际 Range GET 可下载。两包均 2.4.7.0 / labflow / HotLL，本地文件、Release、交付清单与 CI 安装包提交 `d7447e71a7d500aeb16436dec61e4b2d162f3f04` 字节一致。GHCR `2.4.7`/`latest` 同摘要 `sha256:84ed71a750207e20d6a327a10ee523b770ad94107eadd9e6d0eb3e94785719f7`。正式 All Build 为 12 项通过、5 项未运行；受控输入及前端哈希与完整预验收一致，正式与预验收程序哈希分别记录，不冒充正式构建再次执行数据库验收。未操作现用数据库或现场安装，未做浏览器视觉、手机实机与容器运行验收。详情及下载链接见本版《安装包说明.md》。
+先读 [PROJECT_MEMORY.md](PROJECT_MEMORY.md)。它是唯一现行共享记忆；
+[AGENTS.md](AGENTS.md) 是开发助手入口，[历史索引](docs/history/README.md) 保留开发历程，
+[版本与发布索引](docs/releases/版本与发布索引.csv) 标明历史状态。
 
-v2.4.6 历史交付：源码目录为 `source/LabFlow-PostgreSQL-v2.4.6/`。补齐检测人记录和辅助工作统计的独立辅助记录删除入口，沿用辅助权限、记录版本校验、删除原因及软删除审计；遗漏的历史辅助编辑和删除由 v2.4.7 修复。完整预验收 41759144830 的 253 项前端、384 项后端、3 项独立备份恢复、46 项 Windows 生命周期检查及 6 项原生解析与受限 token ACL 检查通过。
+项目目录由新电脑实际情况决定。以下 Windows PowerShell 7 示例只拉当前版本，避免下载历代二进制：
 
-v2.4.6 正式标签源码 `0371d1e3e8ad3e97803c170c27b004bfee3f3acd`，Windows 41765012269、Docker 41765012332 成功，Release 433475621 的五份资产均可下载。两包均 2.4.6.0 / HotLL，本地文件、Release、交付清单与 CI 安装包提交 `e0fe85bae88433293e8305eab45ed2b948fc607c` 字节一致，本版 installer 通过硬链接留档。该版发布时 GHCR 2.4.6/latest 同摘要 `sha256:4664f468f02abb042012cadcc23eec787c28747ef63a0a2e2784b9f43d6f7c54`。正式构建与完整预验收受控输入及前端哈希一致，正式与预验收程序哈希分别记录；未操作现用数据库或现场安装，未做手机实机与容器运行验收。详情见对应版本《安装包说明.md》。
+```powershell
+$projectRoot = Read-Host '输入实际项目目录'
+git clone --branch main --filter=blob:none --sparse https://github.com/HotLL233/labflow.git $projectRoot
+Set-Location -LiteralPath $projectRoot
+git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2.4.7
+```
 
-v2.4.5 历史交付：源码目录为 `source/LabFlow-PostgreSQL-v2.4.5/`。修复卸载后重装的残留配置、数据库定位及明确新建流程；有效原库默认保留，原库缺失时可在空目录新建并先保护旧配置。源码、两类正式安装包、GitHub Release与GHCR镜像均已发布并核验，保留业务功能、历史数据、权限、自定义与程序内品牌。该版卸载后重装使用根 `installers/labflow-v2.4.5.exe` 完整包。
+根 README、PROJECT_MEMORY、AGENTS 自动保留。版本目录以当时根 README 为准，不能把目录最大值当正式版。
+需要准备本机构建依赖时再取共享运行库：
 
-v2.4.5完整预验收41693556428成功：248项前端、382项后端、3项独立备份恢复专项、46项Windows生命周期/HTTP及6项真实Pascal解析检查通过，含受限token配置保存。标签源码dd7c6d345、Windows41699795334、Docker41699795330、Release433127769及CI安装包回写1bdfb85aa均已核验；两包2.4.5.0与Release/清单/Git字节一致，本版installer通过硬链接留档。GHCR2.4.5/latest同摘要7e7c1c2a772ef04981e7f9998c2970069ddae6d6a9ff1499764cd0e95c04950d。正式构建与完整预验收受控输入及前端摘要相同，执行程序与正式程序哈希分别记录；未在本机/现场执行安装、卸载、恢复或生产服务操作，未做手机实机、浏览器视觉及容器运行验收。
+```powershell
+git sparse-checkout add build-resources
+pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.4.7 -InstallDependencies
+```
 
-v2.4.4历史正式交付（该版发布时）：标签源码`54ff8327337ab23da7ebc8368fb4fbd9b114a942`，Windows41600799518、Docker41600799699成功，Release432433941已确认为最新正式版本。CI安装包回写`cf8598aeef8781d5eaa33595b82d8213154096a1`已快进本地；根`installers/`两包均2.4.4.0，与Release、清单及Git字节一致，本版`installer/`硬链接留档且不重复占用包数据空间。GHCR2.4.4/latest同摘要`sha256:522ae6246ff50bab030196ca95781bb53ee0055110952198b09435ba762c6c50`，linux/amd64。正式构建与完整预验收受控输入及前端摘要一致；实际安装/数据库测试在一次性CI机器完成，未操作本机生产库或服务，未做现场覆盖安装、手机实机或容器运行验收。
+开发环境：Git、PowerShell 7、Node.js 24、Rust stable MSVC/C++ Build Tools；Windows本地出包需要 Inno Setup 6。
+项目放在可写的本机 NTFS 目录，旧 junction 不跨机器复制；PostgreSQL 测试数据目录另用 ASCII 路径。
+依赖按锁文件重新准备，身份/代理按本机实际配置。详细流程见 [开发验证与交付自动化](docs/开发验证与交付自动化.md)。
 
-v2.4.3历史正式交付：标签源码`9c851282dfbe49f63836f29899bfa85d47ad27db`；Windows41441442942、Docker41441442681均成功，Release431430381为该版发布时的正式版本，五份资产及CI安装包回写提交`1886654b908e615a8779007b99c50509e8e4d28d`已核验并快进本地。根`installers/`两包均2.4.3.0，与Release、manifest、SHA256SUMS及Git字节一致；GHCR2.4.3/latest在该版发布时同摘要`sha256:d3f431168927d15dc6158ee606631204e6b048f9abdc3c789c4be32e84cca801`，linux/amd64。本机编译OOM，数据库/HTTP验收使用准确提交及SHA绑定的CI预验收程序，正式构建与其受控输入相同，二进制来源和哈希分别记录。测试库及56643/57643已收尾，未操作生产库或8000；未做真实群/网盘、浏览器视觉/手机实机、现场覆盖安装或容器运行验收。旧备份缺失的归档需从原机补齐。
+## 下载正式软件
 
-v2.4.2历史正式交付：标签源码 `89a418618d564c6ab76f442ef140ca463ddce1c8`；Windows41385276182、Docker41385276203均成功，Release431062768在该版发布时为最新正式版本。CI安装包回写提交 `4a179315d794d78a11b131f8719ebaf215d41530` 已快进本地；根 `installers/` 两包均2.4.2.0，与Release、manifest及远端Git字节/摘要一致，本版 `installer/` 继续独立保留本地验收包。CI仅All Build的12项通过、5项未运行，独立后端及HTTP验收为本地证据。GHCR `2.4.2`/`latest` 在该版发布时同摘要 `sha256:9f7f9f0efae512676ce3e15f99d33c1345bedec438b62f9b474bb8522c798d8a`，linux/amd64；未实际启动容器。历史缺失人员ID需管理员核对，不自动按姓名重绑。未做浏览器视觉/手机实机或现场覆盖安装验收；详情见本版《安装包说明.md》。
+- [v2.4.7 Release及校验文件](https://github.com/HotLL233/labflow/releases/tag/v2.4.7)
+- [已有完整服务器安装的热更新包](https://github.com/HotLL233/labflow/releases/download/v2.4.7/labflow-v2.4.7-hotupdate.exe)
+- [首次安装完整包](https://github.com/HotLL233/labflow/releases/download/v2.4.7/labflow-v2.4.7.exe)
 
-v2.4.1历史交付：源码目录为 `source/LabFlow-PostgreSQL-v2.4.1/`，修正上一版扩大改名范围的问题：业务网页恢复“知微”“样品管理系统”和原布局，管理员自定义名称照常生效。外部主程序及安装包仍为labflow、发布者HotLL，保留图标、原生控制窗口、端口、自启动、完整退出及既有业务能力。本地204项前端、343项后端及12项实际HTTP检查已通过，完整/热更新包均已制作。修正版源码、两类CI正式安装包、Release与GHCR镜像均已发布并核验。
+包版本为 2.4.7.0 / labflow / HotLL；升级前备份数据库、附件和配置。
+正式标签源码8572c1d6406e197078cc2c66db1e02dbd8bd8c56，Windows41791202612、Docker41791202757已完成。
+GHCR `ghcr.io/hotll233/labflow:2.4.7` 与 `latest` 当前同摘要84ed71a750207e20d6a327a10ee523b770ad94107eadd9e6d0eb3e94785719f7。
+实际验证/历史失败范围在原版本说明与历史档案中；治理不是重新执行391项后端或现场安装验收。
 
-v2.4.1历史正式交付：Windows41319567674、Docker41319567677均成功，Release430670284在发布时为最新正式版本。根installers两包均2.4.1.0，与Release及远端Git字节/摘要一致；CI前端与本地验证产物一致。GHCR2.4.1/latest在该版发布时同摘要dd49b99d310b9bf808fd50f75f40806e28b34600f5bda7f9070d4ad834145c01，镜像内前端已核对，未实际运行容器。具体哈希与范围见本版安装包说明；未做手机实机或现场升级验收。
+## 仓库与发布约定
 
-v2.4.0历史交付：本地205项前端、342项后端、3项恢复专项、65项隔离HTTP和13项Windows进程检查通过。正式标签源码96e5b32d01f02c05628a50ba73a0fa6a85281ffb；Windows 41299557319、Docker 41299557301均成功，正式两包2.4.0.0已发布并回写根installers，字节/哈希与Release及Git一致。CI仅All Build的12项通过、5项未运行，不冒充本地数据库验收。
+- main 保存开发源码、文档、自动化和一份公共 build-resources；新版本不复制运行库。
+- 历代源码和前端生产文件继续保留；旧版本复现以原 tag 为准。历史内嵌PG/PDF运行库已从main移除，原始Git历史仍在。
+- 正式安装包、manifest.json、SHA256SUMS、DELIVERY-CHECKLIST.md只存对应Release；本地installers仅留下载文件并忽略入库。
+- 正式版本和注释标签采用X.Y.Z/vX.Y.Z，Windows数字版本X.Y.Z.0；发布后不覆盖已有Release或镜像。
+- Windows和Docker标签发布有版本、不可变资产、来源及latest门禁；手动workflow_dispatch只验证，不发布。
+- Gitee发布已停用；GitHub/GHCR为唯一有效发布目标。
+- 版本内旧说明代表当时流程；现行规则以根PROJECT_MEMORY和当前共享工具为准。
+- 历史异常及清理去向见 [仓库治理记录](docs/仓库治理记录.md) 和 [安装包归档索引](docs/releases/安装包归档索引.json)。
 
-v81本地交付已完成：新增OneDrive官方设备授权、常见WebDAV及明确标注的OpenList网关入口，并修正坚果云根目录、当前配置测试与HTTP错误诊断。最终All Integration通过204项前端、336项后端，另有3项备份恢复专项和同一最终Release的57项模拟网盘HTTP通过，两类本地安装包均为2.3.81.0。测试库和服务已收尾；真实账号、网关、微软授权、Ubuntu容器及现场升级未验收。v81源码已随v2.4.0同步，未单独发布，详情见本版安装包说明和根 PROJECT_MEMORY.md。
+删除main文件不会自动回收Git历史对象。新机用部分克隆按需取文件；本轮不强推、不删正式标签、不重写历史。
 
-v80已通过最终All Integration（199项前端、330项后端）、3项单独备份恢复专项、同一最终Release的43项模拟网盘HTTP验收，并完成2.3.80.0本地完整/热更新两包。测试库与测试服务已收尾；未连接真实网盘、未实际安装或启动Ubuntu容器。v80源码已随v2.4.0同步，未单独发布，实际交付清单见本版安装包说明和根 PROJECT_MEMORY.md。
+## 记忆与数据边界
 
-本地 All Integration 通过 193 项前端、324 项后端（3 项既有 ignore）及同一最终本地 Release 的 21 项 HTTP。正式标签源码为 `f7a9ac40c3b3d0c646077466652b2a19493e9424`，Windows 工作流 40994166760、Docker 工作流 40994166807 均成功；CI All Build 为 12 项 passed、5 项 not_run，未执行数据库库测试或 HTTP 专项。两类正式包均为 2.3.79.0，已发布 GitHub Release 并回写根 `installers/`，本地已快进 CI 提交 `78ab5fa6b`，文件版本、大小和 SHA-256 与 Release、origin/main 一致。本地验收包继续独立保留在本版 `installer/`，详情见本版《安装包说明.md》。
-
-三份 Release 交付文件已核验准确源码及实际构建范围。v2.3.79发布当时，GHCR 的 `2.3.79` 与 `latest` 均为 `sha256:81fef30b0a2202367bb9b328e824b02396f9a61e73cd1078f8567aa1b96215d8`，linux/amd64 manifest/config 原始字节及运行元数据核验通过。证据在 `test-artifacts/v2.3.79/`；未实际安装、启动容器或操作现场服务，真实浏览器/手机及覆盖升级未验收。升级前备份数据库、附件及配置，回退须恢复升级前数据库。
-
-## v2.4.0 正式交付
-
-GitHub Release包含 `labflow-v2.4.0.exe`（79,468,809字节，SHA-256 `36005d785dbb127d93c00b13e06201e07624e07862cb80d3229863a89af6580e`）和 `labflow-v2.4.0-hotupdate.exe`（29,023,680字节，SHA-256 `401a96d82ce54ade438878e7e4236aa109dac5c7171fa6d1936034d6cee72696`），以及manifest、SHA256SUMS和DELIVERY-CHECKLIST。根installers是CI正式包，本版installer保留独立本地包，不混同来源。
-
-GHCR `2.4.0` 与 `latest` 均为 `sha256:82781afad6bd9228021336966c943b6b1aba11590849eab2bceb019960c7db82`，linux/amd64，入口 `/app/labflow`、发布者HotLL；已核对索引、平台manifest及配置原始字节，未实际启动容器。
-
-当前安装文件未代码签名。computer-use原生通道不可用，窗口点击/截图、UAC、开机登录、实际安装/现场升级、Ubuntu容器启动及真实网盘未验收。升级前备份数据库、附件与配置；退出会结束labflow托盘及所属后台，独立数据库服务由Windows管理。
-
-## v2.3.75 历史交付记录
-
-辅助事项增加自动生成的只读“事项ID”，改名、调整系数或区域后仍识别为同一事项。辅助工作模板移除“范围、所属实验室”，末列增加“事项ID”；回导优先按 ID 更新，新建留空自动生成，旧模板仍兼容唯一名称，歧义时提示重新导出。
-
-辅助工作只按数量×保存系数计入人员工作量，不分配实验室、项目或仪器，不参与金额计算。人员仍沿用统一账号与实际工作人员的主归属部门，保留本人及授权代录权限、独立区域和事项配置、导入导出与全部既有自定义显示配置。历史记录与系数快照不合并、不重算。
-
-v2.3.75 承接 v2.3.71 至 v2.3.74 的业务功能与迁移，继续修复干净环境交付：完整 Windows CRLF 检出的 workflow 断言兼容正常行尾；binary-extensions、json5、picomatch 的锁内版本标签分别恢复为原完整性摘要对应的 2.3.0、2.2.3、2.3.2，parse-json 的子依赖范围恢复为上游的 ^2.3.0。保留 v74 的 pify 2.3.0 与 CRLF 夹具修复，不增加或升级实际依赖，不修改业务逻辑或新增迁移。
-
-已核验官方 npm 的312项与 pnpm 的311项依赖，覆盖可选及其他平台依赖，保留全部原 integrity。全新隔离目录及全新缓存的冷 `npm ci` 成功，256次 cache miss、0次 cache hit；实际安装版本与锁文件一致。本地 All Build 已通过：172项前端测试、类型检查、生产构建、gzip及Rust格式、check、Release。本版实际 Release 另通过242项 HTTP 与202项 Excel 专项验收，混合统计总量61.5保持；隔离测试服务及数据库均已停止，四个测试端口已清空。本版全部216份 Rust/SQL 文件与 v2.3.73、v2.3.74 逐字节一致，未重复运行库测试；304项通过、3项 ignore 仅为 v2.3.73 Integration 基线。浏览器、手机实机、现场覆盖安装及容器启动尚未验收。
-
-当前交付版本隔离于 `source/LabFlow-PostgreSQL-v2.3.75/`，本地验收与正式 CI 发布均已完成。tag `v2.3.75` 的 Windows 工作流40654592970、Docker 工作流40654593027均成功；远端 All Build 为12项 passed（含 `npm-ci`）、5项 not_run，未运行库测试。正式两类安装包的产品及文件版本均为2.3.75.0，已上传 GitHub Release 并回写根 `installers/`，Release 与 `origin/main` 中两包的字节一致。版本目录 `installer/` 保留独立本地包，本地包与正式 CI 包的大小、哈希在本版安装包说明中分别记录。
-
-GitHub Release 的 `manifest.json`、`SHA256SUMS`、`DELIVERY-CHECKLIST.md` 已核验。GHCR 的 `2.3.75` 与 `latest` 均已发布，指向同一索引摘要 `sha256:96e5672a63ea59280b4ffad4279a8a00da21352fc38c83a433608b704e7d7c31`。远端证据见根 `test-artifacts/v2.3.75/`，实际记录见根 `PROJECT_MEMORY.md`。从更早版本升级仍需执行已有迁移，升级前备份数据库、附件和配置，回退须恢复升级前数据库。
-
-## 开发验证与交付自动化
-
-根共享工具已提供完整版本检查、分层验证、验证产物复用打包和交付清单。用法见 [开发验证与交付自动化](docs/开发验证与交付自动化.md)；工具回归命令为 `pwsh -NoProfile -File scripts/test-automation.ps1`。不自动发布或操作生产数据库；Build通过不等于数据库/浏览器/现场升级验收通过。
-
-## 开发续接与记忆惯例
-
-- 开始开发或更换设备后，必须先阅读仓库根目录的 `PROJECT_MEMORY.md`。
-- `PROJECT_MEMORY.md` 是项目唯一、跨版本、跨设备的长期记忆与开发惯例来源；后续确认的业务规则、技术决策、问题根因、环境约定和发布经验只更新该文件，并随 Git 提交。
-- 不再新增或维护按日期记忆、`历史记忆_*.md`、`开发交接_*.md`、`续接提示词_*.md` 或 `HANDOFF.md`；旧版本目录中的同类文件只作历史归档，不得作为当前规则来源或复制到新版本。
-- 版本 `更新说明.md` 和专项文档仍按用途维护，但不得复制一套长期记忆。规则冲突时以当前用户要求、当前源码与工作流、`PROJECT_MEMORY.md` 的顺序为准。
-
-1. 当前正式源码：`source/LabFlow-PostgreSQL-v2.4.7/`。行为、验证与交付状态见对应版本 `更新说明.md`、`安装包说明.md` 与根 `PROJECT_MEMORY.md`。
-2. Gitee 源码仓库：`https://gitee.com/HotLL233/labflow`（自 v2.3.18 起暂停向 Gitee 推送，仅保留历史仓库）。
-3. Docker 部署使用 `docker-compose.deploy.yml`，推荐执行 `scripts/pull-labflow-image.ps1`（Windows）或 `scripts/pull-labflow-image.sh`（Ubuntu）。
-4. 脚本按 `LABFLOW_IMAGE_PRIORITY` 依次尝试已配置的镜像地址，成功后再启动 Compose；Gitee 镜像地址未配置时跳过，目前发布仅使用 GHCR。
-5. v2.3.19 起 JWT 签名密钥由部署自动生成并保存在数据目录 `jwt_secret`；如需集中管理，可用环境变量 `JWT_SECRET` 覆盖（长度需 ≥16 位）。数据库会话时区跟随程序所在机器，容器部署默认 `TZ=Asia/Shanghai`。
-6. 从 v2.3.18 升级到 v2.3.19 后所有已登录会话会失效一次，用户需重新登录，之后重启与升级不再失效。
-
-本包不含任何生产数据库、附件、备份、实际服务器配置、登录凭据或用户本机数据。
-
-本地共享构建资源集中于根 `build-resources/`，其中 `local/target/` 为公共编译缓存，`local/version-cache/` 按需保留仍被引用的独立缓存，`local/static-snapshots/` 保存旧共享入口的静态资源，前端依赖按锁文件隔离。版本目录通过链接引用根资源。使用 PowerShell 7 执行 `./scripts/prepare-local-build.ps1 -WhatIf` 检查；首次缺少依赖时加 `-InstallDependencies` 准备环境。原有安装与发布路径保持兼容，目录说明见 [build-resources/README.md](build-resources/README.md)。
-
-打包口径（v2.3.13 起固化为发布规范）：
-
-- v2.4.0起安装包使用 `labflow-v<版本>.exe`（完整服务器版）与 `labflow-v<版本>-hotupdate.exe`（热更新升级包）；旧版本名称保持原样。
-- 发布流程根据 tag `v<版本>` 自动构建，并**自动提交到仓库根 `installers/` 目录**，同时上传 GitHub Release。
-- 本地构建包留档于对应版本目录的 `installer/`，与根 `installers/` 的 CI 正式包分别核验；该目录被 `.gitignore` 忽略，不进入版本库。
-- Docker 镜像由发布工作流推送到 GHCR（`ghcr.io/hotll233/labflow:<版本>` 与 `latest`）；向 Gitee registry 的同步自 v2.3.18 起暂停。
+项目规则和开发结论随Git同步。原始Codex/WorkBuddy会话、本地未提交设计、stash等需另行私有保留；
+可放新工作区的.developer-archive/并让助手按需检索，不覆盖新机登录数据库。
+治理前离线交付包只作历史备份；新机优先拉当前主线再补私有记忆，不照搬旧包的发布规则。
+仓库不含生产数据库、实际配置、云盘授权或用户备份；本次仓库治理不迁移业务数据。

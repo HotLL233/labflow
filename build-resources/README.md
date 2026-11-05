@@ -1,5 +1,9 @@
 # 本地共享构建资源
 
+现行规范见根 PROJECT_MEMORY.md。本目录中的公共运行资源是新版本的构建输入，继续保留；
+历史版本目录中的重复PDF/PostgreSQL运行库已从main移除，原tag/治理前提交仍保留完整快照。
+正式安装包改存GitHub Release，不再由CI回写Git。
+
 根目录统一存放各版本共享的构建输入与本地缓存：
 
 ```text
@@ -34,12 +38,12 @@ build-resources/
 使用PowerShell 7，在仓库根执行：
 
 ```powershell
-./scripts/prepare-local-build.ps1 -WhatIf
-./scripts/prepare-local-build.ps1
+./scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.4.7 -WhatIf
+./scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.4.7
 # 新设备或新锁文件没有依赖时，显式允许安装：
-./scripts/prepare-local-build.ps1 -InstallDependencies
+./scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.4.7 -InstallDependencies
 # 指定版本（省略时选数值最高版本）：
-./scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.3.62 -WhatIf
+./scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.4.7 -WhatIf
 ```
 
 以后创建隔离版本时，排除 `target/`、`postgres-compat/target/`、`frontend/node_modules/` 和本地运行库链接，随后运行此准备脚本，使版本目录引用根共享资源。已有独立缓存应先经核验迁到根 `version-cache/`，再建立兼容链接；准备脚本自身不会擅自移动或覆盖已有缓存。
@@ -54,7 +58,7 @@ build-resources/
 
 - 优先删除未使用的增量缓存，保留日常编译所需的Debug/Release依赖缓存；下次编译会重新生成增量缓存。
 - 仅删除确认停止的隔离测试数据库，保留测试日志、验证摘要和发布证据；重新测试需初始化新集群。
-- 安装包、离线镜像、backend/static、真实业务数据、配置及备份不在默认清理范围。
+- 正式安装包与离线镜像只在Release/本地留档，不再进入main；backend/static、真实业务数据、配置及备份不在本地缓存清理范围。
 - Windows junction依赖当前克隆位置，不能作为可迁移的Git文件提交；远端只保存脚本、目录规则及报告。
 
 准备脚本验证：`pwsh -NoProfile -File scripts/tests/prepare-local-build.Tests.ps1`。

@@ -1,0 +1,87 @@
+name: Check repository governance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/**"
+      - "scripts/**"
+      - "PROJECT_MEMORY.md"
+      - "README.md"
+      - "AGENTS.md"
+      - "docs/**"
+      - "installers/**"
+      - "source/**/postgres-runtime/**"
+      - "source/**/pdf-runtime/**"
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "scripts/**"
+      - "PROJECT_MEMORY.md"
+      - "README.md"
+      - "AGENTS.md"
+      - "docs/**"
+      - "installers/**"
+      - "source/**/postgres-runtime/**"
+      - "source/**/pdf-runtime/**"
+  workflow_dispatch:
+    inputs:
+      archive_legacy:
+        description: "One-time: preserve four reviewed historical package variants in the archive Release"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  automation:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github
+            scripts
+            docs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Verify shared automation and release policy
+        shell: pwsh
+        run: ./scripts/test-automation.ps1
+  archive-legacy:
+    if: github.event_name == 'workflow_dispatch' && inputs.archive_legacy
+    needs: automation
+    concurrency:
+      group: labflow-legacy-migration-20261105
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github
+            scripts
+            docs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Preserve reviewed bytes and remove only verified mislabelled duplicates
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/archive-legacy-assets.cjs docs/releases/legacy-migration-plan.json
+      - name: Retain migration proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labflow-legacy-migration-${{ github.run_id }}
+          path: ci-artifacts/legacy-migration-result.json
+          if-no-files-found: warn

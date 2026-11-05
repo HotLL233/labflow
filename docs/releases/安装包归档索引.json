@@ -1,0 +1,1884 @@
+{
+  "source_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+  "historical_file_count": 111,
+  "index_only_no_binary_payload": true,
+  "archive_migration_status": "pending",
+  "software_latest": "v2.4.7",
+  "files": [
+    {
+      "path": "installers/LabFlow-v2.3.13-HotUpdate.exe",
+      "git_blob": "0840d4f7129027e1b7909b754a82629e46569842",
+      "bytes": 28160007,
+      "sha256": "70b910a230cc3bb1747aa7ec896181536e38b0c4dfa2101712d6b6aa99209b3e",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.13",
+          "name": "LabFlow-v2.3.13-HotUpdate.exe",
+          "id": 572641493,
+          "bytes": 28160007,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.13/LabFlow-v2.3.13-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.13.exe",
+      "git_blob": "499355143bb4dbc0a599d347c7aa0a96a1f8f912",
+      "bytes": 78664097,
+      "sha256": "505b5d5e808a065c8159cdc542dc36415d5c84b0d4c7b66fcadc6e5c932d983d",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.13",
+          "name": "LabFlow-v2.3.13.exe",
+          "id": 572641492,
+          "bytes": 78664097,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.13/LabFlow-v2.3.13.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.14-HotUpdate.exe",
+      "git_blob": "25cf34098f175298da599abc9fb184d02385251a",
+      "bytes": 28161139,
+      "sha256": "2a30802c1240610ad568a5c075dc74ab552124df0a707ab8580d64dab9621706",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.14",
+          "name": "LabFlow-v2.3.14-HotUpdate.exe",
+          "id": 574509968,
+          "bytes": 28161139,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.14/LabFlow-v2.3.14-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.14.exe",
+      "git_blob": "38f32b10d79c756aa65bf9b15ebbe2a8df86153b",
+      "bytes": 78663835,
+      "sha256": "bc228708e618f01b5a0773b912ad691705c17e4f8fbb9cb9af5a437579e31de9",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.14",
+          "name": "LabFlow-v2.3.14.exe",
+          "id": 574509971,
+          "bytes": 78663835,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.14/LabFlow-v2.3.14.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.15-HotUpdate.exe",
+      "git_blob": "6a5c40684b423269b3a28216e9555adeb72e4d9f",
+      "bytes": 28173774,
+      "sha256": "41ce6ce6fc28d17574d82672e89c2acb2637a685511a5d07ba050c33614db667",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.15",
+          "name": "LabFlow-v2.3.15-HotUpdate.exe",
+          "id": 575861641,
+          "bytes": 28173774,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.15/LabFlow-v2.3.15-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.15.exe",
+      "git_blob": "b343c104fb0d0b59c3e637d3ccb832d0e251e3b9",
+      "bytes": 78674994,
+      "sha256": "fc98c985dbbe06ce4124e8b73a64114fdfea52126b02eff7731c48abfdec152f",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.15",
+          "name": "LabFlow-v2.3.15.exe",
+          "id": 575861643,
+          "bytes": 78674994,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.15/LabFlow-v2.3.15.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.16-HotUpdate.exe",
+      "git_blob": "4651457535b29484cbc887bbf5cf7006c240a6da",
+      "bytes": 28156944,
+      "sha256": "e40e049f52ff37c8b37fb93fc197bca6133485ac6cae768350b898435689f71e",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.16",
+          "name": "LabFlow-v2.3.16-HotUpdate.exe",
+          "id": 576211038,
+          "bytes": 28156944,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.16/LabFlow-v2.3.16-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.16.exe",
+      "git_blob": "af8fefee1378b8069bbb30ef68a15e25311af8fa",
+      "bytes": 78671620,
+      "sha256": "6e49cb0e10a21fba455e0621f04afe344b33f77b3b908c138f69e0e965a39c76",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.16",
+          "name": "LabFlow-v2.3.16.exe",
+          "id": 576211040,
+          "bytes": 78671620,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.16/LabFlow-v2.3.16.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.17-HotUpdate.exe",
+      "git_blob": "d410ee712bed09fa64e68621166a9a1daafeccd9",
+      "bytes": 28159934,
+      "sha256": "5c4decfb3c8e9aad2b6e9c577b12672df9e2f0f482509a7d1f77fb753a830ef1",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.17",
+          "name": "LabFlow-v2.3.17-HotUpdate.exe",
+          "id": 576403579,
+          "bytes": 28159934,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.17/LabFlow-v2.3.17-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.17.exe",
+      "git_blob": "e464f48a46612b1c3a41f31e270af58d7d8c9c26",
+      "bytes": 78663375,
+      "sha256": "ab239d02977acac94ba26e433a0dd2ab316da4c5c913c499b407937ed34140d5",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.17",
+          "name": "LabFlow-v2.3.17.exe",
+          "id": 576403581,
+          "bytes": 78663375,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.17/LabFlow-v2.3.17.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.18-HotUpdate.exe",
+      "git_blob": "0223436b5d10225074aa152567b09bf698389739",
+      "bytes": 28172598,
+      "sha256": "ee7752d5cbf7e1cc37c4ea28d96dcc719d8561d142cf3355bb6003a173dda0ff",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.18",
+          "name": "LabFlow-v2.3.18-HotUpdate.exe",
+          "id": 578316610,
+          "bytes": 28172598,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.18/LabFlow-v2.3.18-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.18.exe",
+      "git_blob": "8ec9f143ecd3cf7d7fec541128deafaea78733ad",
+      "bytes": 78684280,
+      "sha256": "a7118070c588d30d50e6508eef69400d6c168da186a29236e92076eac1b5855c",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.18",
+          "name": "LabFlow-v2.3.18.exe",
+          "id": 578316611,
+          "bytes": 78684280,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.18/LabFlow-v2.3.18.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.19-HotUpdate.exe",
+      "git_blob": "f9ad80b8f478e5a6aa9f1a264907b44b9ba2bab0",
+      "bytes": 28182306,
+      "sha256": "a2506121b9ec503973f9d808899c18468b910356ffa6c02a603be6abde318b32",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.19",
+          "name": "LabFlow-v2.3.19-HotUpdate.exe",
+          "id": 583580646,
+          "bytes": 28182306,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.19/LabFlow-v2.3.19-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.19.exe",
+      "git_blob": "f8c253289bfeddb2a73a1c851c2982a2481e564f",
+      "bytes": 78695339,
+      "sha256": "01e40de6f0cbbedc2d208e8fedd368aa88eb1476279d56695b4265931188247d",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.19",
+          "name": "LabFlow-v2.3.19.exe",
+          "id": 583580645,
+          "bytes": 78695339,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.19/LabFlow-v2.3.19.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.22-HotUpdate.exe",
+      "git_blob": "d33b94d629bfe22c2a1d591bcdb04c2aa13d6ee0",
+      "bytes": 28180965,
+      "sha256": "0797a0f03dd543a4aee913b3f8633a6cb0c7d209e6366290caa7763993a0c11f",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.22",
+          "name": "LabFlow-v2.3.22-HotUpdate.exe",
+          "id": 584848187,
+          "bytes": 28180965,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.22/LabFlow-v2.3.22-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.22.exe",
+      "git_blob": "6dbb09fd52025ba0803523a81104b34f30c97dd8",
+      "bytes": 78678770,
+      "sha256": "563ee0597aec1adf92589c4ac5622bbe15db84f269a6e6839be88f94d2c1590b",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.22",
+          "name": "LabFlow-v2.3.22.exe",
+          "id": 584848185,
+          "bytes": 78678770,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.22/LabFlow-v2.3.22.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.24-HotUpdate.exe",
+      "git_blob": "1a550d013a81c3a018ee94dafd287fd45c05357c",
+      "bytes": 28183706,
+      "sha256": "306f2c9b9f6db121e67d5cb263a6ffbcd48aa5f2f4e0ba81a2c658cde7e93539",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.24",
+          "name": "LabFlow-v2.3.24-HotUpdate.exe",
+          "id": 585767231,
+          "bytes": 28183706,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.24/LabFlow-v2.3.24-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.24.exe",
+      "git_blob": "652f05c5daf33317f8ecad424e048f49a9b63118",
+      "bytes": 78675676,
+      "sha256": "24c41378413e189e123a7c47e13d911006b64e4d77444d88703bcb1a299c6de8",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.24",
+          "name": "LabFlow-v2.3.24.exe",
+          "id": 585767233,
+          "bytes": 78675676,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.24/LabFlow-v2.3.24.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.26-HotUpdate.exe",
+      "git_blob": "a8b64562aa0330560202146adda6e01aa8d2524e",
+      "bytes": 28203506,
+      "sha256": "f61c6125817c9cbe694ce4f28695d1914331113c1eea9c0b8b705a69e588c931",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.26",
+          "name": "LabFlow-v2.3.26-HotUpdate.exe",
+          "id": 594078011,
+          "bytes": 28203506,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.26/LabFlow-v2.3.26-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.26.exe",
+      "git_blob": "3fd2ba5d36bfb7e8c6f58157c51877d9dbdb4af4",
+      "bytes": 78698808,
+      "sha256": "e2646f64c85c1a4c58c8a1173dfa45819b3ce45166c1bafab2a1208fa35b2c8e",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.26",
+          "name": "LabFlow-v2.3.26.exe",
+          "id": 594078016,
+          "bytes": 78698808,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.26/LabFlow-v2.3.26.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.27-HotUpdate.exe",
+      "git_blob": "37ea0b7339564ea0b83788153fbf6b5c96478d5e",
+      "bytes": 28199301,
+      "sha256": "a4643f0801f4a409687680363ed2e88d3353dd6b9eb95dae2c4db50d8f7aa02b",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.27",
+          "name": "LabFlow-v2.3.27-HotUpdate.exe",
+          "id": 594212109,
+          "bytes": 28199301,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.27/LabFlow-v2.3.27-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.27.exe",
+      "git_blob": "dd0c12dbe200a8df5657fcb2b5254e87938dc556",
+      "bytes": 78693984,
+      "sha256": "e1dcea268141523914c415c99ac7283663860a0b01f0a1e52cd75e889a2ea998",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.27",
+          "name": "LabFlow-v2.3.27.exe",
+          "id": 594212108,
+          "bytes": 78693984,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.27/LabFlow-v2.3.27.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.28-HotUpdate.exe",
+      "git_blob": "fca86b78d0e6c770d5ba018ba471c9fb558d06c6",
+      "bytes": 28203958,
+      "sha256": "8c8e0d008f6d5210aef7c24c1832c3a83e12e4b402836071e9fbf99ed472efc5",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.28",
+          "name": "LabFlow-v2.3.28-HotUpdate.exe",
+          "id": 594445921,
+          "bytes": 28203958,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.28/LabFlow-v2.3.28-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.28.exe",
+      "git_blob": "51fc81f72fd6acc80059a7752d9cafa777866583",
+      "bytes": 78698428,
+      "sha256": "af3ea4027eb2b96e0f149f0d44dcb13a8335a9ca81272b3ebe55b5de527c448b",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.28",
+          "name": "LabFlow-v2.3.28.exe",
+          "id": 594445923,
+          "bytes": 78698428,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.28/LabFlow-v2.3.28.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.37-HotUpdate.exe",
+      "git_blob": "1a2ed9669b5bb5f9aa2ed60e2f4fd90b310754ab",
+      "bytes": 28203371,
+      "sha256": "eb3cbcad53c58ceb4ff0d74b7b28ea17d66fe87931be7458998ada201b3861ff",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.37",
+          "name": "LabFlow-v2.3.37-HotUpdate.exe",
+          "id": 602538374,
+          "bytes": 28203371,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.37/LabFlow-v2.3.37-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.37.exe",
+      "git_blob": "ab6848ff516637becc5bfee33e391dfaa3b6edbc",
+      "bytes": 78698264,
+      "sha256": "b3447bdef5e2fcb3096fef1ab3244d248c13d59d707d0c3023d62c829384e1b5",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.37",
+          "name": "LabFlow-v2.3.37.exe",
+          "id": 602538373,
+          "bytes": 78698264,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.37/LabFlow-v2.3.37.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.38-HotUpdate.exe",
+      "git_blob": "b120e545bac2cd8595b7fa3a1ca5b161523e17f4",
+      "bytes": 28209685,
+      "sha256": "cfeb34f3f8d05a6eb05cc338c678ab235522f9f2c6498ef4d8b589875d2a88f8",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.38",
+          "name": "LabFlow-v2.3.38-HotUpdate.exe",
+          "id": 602840719,
+          "bytes": 28209685,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.38/LabFlow-v2.3.38-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.38.exe",
+      "git_blob": "b9296fe7b83886f5771103730e481d5aeec7b1d0",
+      "bytes": 78698309,
+      "sha256": "7f10668b7f944870efa78b85910a787a066fe6ad58de3e942f45a892efc47170",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.38",
+          "name": "LabFlow-v2.3.38.exe",
+          "id": 602840720,
+          "bytes": 78698309,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.38/LabFlow-v2.3.38.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.41-HotUpdate.exe",
+      "git_blob": "cfd1676b2d9ea225b8552a62a1c3b52edb8dfc64",
+      "bytes": 28235135,
+      "sha256": "eb23e07b7a1a0705f0ea4ed5764b63891b841fb9bc5d3dfa919c9258402deff2",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.41",
+          "name": "LabFlow-v2.3.41-HotUpdate.exe",
+          "id": 624521457,
+          "bytes": 28235135,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.41/LabFlow-v2.3.41-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.41.exe",
+      "git_blob": "f9617626e00a04d8d21d02b37977cf40dc1ce5b9",
+      "bytes": 78725666,
+      "sha256": "840a3a180d21ee06e736d0b462bd73c5ba4598fb877b57c827cdfc955b020ce1",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.41",
+          "name": "LabFlow-v2.3.41.exe",
+          "id": 624521454,
+          "bytes": 78725666,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.41/LabFlow-v2.3.41.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.42-HotUpdate.exe",
+      "git_blob": "878fd987aa0a1bf9a7c44d5e6eea269381dae25e",
+      "bytes": 28237204,
+      "sha256": "381e86ea11c480da110de66acf92e0dc8b248d124b9e9254f91834c4bfaab968",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.42",
+          "name": "LabFlow-v2.3.42-HotUpdate.exe",
+          "id": 626596185,
+          "bytes": 28237204,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.42/LabFlow-v2.3.42-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.42.exe",
+      "git_blob": "2bb6a1d883fc6dff635b6edfd49539f2623c3600",
+      "bytes": 78732105,
+      "sha256": "b10c529e298a83be6fb60967306bef81f7630a66f330a60f1b3e7d8ce5f01203",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.42",
+          "name": "LabFlow-v2.3.42.exe",
+          "id": 626596181,
+          "bytes": 78732105,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.42/LabFlow-v2.3.42.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.43-HotUpdate.exe",
+      "git_blob": "7c7d03d63720cd355e2d191f38e3d800e94ab825",
+      "bytes": 28234920,
+      "sha256": "fafde0236c15a6eda53c3f962a78272e06c55e0360fe0f1bb8f9b89c470254f6",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.43",
+          "name": "LabFlow-v2.3.43-HotUpdate.exe",
+          "id": 626772492,
+          "bytes": 28234920,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.43/LabFlow-v2.3.43-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.43.exe",
+      "git_blob": "0c2b5e726b6e9f94c585aa8338499a2cd1a72c41",
+      "bytes": 78730512,
+      "sha256": "4e34271e18bf4002aa4b95470d8e47fdc7d339c31c1d0bfe3d3d44e026b4d82a",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.43",
+          "name": "LabFlow-v2.3.43.exe",
+          "id": 626772495,
+          "bytes": 78730512,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.43/LabFlow-v2.3.43.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.44-HotUpdate.exe",
+      "git_blob": "a065432138f713d3744e74e3620f8a9bd1eb08d4",
+      "bytes": 28290782,
+      "sha256": "4a11fc808adf9129fa94b522be5ce4867db0c7dcff1566883f292caa1e706dee",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.44",
+          "name": "LabFlow-v2.3.44-HotUpdate.exe",
+          "id": 626994088,
+          "bytes": 28290782,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.44/LabFlow-v2.3.44-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.44.exe",
+      "git_blob": "6e347bfe45313b88c378e40891cf092165794116",
+      "bytes": 78786660,
+      "sha256": "d55ac6c1db32128c00effcd7c5db3b396a2903bd430c53f61e5a95044d0f0a78",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.44",
+          "name": "LabFlow-v2.3.44.exe",
+          "id": 626994089,
+          "bytes": 78786660,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.44/LabFlow-v2.3.44.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.45-HotUpdate.exe",
+      "git_blob": "bc626cb226e6062482fe8d5dbe91dacc83aa2b16",
+      "bytes": 28263817,
+      "sha256": "aa2983d2caa693dc73abf322c45b15586ca911ace7a37d5f58d1c467eb223f76",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.45",
+          "name": "LabFlow-v2.3.45-HotUpdate.exe",
+          "id": 627334099,
+          "bytes": 28263817,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.45/LabFlow-v2.3.45-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.45.exe",
+      "git_blob": "aba524d03efd94b050618346ad3e7504f49f6130",
+      "bytes": 78761629,
+      "sha256": "8b6d85107d1697bb4117a4a54a110fe728fba494f0443bc343212d9b03658210",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.45",
+          "name": "LabFlow-v2.3.45.exe",
+          "id": 627334100,
+          "bytes": 78761629,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.45/LabFlow-v2.3.45.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.46-HotUpdate.exe",
+      "git_blob": "9b194f40181ded4854a363d550193b346fc49f24",
+      "bytes": 27344539,
+      "sha256": "cf7c1d7b92936138655b4021a476c6942ee89182cdfa014e43a07054f24725db",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.46",
+          "name": "LabFlow-v2.3.46-HotUpdate.exe",
+          "id": 628001024,
+          "bytes": 27344539,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.46/LabFlow-v2.3.46-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.46.exe",
+      "git_blob": "ebfcd45532be05aae34376ee6bda9acf5b8cef9a",
+      "bytes": 77842534,
+      "sha256": "9af084a4024a751ff777be788bd256fcae273988458109f3f93e9fec3eadab79",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.46",
+          "name": "LabFlow-v2.3.46.exe",
+          "id": 628001025,
+          "bytes": 77842534,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.46/LabFlow-v2.3.46.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.47-HotUpdate.exe",
+      "git_blob": "154c08e8d0464f3af134d6cac0bf8abb2b0a21d9",
+      "bytes": 27339798,
+      "sha256": "38ad612b7510425a5a9874bba3dce7c268dee88dd0d439de3bce87e6fbb5f188",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.47",
+          "name": "LabFlow-v2.3.47-HotUpdate.exe",
+          "id": 632326807,
+          "bytes": 27339798,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.47/LabFlow-v2.3.47-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.47.exe",
+      "git_blob": "be5d745ef30b359dfb0c2132a6cba501605a5c6f",
+      "bytes": 77841929,
+      "sha256": "894f0b5f6a5df8168af6ad7428730d2fc19db69f332bc754c5326123f42d58e1",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.47",
+          "name": "LabFlow-v2.3.47.exe",
+          "id": 632326806,
+          "bytes": 77841929,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.47/LabFlow-v2.3.47.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.48-HotUpdate.exe",
+      "git_blob": "8e4fc1fd6db9ae39529b561de5def578597bcc4f",
+      "bytes": 28355141,
+      "sha256": "63adcfe69e164113850e2bf195fcc855080d66b235de910f8c7b3f11373dde86",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.48",
+          "name": "LabFlow-v2.3.48-HotUpdate.exe",
+          "id": 632513163,
+          "bytes": 28355141,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.48/LabFlow-v2.3.48-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.48.exe",
+      "git_blob": "fa92e077a52fa0ec619874e52d5846d6f5aef299",
+      "bytes": 78852307,
+      "sha256": "2057903b2f017507af20e761af89eef806f5db28c8788e92ae7034698caf7cc2",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.48",
+          "name": "LabFlow-v2.3.48.exe",
+          "id": 632513162,
+          "bytes": 78852307,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.48/LabFlow-v2.3.48.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.49-HotUpdate.exe",
+      "git_blob": "34f9461784affac0ef8b15bb169771a66462454c",
+      "bytes": 28355127,
+      "sha256": "64b84f2200db82685d10fe41b15eb9807c528fe61e5d653e7ba539fcc92222b4",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.49",
+          "name": "LabFlow-v2.3.49-HotUpdate.exe",
+          "id": 632870900,
+          "bytes": 28355127,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.49/LabFlow-v2.3.49-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.49.exe",
+      "git_blob": "5b1d3e7c1da743f3d0d51486734a4357c390b58f",
+      "bytes": 78860258,
+      "sha256": "a13d636f0bc77586f294bc49015f2e07de719afcaa46924c72d0e9b10e50271e",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.49",
+          "name": "LabFlow-v2.3.49.exe",
+          "id": 632870902,
+          "bytes": 78860258,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.49/LabFlow-v2.3.49.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.50-HotUpdate.exe",
+      "git_blob": "af57d994db63189d633ae0e520f61aa4fb792ee7",
+      "bytes": 28317538,
+      "sha256": "4706912a971760e0b85bdfc23fcc9b528b3ecd8acc90ab2db219926995671cf1",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.50",
+          "name": "LabFlow-v2.3.50-HotUpdate.exe",
+          "id": 633233786,
+          "bytes": 28317538,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.50/LabFlow-v2.3.50-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.50.exe",
+      "git_blob": "04b032220978e5e9ddba3a66e804c60482b9faa9",
+      "bytes": 78817374,
+      "sha256": "9f1b046feec783610dbb6bcf756cd398fd5442e289cdbb5274d64315cadad62d",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.50",
+          "name": "LabFlow-v2.3.50.exe",
+          "id": 633233787,
+          "bytes": 78817374,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.50/LabFlow-v2.3.50.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.51-HotUpdate.exe",
+      "git_blob": "80fd4f3dfe8a4e311690ce261296ed9e660075a5",
+      "bytes": 28929566,
+      "sha256": "44d83181ba10c28ac544013094c6f51882bb085e44a619682d5acc6d889398f7",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.51",
+          "name": "LabFlow-v2.3.51-HotUpdate.exe",
+          "id": 635851835,
+          "bytes": 28929566,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.51/LabFlow-v2.3.51-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.51.exe",
+      "git_blob": "2f5af67e693503ede5d48ed5a0ac89f915e17d46",
+      "bytes": 79437101,
+      "sha256": "41ec06f3a267a7b245dd30a217b1be990dd382fe342b87e93e586e9e7246921f",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.51",
+          "name": "LabFlow-v2.3.51.exe",
+          "id": 635851832,
+          "bytes": 79437101,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.51/LabFlow-v2.3.51.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.52-HotUpdate.exe",
+      "git_blob": "539c4512d263086aabd357db4b5439e71845fe06",
+      "bytes": 28935533,
+      "sha256": "4438327596f7191c3dd69fa67c5b5db90ddbc4a027023075e33bd9e47d5279d2",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.52",
+          "name": "LabFlow-v2.3.52-HotUpdate.exe",
+          "id": 635960636,
+          "bytes": 28935533,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.52/LabFlow-v2.3.52-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.52.exe",
+      "git_blob": "792be166f1d0cc6946e0803b837d6bb07e1de5ae",
+      "bytes": 79430856,
+      "sha256": "8d2e8dc354f531545133a6dc190f9e75ec06378b4ddd457274bea06d617c295c",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.52",
+          "name": "LabFlow-v2.3.52.exe",
+          "id": 635960637,
+          "bytes": 79430856,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.52/LabFlow-v2.3.52.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.53-HotUpdate.exe",
+      "git_blob": "154e7dda6f1c9366fddecb257c6ed97be975d083",
+      "bytes": 28986814,
+      "sha256": "26c7915a64aa79a2bc9842f3ba91dd09091d7414db94291f9de6ad007f18d3d9",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.53",
+          "name": "LabFlow-v2.3.53-HotUpdate.exe",
+          "id": 636176202,
+          "bytes": 28986814,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.53/LabFlow-v2.3.53-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.53.exe",
+      "git_blob": "5f8f44aee250c07e827d5db1c8e1ee17a41c296e",
+      "bytes": 79493914,
+      "sha256": "aba13f84aac58ebbd355416c9392972bde1829f65a7284ffb0159d007a61323f",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.53",
+          "name": "LabFlow-v2.3.53.exe",
+          "id": 636176205,
+          "bytes": 79493914,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.53/LabFlow-v2.3.53.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.54-HotUpdate.exe",
+      "git_blob": "45236eb41845cfd8a670dd011583273c211ffbbb",
+      "bytes": 28980395,
+      "sha256": "2b7b579f020d192171e0e8e94f29a3d281b852ca3cf345bfcb4369af7e6bd575",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.54",
+          "name": "LabFlow-v2.3.54-HotUpdate.exe",
+          "id": 636365548,
+          "bytes": 28980395,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.54/LabFlow-v2.3.54-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.54.exe",
+      "git_blob": "1b3cd8d04ba6cabff56339307dec86eded8aa749",
+      "bytes": 79490549,
+      "sha256": "cb261ea6a1352e1e962ae447d530f6fbfa239a78b10eb9b0cbab0c82cd4a4070",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.54",
+          "name": "LabFlow-v2.3.54.exe",
+          "id": 636365546,
+          "bytes": 79490549,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.54/LabFlow-v2.3.54.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.55-HotUpdate.exe",
+      "git_blob": "f8743bdf058cc363aee0212cbd75d93ab5fb150a",
+      "bytes": 28053429,
+      "sha256": "d6e272fa6571417ca6e20f620b91d198abe159f57afc545422ee8af03c086230",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.55",
+          "name": "LabFlow-v2.3.55-HotUpdate.exe",
+          "id": 636516915,
+          "bytes": 28053429,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.55/LabFlow-v2.3.55-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.55.exe",
+      "git_blob": "3db405cddbd2b87fb775b2a361312bc31d1b91b0",
+      "bytes": 78549065,
+      "sha256": "72c9ace4375334b274b82603a314a10350bd9e291e2e73065d168c39cc607ff1",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.55",
+          "name": "LabFlow-v2.3.55.exe",
+          "id": 636516914,
+          "bytes": 78549065,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.55/LabFlow-v2.3.55.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.56-HotUpdate.exe",
+      "git_blob": "843a4e0a32be7a14f3c36411f9bd87783a313106",
+      "bytes": 28987809,
+      "sha256": "05b7f584e8be8c9e4bbef70e8143087ae5f4704bd0473ab75d1634691e266d02",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.56",
+          "name": "LabFlow-v2.3.56-HotUpdate.exe",
+          "id": 639449456,
+          "bytes": 28987809,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.56/LabFlow-v2.3.56-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.56.exe",
+      "git_blob": "e165809ce74c2c18fd0ca70056d11d97ccb2527a",
+      "bytes": 79503393,
+      "sha256": "df20b1e2052486dc85cf4e9d796cc0de7338d5be85c217dbad7e59a8c10ba6fe",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.56",
+          "name": "LabFlow-v2.3.56.exe",
+          "id": 639449460,
+          "bytes": 79503393,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.56/LabFlow-v2.3.56.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.57-HotUpdate.exe",
+      "git_blob": "286529e12d20bc1c24363259ad81958a422008f1",
+      "bytes": 28078710,
+      "sha256": "a76624dc0862f49f48304161115b3abf02cadf4a2073439ce1fafa3f7c07a90c",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.57",
+          "name": "LabFlow-v2.3.57-HotUpdate.exe",
+          "id": 642303165,
+          "bytes": 28078710,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.57/LabFlow-v2.3.57-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.57.exe",
+      "git_blob": "e66f2c7f095c2057116491653767d575fe5a17c4",
+      "bytes": 78585384,
+      "sha256": "a29a3ee994bd3266034d3e695f6f0ecc8b8721bbd2d1664c44d2476ca953b3b4",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.57",
+          "name": "LabFlow-v2.3.57.exe",
+          "id": 642303164,
+          "bytes": 78585384,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.57/LabFlow-v2.3.57.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.58-HotUpdate.exe",
+      "git_blob": "4f95a515c0ebafaf55cfa543415e1443da34aeb7",
+      "bytes": 28993656,
+      "sha256": "5122d72451857d7273aa874f5137d468609c9a56e2a468a217a0a49a4d118926",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.58",
+          "name": "LabFlow-v2.3.58-HotUpdate.exe",
+          "id": 642483220,
+          "bytes": 28993656,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.58/LabFlow-v2.3.58-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.58.exe",
+      "git_blob": "b01ac1caf5116d0e289d7c3599afd9e787360ea3",
+      "bytes": 79501336,
+      "sha256": "8b7cc07a7299e031d476c9aaf6d9598d9ef33d0bc88a4c65f40bf877aed36e45",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.58",
+          "name": "LabFlow-v2.3.58.exe",
+          "id": 642483217,
+          "bytes": 79501336,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.58/LabFlow-v2.3.58.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.59-HotUpdate.exe",
+      "git_blob": "a46b4b6b6bae8d944141eafe71fa38928a693776",
+      "bytes": 29023771,
+      "sha256": "6810295cec61d22797c82d5e2f4134a03f77ec923c4db434528cbd114f871b8b",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.59",
+          "name": "LabFlow-v2.3.59-HotUpdate.exe",
+          "id": 642543128,
+          "bytes": 29023771,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.59/LabFlow-v2.3.59-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.59.exe",
+      "git_blob": "84c8ec812269e79761dc0cff48ad646683b36ea3",
+      "bytes": 79535830,
+      "sha256": "54197a3b9de10e0d0c39e2566babac12aa30d805fefd6bc537076c4a5d06f048",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.59",
+          "name": "LabFlow-v2.3.59.exe",
+          "id": 642543117,
+          "bytes": 79535830,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.59/LabFlow-v2.3.59.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.60-HotUpdate.exe",
+      "git_blob": "55617543387f230289a4c662f30d3b9597b15239",
+      "bytes": 29022229,
+      "sha256": "bcdbc5e8e87c99131f1067c1f7ce52065c556968cee1e10e0e191e53c591ba90",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.60",
+          "name": "LabFlow-v2.3.60-HotUpdate.exe",
+          "id": 642604166,
+          "bytes": 29022229,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.60/LabFlow-v2.3.60-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.60.exe",
+      "git_blob": "d1b18f20327f19947aa56a8dab0c4332e31a0d71",
+      "bytes": 79529021,
+      "sha256": "608e36b77f26f75786fedfde7ac61628d34576c913603240bcfeaa4c0edb4c9b",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.60",
+          "name": "LabFlow-v2.3.60.exe",
+          "id": 642604169,
+          "bytes": 79529021,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.60/LabFlow-v2.3.60.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.61-HotUpdate.exe",
+      "git_blob": "b30945b2cf28c7dae1f877a28d40d3405f583fc1",
+      "bytes": 29116918,
+      "sha256": "66929f71c8607f148f55c18dbc4c8d4ea28a42420ec6671515b97c99bca517f8",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.61",
+          "name": "LabFlow-v2.3.61-HotUpdate.exe",
+          "id": 642970146,
+          "bytes": 29116918,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.61/LabFlow-v2.3.61-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.61.exe",
+      "git_blob": "f5e9742cb9d3c931fe40395a94c6b1a3bee1632b",
+      "bytes": 79637541,
+      "sha256": "35bccbeab7aaac3a3d867b6f7400a3e016eeea3070cc3af9648c25647ae4f10e",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.61",
+          "name": "LabFlow-v2.3.61.exe",
+          "id": 642970148,
+          "bytes": 79637541,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.61/LabFlow-v2.3.61.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.62-HotUpdate.exe",
+      "git_blob": "58d2db17e5fd78eeef95fd86cc5ca6bf9a0bcc25",
+      "bytes": 29122515,
+      "sha256": "83dbb932e3a9b3f3d825bfa81cef4c31b9fe513c324e21d744128764dc8a66cd",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.62",
+          "name": "LabFlow-v2.3.62-HotUpdate.exe",
+          "id": 643220330,
+          "bytes": 29122515,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.62/LabFlow-v2.3.62-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.62.exe",
+      "git_blob": "049000815acc2d07f31716ef889f494966ef2efe",
+      "bytes": 79635622,
+      "sha256": "961e9a874a9d872d48df2b5bba219d2f00d3432fbf6fc08b7cbe8bc2e79ed773",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.62",
+          "name": "LabFlow-v2.3.62.exe",
+          "id": 643220342,
+          "bytes": 79635622,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.62/LabFlow-v2.3.62.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.63-HotUpdate.exe",
+      "git_blob": "79ac9960ae36f331acf03798891b1ec5d19396d1",
+      "bytes": 29122497,
+      "sha256": "2c062647195a1cf7a3ca018339ebb8f84e569da6517561953a3bde90348acadb",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.63",
+          "name": "LabFlow-v2.3.63-HotUpdate.exe",
+          "id": 666011077,
+          "bytes": 29122497,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.63/LabFlow-v2.3.63-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.63.exe",
+      "git_blob": "7f80de60af4ac7523f0ef2772a5e41dbb235e7fb",
+      "bytes": 79635074,
+      "sha256": "43430803cecf8a42010671834668f8f3d11e5b99a72893bb8e2f0ac9d635d5e0",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.63",
+          "name": "LabFlow-v2.3.63.exe",
+          "id": 666011073,
+          "bytes": 79635074,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.63/LabFlow-v2.3.63.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.64-HotUpdate.exe",
+      "git_blob": "05564b4cda5cc46a3857444a0590d6022374d32f",
+      "bytes": 29125495,
+      "sha256": "98ced0084a7b177c792dbf7e94e8d1b3467234368801b6ab3f7f50ee64b2aee6",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.64",
+          "name": "LabFlow-v2.3.64-HotUpdate.exe",
+          "id": 668001580,
+          "bytes": 29125495,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.64/LabFlow-v2.3.64-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.64.exe",
+      "git_blob": "a3133f68c201bc840f8c03ceaa36580fd4ace27c",
+      "bytes": 79642713,
+      "sha256": "5eedabaf737641fc64fabe63f577357d6f4bb9fcdacf5a19d2c2307e3317538a",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.64",
+          "name": "LabFlow-v2.3.64.exe",
+          "id": 668001582,
+          "bytes": 79642713,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.64/LabFlow-v2.3.64.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.65-HotUpdate.exe",
+      "git_blob": "bb1180afa8b8fdc7d8fc59de90a65ad6dc4481d7",
+      "bytes": 29128964,
+      "sha256": "f6bb192eae324d5eee4313f404961283430caec7ad1ebdc6803a06b26a96914d",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.65",
+          "name": "LabFlow-v2.3.65-HotUpdate.exe",
+          "id": 668177498,
+          "bytes": 29128964,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.65/LabFlow-v2.3.65-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.65.exe",
+      "git_blob": "e86b9598dad5d6d8ad755a5e00e59d8fb38a859c",
+      "bytes": 79621537,
+      "sha256": "97fde0e39e8b94e39424da4165cda8dfa31f213d270e8d1c8efca717f19e1794",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.65",
+          "name": "LabFlow-v2.3.65.exe",
+          "id": 668177502,
+          "bytes": 79621537,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.65/LabFlow-v2.3.65.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.66-HotUpdate.exe",
+      "git_blob": "dd1ae46799ee749a1d3c269962e3d88c973ebfc4",
+      "bytes": 29123222,
+      "sha256": "ee054e23e9f852b4818d5f403efb67db1ac64aa87f42b29528e8f3cd6e2c3593",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.66",
+          "name": "LabFlow-v2.3.66-HotUpdate.exe",
+          "id": 668262967,
+          "bytes": 29123222,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.66/LabFlow-v2.3.66-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.66.exe",
+      "git_blob": "a61af1829ec1b67a2dc17becd82def000bda86e9",
+      "bytes": 79616882,
+      "sha256": "ab55de0556732d257caab314234817becc884f4535f3ff3236e71d2833c45642",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.66",
+          "name": "LabFlow-v2.3.66.exe",
+          "id": 668262968,
+          "bytes": 79616882,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.66/LabFlow-v2.3.66.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.67-HotUpdate.exe",
+      "git_blob": "213a0d0cbdf318c8b51ce5c3ba3c07c41376eec5",
+      "bytes": 29168793,
+      "sha256": "788f7e670c55d77fd95ae56a99b1704c95dec1bc8cabf6c21775414ce0933bc8",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.67",
+          "name": "LabFlow-v2.3.67-HotUpdate.exe",
+          "id": 676597192,
+          "bytes": 29168793,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.67/LabFlow-v2.3.67-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.67.exe",
+      "git_blob": "603e25643679ae9ceff594fb8ecf28b3c9020788",
+      "bytes": 79659402,
+      "sha256": "de8d0557bc09d7db336cdefaf62cd1f810286cbe52d8ad333f53f79e61094602",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.67",
+          "name": "LabFlow-v2.3.67.exe",
+          "id": 676597193,
+          "bytes": 79659402,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.67/LabFlow-v2.3.67.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.68-HotUpdate.exe",
+      "git_blob": "0bdd9357bd4b96a8cc6d913c7ba13bb3ebf8aab9",
+      "bytes": 29229441,
+      "sha256": "26f420fa9c73d978d6df930c93b98157a7d5ac0234d961e8171ac3b3a1c090b3",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.68",
+          "name": "LabFlow-v2.3.68-HotUpdate.exe",
+          "id": 680398371,
+          "bytes": 29229441,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.68/LabFlow-v2.3.68-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.68.exe",
+      "git_blob": "38e9ce245fc19c7ce0bcc1bde6647f82d6e97c0e",
+      "bytes": 79720733,
+      "sha256": "5503054bcb655d0aa0b75636a675419e53395f095f252d18f9e8de8e1d677154",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.68",
+          "name": "LabFlow-v2.3.68.exe",
+          "id": 680398372,
+          "bytes": 79720733,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.68/LabFlow-v2.3.68.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.69-HotUpdate.exe",
+      "git_blob": "0f45fc1f0495c521f972d7a44e42bf73f6bfff36",
+      "bytes": 29261116,
+      "sha256": "dba2e9a092bf3b6d7eef548642cfbb01fb3a92759db07c5c43fc22ed85629627",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.69",
+          "name": "LabFlow-v2.3.69-HotUpdate.exe",
+          "id": 680761004,
+          "bytes": 29261116,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.69/LabFlow-v2.3.69-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.69.exe",
+      "git_blob": "42996d93c80daad3aebf3e6cb61350eb7a27cf3d",
+      "bytes": 79754208,
+      "sha256": "1a7b69595fe3e647163d89f6b7ec6f28af0174a518d40a7f49b73765f06a4b63",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.69",
+          "name": "LabFlow-v2.3.69.exe",
+          "id": 680761006,
+          "bytes": 79754208,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.69/LabFlow-v2.3.69.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.70-HotUpdate.exe",
+      "git_blob": "1376c22df84e6ec5d6635599624a766b950a2304",
+      "bytes": 29284778,
+      "sha256": "562da355c83f597b23693afb9803e84f022198ecc20d1c7cbef9251fbfd7fbab",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.70",
+          "name": "LabFlow-v2.3.70-HotUpdate.exe",
+          "id": 681066400,
+          "bytes": 29284778,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.70/LabFlow-v2.3.70-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.70.exe",
+      "git_blob": "23b0bd529aad9686373f6a62527a4fc83cc9c6ff",
+      "bytes": 79777702,
+      "sha256": "74139f2204bd8bf91ce450a2317767ec86d9d63164f32362c14ca937e80bae7f",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.70",
+          "name": "LabFlow-v2.3.70.exe",
+          "id": 681066405,
+          "bytes": 79777702,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.70/LabFlow-v2.3.70.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.75-HotUpdate.exe",
+      "git_blob": "f112894ae5b3acd4b73fb9970bf6054074379f3b",
+      "bytes": 29284354,
+      "sha256": "35bdd73ed43cd85ee537da9d8eafc20b0f057111b1f7a848e23b78a833dd1d27",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.75",
+          "name": "LabFlow-v2.3.75-HotUpdate.exe",
+          "id": 684336039,
+          "bytes": 29284354,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.75/LabFlow-v2.3.75-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.75.exe",
+      "git_blob": "f2901ca473446d2c7e7083f8f24ca6570b95faf4",
+      "bytes": 79777825,
+      "sha256": "9c7ae2967c716079e12ee401b615dfc81befa3d1c50716d01621328f13f6430b",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.75",
+          "name": "LabFlow-v2.3.75.exe",
+          "id": 684336035,
+          "bytes": 79777825,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.75/LabFlow-v2.3.75.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.79-HotUpdate.exe",
+      "git_blob": "16b0fe5ff72371e23370e6c250433e498f962d96",
+      "bytes": 29410708,
+      "sha256": "4f61e15fe449a1e33f58c19f1fe248491e8259b2d18c74c75e4ff67a8598eec4",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.79",
+          "name": "LabFlow-v2.3.79-HotUpdate.exe",
+          "id": 690754349,
+          "bytes": 29410708,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.79/LabFlow-v2.3.79-HotUpdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/LabFlow-v2.3.79.exe",
+      "git_blob": "31d332665e8caddc90c7a04a9cad48e44c7e023c",
+      "bytes": 79900669,
+      "sha256": "b875970b6737474bd8b5a51b16e5888d0daceafb3e8e5b6d8de2a4a3e714d418",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.3.79",
+          "name": "LabFlow-v2.3.79.exe",
+          "id": 690754351,
+          "bytes": 79900669,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.3.79/LabFlow-v2.3.79.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.0-hotupdate.exe",
+      "git_blob": "efee39ad8a635797eed2254285bb0141d987c613",
+      "bytes": 29023680,
+      "sha256": "401a96d82ce54ade438878e7e4236aa109dac5c7171fa6d1936034d6cee72696",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.0",
+          "name": "labflow-v2.4.0-hotupdate.exe",
+          "id": 698110760,
+          "bytes": 29023680,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.0/labflow-v2.4.0-hotupdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.0.exe",
+      "git_blob": "6736c99d82f698d4bd47e4ab7a78b6b2ef66a827",
+      "bytes": 79468809,
+      "sha256": "36005d785dbb127d93c00b13e06201e07624e07862cb80d3229863a89af6580e",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.0",
+          "name": "labflow-v2.4.0.exe",
+          "id": 698110758,
+          "bytes": 79468809,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.0/labflow-v2.4.0.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.1-hotupdate.exe",
+      "git_blob": "cf114266223d79a385b7d95ebc5ec759adeae4d7",
+      "bytes": 29016018,
+      "sha256": "75d38a808a57d0502e180e0e24a52ceb35ae6a7c24f92beb01980f1463519a15",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.1",
+          "name": "labflow-v2.4.1-hotupdate.exe",
+          "id": 698707119,
+          "bytes": 29016018,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.1/labflow-v2.4.1-hotupdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.1.exe",
+      "git_blob": "d60a4e6f14c5b7787dd2158db4e624b1f5df7efb",
+      "bytes": 79462881,
+      "sha256": "1f783cb8b1945d985351017d21347170bad9a6e42f643f904311c5e7acc7b4aa",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.1",
+          "name": "labflow-v2.4.1.exe",
+          "id": 698707120,
+          "bytes": 79462881,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.1/labflow-v2.4.1.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.2-hotupdate.exe",
+      "git_blob": "275c0a0f5040d35a8ae8db546948a93f7324fc3e",
+      "bytes": 29020237,
+      "sha256": "719c63e8ed006ebe92fa4406bccd86a325b9ea6defc057e8f3bfadd4a1a15774",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.2",
+          "name": "labflow-v2.4.2-hotupdate.exe",
+          "id": 700468683,
+          "bytes": 29020237,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.2/labflow-v2.4.2-hotupdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.2.exe",
+      "git_blob": "584dd20f8b963fbcfd99294fa1970b34ffdd9386",
+      "bytes": 79463849,
+      "sha256": "dfedcf2e44731d319a90356e83244288ba08dee313c466dbdad09623683cf1bc",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.2",
+          "name": "labflow-v2.4.2.exe",
+          "id": 700468685,
+          "bytes": 79463849,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.2/labflow-v2.4.2.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.3-hotupdate.exe",
+      "git_blob": "573ce0343b6d44c307f25cda7042fc33d1503a0c",
+      "bytes": 30038304,
+      "sha256": "5ea1edf2aadb3199be4933add2953f1a3e173a368b1a4bd55cf968a4f237aeeb",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.3",
+          "name": "labflow-v2.4.3-hotupdate.exe",
+          "id": 701666060,
+          "bytes": 30038304,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.3/labflow-v2.4.3-hotupdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.3.exe",
+      "git_blob": "1c41693391c6bcad125b75ef1fac6678ae30fc95",
+      "bytes": 80482810,
+      "sha256": "2201ae13210a075cf4929229513df011c91c553f03655818d7d592a8946c85c5",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.3",
+          "name": "labflow-v2.4.3.exe",
+          "id": 701666061,
+          "bytes": 80482810,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.3/labflow-v2.4.3.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.4-hotupdate.exe",
+      "git_blob": "065f069383aec1c9be5cb1c22067309046508312",
+      "bytes": 30024621,
+      "sha256": "96c7556fbddc5720c20b2091770523b40174594f9ee4eb808e498b09dc10b676",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.4",
+          "name": "labflow-v2.4.4-hotupdate.exe",
+          "id": 704879024,
+          "bytes": 30024621,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.4/labflow-v2.4.4-hotupdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.4.exe",
+      "git_blob": "08244004c52f7d4279348c0c30f4700721b5379f",
+      "bytes": 80470625,
+      "sha256": "7848eb76a500a292121b332bda3478a3041bcbd775a43fe4a03fa8bd0b89e555",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.4",
+          "name": "labflow-v2.4.4.exe",
+          "id": 704879021,
+          "bytes": 80470625,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.4/labflow-v2.4.4.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.5-hotupdate.exe",
+      "git_blob": "1d4ffd0a0eac735d66e83aa3b805c674c22d3dcb",
+      "bytes": 30031707,
+      "sha256": "bbcc78f06958c816c5e16e5a3c2a5ed2f2443b2e684b78c0a15313f5c80f8090",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.5",
+          "name": "labflow-v2.4.5-hotupdate.exe",
+          "id": 706816742,
+          "bytes": 30031707,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.5/labflow-v2.4.5-hotupdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.5.exe",
+      "git_blob": "0cb54c4f45194338578b43bdde2e3af7745617b3",
+      "bytes": 80473327,
+      "sha256": "d8591dc9646aa193658593a0cdf0426f3ef9fa74fb0bafe0ea5ce3f066550014",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.5",
+          "name": "labflow-v2.4.5.exe",
+          "id": 706816740,
+          "bytes": 80473327,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.5/labflow-v2.4.5.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.6-hotupdate.exe",
+      "git_blob": "b0390fbaccfb7f6e4386a6d4a00a6103418b70aa",
+      "bytes": 30043199,
+      "sha256": "930825994cf809f58d6adadff1111cf76ffadc59dd8dde925ff8c16b4553856a",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.6",
+          "name": "labflow-v2.4.6-hotupdate.exe",
+          "id": 708064981,
+          "bytes": 30043199,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.6/labflow-v2.4.6-hotupdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.6.exe",
+      "git_blob": "61f4ef1d68b90bd1461e065a98775ff43bf66503",
+      "bytes": 80486648,
+      "sha256": "f689d49a392e6e9cf276ea5fc788429ef5c5c7320a1af9ef996f5fded9b10d44",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.6",
+          "name": "labflow-v2.4.6.exe",
+          "id": 708064979,
+          "bytes": 80486648,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.6/labflow-v2.4.6.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.7-hotupdate.exe",
+      "git_blob": "ea3c89a2ae216706a1f5706506d9061690ce1c9c",
+      "bytes": 30073956,
+      "sha256": "0cbcdba2caac21d14c0719b210ccc2e0cfe499cd5ca7cb5ce4c67717f3dad885",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.7",
+          "name": "labflow-v2.4.7-hotupdate.exe",
+          "id": 708654934,
+          "bytes": 30073956,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.7/labflow-v2.4.7-hotupdate.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/labflow-v2.4.7.exe",
+      "git_blob": "8dae7ff718fa675364225e9f4e3bd4aafbb82520",
+      "bytes": 80500063,
+      "sha256": "d479fad546dea6c0fbc6548f7b170ac8316127aec37109c6a9e0a8616eeeff48",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.4.7",
+          "name": "labflow-v2.4.7.exe",
+          "id": 708654932,
+          "bytes": 80500063,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.4.7/labflow-v2.4.7.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/样品管理系统_v2.2.18_PostgreSQL服务器版_Setup.exe",
+      "git_blob": "a28fadb2de49db24ae298961faa3db2a27ae2973",
+      "bytes": 78630716,
+      "sha256": "a909ac33976a21a86d99ae8709de9fb31f1c81011e1f084b3ae10031dc6f8ada",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "archive-migration-pending",
+      "archive_tag": "archive/legacy-binaries-20261105",
+      "archive_alias": "labflow-legacy-git-v2.2.18-a909ac33976a.exe",
+      "recoverable_from_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c"
+    },
+    {
+      "path": "installers/样品管理系统_v2.2.19_PostgreSQL服务器版_Setup.exe",
+      "git_blob": "d5e48a221d81762039a8d587f770ee914fb420d4",
+      "bytes": 78672591,
+      "sha256": "b98f60939a630ff9e488f002e0e894f7b60cb5a6e8da2c6033ff9cfba96de53a",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "existing-release-sha256-verified",
+      "release_copies": [
+        {
+          "tag": "v2.2.19",
+          "name": "_v2.2.19_PostgreSQL._Setup.exe",
+          "id": 564499847,
+          "bytes": 78672591,
+          "url": "https://github.com/HotLL233/labflow/releases/download/v2.2.19/_v2.2.19_PostgreSQL._Setup.exe"
+        }
+      ]
+    },
+    {
+      "path": "installers/样品管理系统_v2.2.20_PostgreSQL服务器版_Setup.exe",
+      "git_blob": "5e756f5775e0842b64392d9595b8d270d36bb02d",
+      "bytes": 78687410,
+      "sha256": "df7f54622612a37a587f17e898260f1e83ddb92bdfa5a88acfb6bdb876d10004",
+      "original_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c",
+      "retention": "archive-migration-pending",
+      "archive_tag": "archive/legacy-binaries-20261105",
+      "archive_alias": "labflow-legacy-git-v2.2.20-df7f54622612.exe",
+      "recoverable_from_commit": "196e78f3cfcdf0a830979c09d30273b974ca0a3c"
+    }
+  ]
+}

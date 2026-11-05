@@ -12,6 +12,12 @@
 /data/
 /workload_data/
 /postgres_data/
+/ci-artifacts/
+/installers/*
+!/installers/README.md
+/.developer-archive/
+/.workbuddy/
+/rebuild-output/
 *.log
 *.pdb
 .DS_Store
