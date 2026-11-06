@@ -99,4 +99,5 @@ v2.4.4,LabFlow-PostgreSQL-v2.4.4,True,True,published,
 v2.4.5,LabFlow-PostgreSQL-v2.4.5,True,True,published,
 v2.4.6,LabFlow-PostgreSQL-v2.4.6,True,True,published,
 v2.4.7,LabFlow-PostgreSQL-v2.4.7,True,True,current-official,正式软件基线；本轮仓库治理不重打
+v2.4.8,LabFlow-PostgreSQL-v2.4.8,False,False,development,后台布局优化；验证与正式渠道核验完成后更新
 archive/legacy-binaries-20261105,,True,True,historical-assets-archive,4份唯一历史字节及校验清单；非软件版本，不更新latest

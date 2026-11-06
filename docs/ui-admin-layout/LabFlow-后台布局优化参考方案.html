@@ -1,0 +1,692 @@
+<!doctype html>
+<!--
+  Proposal only. Synthetic data. No API calls, cookies or production writes.
+  Design review informed by unslop, Damir Sokolovsky (@heydamir), CC BY 4.0.
+  Material Design icon paths: Google, Apache-2.0; packaged by MUI, MIT.
+  MUI MIT notice: Copyright (c) 2014 Call-Em-All. Permission is hereby granted,
+  free of charge, to any person obtaining a copy of this software and associated
+  documentation files (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge, publish,
+  distribute, sublicense, and/or sell copies of the Software, and to permit persons
+  to whom the Software is furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS",
+  WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+  THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+  FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+  THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  Material icon license: https://www.apache.org/licenses/LICENSE-2.0
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>样品管理系统 · 后台布局参考方案</title>
+  <style>
+    :root {
+      --bg:#f5f6f7; --surface:#fff; --raised:#f2f4f6; --line:#dce1e6;
+      --ink:#20252b; --secondary:#525c68; --muted:#67717c;
+      --accent:#1769aa; --accent-hover:#125789; --accent-soft:#eaf2f9;
+      --good:#287249; --good-bg:#edf6f0; --bad:#ae3033; --bad-bg:#fcf0f0;
+      --warn:#925319; --warn-bg:#fcf4e9; --radius:4px; --row:44px;
+      --sidebar:232px; --control:36px;
+    }
+    * { box-sizing:border-box; }
+    html { font-size:14px; scrollbar-gutter:stable; }
+    body { margin:0; color:var(--ink); background:var(--bg); font-family:"Segoe UI","Microsoft YaHei","PingFang SC",Arial,sans-serif; line-height:1.5; letter-spacing:0; }
+    button,input,select,textarea { font:inherit; letter-spacing:0; }
+    button { cursor:pointer; }
+    button:disabled { cursor:default; opacity:.5; }
+    button,a,input,select,textarea { -webkit-tap-highlight-color:transparent; }
+    :focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+    [hidden] { display:none!important; }
+    button,input,select,textarea { border-radius:var(--radius); }
+    button { color:inherit; }
+    h1,h2,h3,p { margin:0; }
+    h1 { font-size:24px; line-height:32px; font-weight:600; }
+    h2 { font-size:16px; line-height:24px; font-weight:600; }
+    h3 { font-size:14px; font-weight:600; }
+    a { color:var(--accent); }
+    .ico { width:18px; height:18px; flex:0 0 18px; fill:currentColor; vertical-align:middle; }
+    .row { display:flex; align-items:center; gap:8px; }
+    .between { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .wrap { flex-wrap:wrap; }
+    .grow { flex:1; min-width:0; }
+    .muted { color:var(--muted); }
+    .small { font-size:12px; line-height:20px; }
+    .num { font-variant-numeric:tabular-nums; }
+    .secondary { color:var(--secondary); }
+    .button,.icon-button { border:1px solid var(--line); background:var(--surface); display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:var(--control); padding:6px 12px; text-decoration:none; white-space:nowrap; flex-shrink:0; font-size:13px; font-weight:500; transition:background-color 150ms,border-color 150ms,color 150ms; }
+    .button:hover,.icon-button:hover { background:var(--raised); border-color:#bbc5cf; }
+    .button.primary { background:var(--accent); color:white; border-color:var(--accent); }
+    .button.primary:hover { background:var(--accent-hover); }
+    .button.danger { color:var(--bad); border-color:#e7bdbd; }
+    .button.quiet { border-color:transparent; background:transparent; color:var(--secondary); }
+    .icon-button { padding:8px; width:36px; }
+    .button.tiny { min-height:28px; padding:3px 8px; font-size:12px; }
+    .prototype-strip { background:#eef2f5; border-bottom:1px solid var(--line); padding:8px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:40px; font-size:12px; color:var(--secondary); }
+    .prototype-strip strong { color:var(--ink); font-weight:600; }
+    .prototype-strip a { white-space:nowrap; text-decoration:none; }
+    .appbar { height:56px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; gap:16px; background:white; border-bottom:1px solid var(--line); }
+    .brand { display:flex; align-items:center; gap:12px; white-space:nowrap; }
+    .brand-mark { display:grid; place-items:center; width:32px; height:32px; border:1px solid #adc6da; border-radius:4px; color:var(--accent); font-size:18px; font-weight:600; }
+    .brand-name { font-size:15px; font-weight:600; }
+    .appbar nav { display:flex; align-items:center; gap:4px; }
+    .appbar .nav-label { font-size:13px; }
+    .appbar .selected { background:var(--accent-soft); color:var(--accent); }
+    .notification { position:relative; }
+    .notification b { position:absolute; top:-1px; right:-1px; min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:var(--bad); color:white; font-size:10px; line-height:16px; font-weight:500; }
+    .account { border-left:1px solid var(--line); margin-left:8px; padding-left:16px; font-size:13px; }
+    .shell { display:grid; grid-template-columns:var(--sidebar) minmax(0,1fr); min-height:calc(100vh - 96px); }
+    .sidebar { background:white; border-right:1px solid var(--line); display:flex; flex-direction:column; min-width:0; }
+    .sidebar-top { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px; }
+    .sidebar-title { font-size:13px; font-weight:600; color:var(--secondary); }
+    .nav-scroll { padding:0 8px 16px; }
+    .nav-group { margin-top:16px; }
+    .nav-group:first-child { margin-top:4px; }
+    .nav-group-title { font-size:12px; line-height:20px; color:var(--muted); padding:0 12px; margin-bottom:4px; }
+    .nav-item { width:100%; min-height:36px; display:flex; align-items:center; gap:12px; padding:6px 12px; color:var(--secondary); text-align:left; border:1px solid transparent; background:transparent; font-size:13px; text-decoration:none; border-radius:4px; }
+    button.nav-item:hover { background:var(--raised); }
+    .nav-item.active { background:var(--accent-soft); border-color:#d6e5f2; color:var(--accent); font-weight:600; }
+    .nav-item.undetailed { color:#65717d; }
+    .nav-item .ico { width:16px; height:16px; flex-basis:16px; }
+    .nav-foot { margin-top:auto; padding:16px 20px; font-size:12px; color:var(--muted); border-top:1px solid var(--line); }
+    main { min-width:0; padding:20px 24px 32px; }
+    .breadcrumb { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); margin-bottom:12px; }
+    .breadcrumb .ico { width:14px; height:14px; flex-basis:14px; }
+    .page-head { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
+    .page-head .title-block { min-width:0; }
+    .page-head p { margin-top:4px; font-size:13px; color:var(--secondary); }
+    .head-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+    .back { min-height:32px; font-size:12px; }
+    .back .ico { width:16px; height:16px; flex-basis:16px; }
+    .body-band { background:white; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .tabs { display:flex; gap:20px; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:thin; }
+    .tab { flex-shrink:0; padding:12px 0; min-height:44px; border:0; border-radius:0; border-bottom:2px solid transparent; background:transparent; color:var(--secondary); white-space:nowrap; font-size:13px; }
+    .tab.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:600; }
+    .toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:16px 0; }
+    .field { display:flex; flex-direction:column; gap:4px; min-width:0; font-size:12px; color:var(--secondary); }
+    .field input,.field select,.field textarea,.search input { width:100%; min-height:var(--control); border:1px solid #c7cfd7; color:var(--ink); background:white; padding:6px 10px; min-width:0; }
+    .field input:focus,.field select:focus,.field textarea:focus,.search:focus-within { border-color:var(--accent); outline:1px solid var(--accent); }
+    .search { display:flex; align-items:center; gap:8px; border:1px solid #c7cfd7; border-radius:4px; padding:0 10px; width:300px; min-height:var(--control); color:var(--muted); }
+    .search input { border:0; padding:6px 0; outline:0!important; background:transparent; font-size:13px; }
+    .toolbar select { min-height:var(--control); border:1px solid #c7cfd7; padding:4px 28px 4px 10px; background:white; font-size:13px; color:var(--secondary); max-width:100%; }
+    .toolbar-meta { margin-left:auto; font-size:12px; color:var(--muted); white-space:nowrap; }
+    .table-wrap { max-width:100%; overflow:auto; border-top:1px solid var(--line); border-bottom:1px solid var(--line); scrollbar-width:thin; background:white; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { background:#f1f3f5; color:var(--secondary); font-size:12px; font-weight:500; text-align:left; height:40px; white-space:nowrap; }
+    td { height:var(--row); color:var(--ink); border-top:1px solid #e8ebee; }
+    th,td { padding:8px 12px; vertical-align:middle; }
+    tbody tr:hover { background:#f7f9fb; }
+    th.right,td.right { text-align:right; font-variant-numeric:tabular-nums; }
+    td.name { min-width:240px; font-weight:500; }
+    .status { display:inline-flex; align-items:center; gap:6px; color:var(--secondary); font-size:12px; white-space:nowrap; }
+    .status::before { content:""; width:6px; height:6px; border-radius:3px; background:#8a949e; }
+    .status.good { color:var(--good); }
+    .status.good::before { background:var(--good); }
+    .status.bad { color:var(--bad); }
+    .status.bad::before { background:var(--bad); }
+    .status.warn { color:var(--warn); }
+    .status.warn::before { background:var(--warn); }
+    .flag { display:inline-flex; align-items:center; min-height:24px; padding:2px 6px; font-size:12px; border-radius:3px; background:var(--raised); color:var(--secondary); white-space:nowrap; }
+    .flag.info { background:var(--accent-soft); color:var(--accent); }
+    .row-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; white-space:nowrap; }
+    .text-action { font-size:12px; border:0; padding:4px 0; color:var(--accent); background:transparent; min-height:28px; }
+    .text-action:hover { text-decoration:underline; }
+    .pagination { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; color:var(--secondary); font-size:12px; }
+    .pagination select { min-height:28px; border:1px solid var(--line); background:white; padding:2px 6px; }
+    .pagination .icon-button { width:28px; min-height:28px; padding:4px; }
+    .tip { display:flex; align-items:flex-start; gap:8px; padding:12px 0; color:var(--secondary); font-size:12px; line-height:20px; }
+    .tip .ico { margin-top:1px; width:16px; height:16px; flex-basis:16px; }
+    .notice { border-left:3px solid #b8cddd; padding:8px 12px; background:#f0f4f7; color:var(--secondary); font-size:12px; line-height:20px; margin:16px 0; }
+    .master-grid { display:grid; grid-template-columns:156px minmax(0,1fr); gap:20px; margin-top:16px; }
+    .sheet-nav { border-right:1px solid var(--line); padding-right:12px; }
+    .sheet-nav button { width:100%; min-height:36px; background:transparent; border:1px solid transparent; padding:6px 8px; display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px; color:var(--secondary); text-align:left; }
+    .sheet-nav button.active { background:var(--accent-soft); color:var(--accent); border-color:#d6e5f2; }
+    .sheet-nav button small { color:var(--muted); font-size:11px; font-variant-numeric:tabular-nums; }
+    .sheet-main { min-width:0; }
+    .sheet-main .toolbar { padding-top:0; }
+    .snapshot { font-size:12px; color:var(--muted); padding-bottom:12px; }
+    .directory { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+    .directory-group { border-top:1px solid var(--line); }
+    .directory-group h2 { padding:12px 0; }
+    .directory-item { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border:0; border-bottom:1px solid #e8ebee; background:transparent; text-align:left; border-radius:0; }
+    .directory-item .item-title { font-size:13px; font-weight:500; }
+    .directory-item .item-desc { font-size:12px; color:var(--muted); margin-top:2px; }
+    button.directory-item:hover { color:var(--accent); }
+    .directory-item .ico { color:var(--muted); width:16px; height:16px; }
+    .section-title { margin-top:24px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    #content>.section-title:first-child { margin-top:0; }
+    .summary-line { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); border-bottom:1px solid var(--line); padding:16px 0; gap:12px; }
+    .summary-value { font-size:24px; line-height:32px; font-weight:500; font-variant-numeric:tabular-nums; }
+    .summary-label { font-size:12px; color:var(--muted); }
+    .summary-value.bad { color:var(--bad); }
+    .summary-value.good { color:var(--good); }
+    .section-anchor { scroll-margin-top:20px; }
+    .jumpbar { display:flex; flex-wrap:wrap; gap:8px; padding:12px 0; border-bottom:1px solid var(--line); }
+    .jumpbar a { font-size:12px; padding:4px 8px; color:var(--secondary); text-decoration:none; border-radius:3px; }
+    .jumpbar a:hover { background:var(--raised); color:var(--accent); }
+    .compact-line { display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:12px 0; border-bottom:1px solid var(--line); }
+    .compact-line .head-actions { margin-left:auto; }
+    .field-edit-layout { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:24px; }
+    .preview-pane { background:#f8f9fa; border-left:1px solid var(--line); padding:16px; align-self:start; }
+    .preview-line { display:grid; grid-template-columns:72px minmax(0,1fr); padding:8px 0; border-bottom:1px solid var(--line); gap:12px; font-size:12px; }
+    .preview-line span:first-child { color:var(--muted); }
+    .check { display:inline-flex; align-items:center; gap:8px; font-size:13px; }
+    input[type=checkbox] { width:16px; height:16px; accent-color:var(--accent); cursor:pointer; }
+    .settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .settings-row { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:52px; padding:8px 0; border-bottom:1px solid var(--line); font-size:13px; }
+    .settings-row .field { width:160px; }
+    .empty { text-align:center; padding:40px 16px; color:var(--muted); }
+    .import-grid { display:grid; grid-template-columns:1fr 1fr auto; gap:16px; align-items:end; padding:20px 0; border-bottom:1px solid var(--line); }
+    .file-input { max-width:100%; font-size:12px; }
+    .segments { display:flex; }
+    .segments label { flex:1; position:relative; min-width:0; cursor:pointer; }
+    .segments input { position:absolute; width:1px; height:1px; min-height:0; margin:-1px; padding:0; border:0; clip-path:inset(50%); overflow:hidden; }
+    .segments span { display:flex; justify-content:center; border:1px solid #c7cfd7; border-left:0; min-height:36px; align-items:center; padding:4px; font-size:12px; white-space:nowrap; }
+    .segments label:first-child span { border-left:1px solid #c7cfd7; border-radius:4px 0 0 4px; }
+    .segments label:last-child span { border-radius:0 4px 4px 0; }
+    .segments input:checked+span { background:var(--accent-soft); color:var(--accent); }
+    .segments input:focus-visible+span { outline:2px solid var(--accent); }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .form-grid .full { grid-column:1/-1; }
+    dialog { width:min(560px,calc(100% - 32px)); max-height:calc(100dvh - 32px); border:1px solid var(--line); border-radius:8px; padding:0; color:var(--ink); box-shadow:0 16px 64px #1c273329; }
+    dialog::backdrop { background:#111c2d52; }
+    .dialog-head { padding:16px 20px; border-bottom:1px solid var(--line); }
+    .dialog-body { padding:20px; overflow:auto; }
+    .dialog-foot { display:flex; align-items:center; justify-content:flex-end; gap:8px; padding:12px 20px; border-top:1px solid var(--line); }
+    .dialog-body .notice { margin-bottom:0; }
+    .form-error { font-size:12px; color:var(--bad); margin-top:12px; }
+    #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#27303a; color:#fff; padding:12px 20px; border-radius:4px; box-shadow:0 4px 16px #0002; z-index:30; max-width:calc(100vw - 32px); font-size:13px; }
+    .mobile-only { display:none; }
+    .mobile-menu-close { display:none; }
+    .mobile-records { display:none; }
+    .mobile-record { background:white; border:1px solid var(--line); border-radius:4px; margin-bottom:8px; padding:12px; }
+    .mobile-record-title { font-size:13px; font-weight:600; overflow-wrap:anywhere; }
+    .mobile-record .data-line { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--secondary); margin-top:8px; }
+    .mobile-record .row-actions { border-top:1px solid #e8ebee; padding-top:8px; margin-top:8px; }
+    .mobile-record .text-action { min-height:32px; }
+    .collapsed { --sidebar:64px; }
+    .collapsed .sidebar-title,.collapsed .nav-group-title,.collapsed .nav-item .label,.collapsed .nav-foot { display:none; }
+    .collapsed .nav-item { padding:8px 14px; justify-content:center; min-height:36px; }
+    .collapsed .sidebar-top { justify-content:center; }
+    .collapsed .nav-group { margin-top:12px; }
+    @media(min-width:1100px) {
+      .sidebar { position:sticky; top:0; height:100dvh; }
+      .nav-scroll { overflow-y:auto; flex:1; min-height:0; scrollbar-width:thin; }
+    }
+    @media(max-width:1199px) {
+      :root { --sidebar:208px; }
+      main { padding:16px 20px 32px; }
+      .field-edit-layout { grid-template-columns:minmax(0,1fr); gap:16px; }
+      .preview-pane { border-left:0; border-top:1px solid var(--line); }
+      .import-grid { grid-template-columns:1fr 1fr; }
+      .import-grid>.button { justify-self:start; }
+    }
+    @media(max-width:899px) {
+      :root { --control:40px; }
+      .shell { display:block; }
+      .sidebar { display:none; }
+      .mobile-only { display:inline-flex; }
+      .appbar .desktop-nav { display:none; }
+      .appbar { padding:0 16px; }
+      .account { padding-left:8px; margin-left:0; }
+      main { padding:16px; }
+      body.menu-open { overflow:hidden; }
+      .menu-open .sidebar { display:flex; position:fixed; inset:0 auto 0 0; width:272px; max-width:calc(100vw - 40px); z-index:50; box-shadow:8px 0 0 100vmax #14223466; height:100dvh; }
+      .menu-open .nav-scroll { flex:1; overflow:auto; }
+      .menu-open .mobile-menu-close { display:inline-flex; }
+      .menu-open #collapse { display:none; }
+      .menu-open .sidebar-title { display:block; }
+      .menu-open .nav-group-title,.menu-open .nav-item .label,.menu-open .nav-foot { display:block; }
+      .menu-open .nav-item { justify-content:flex-start; }
+      .nav-item { min-height:44px; }
+      .page-head { align-items:flex-start; }
+      .master-grid { grid-template-columns:132px minmax(0,1fr); gap:16px; }
+      .table-wrap { border-left:1px solid var(--line); border-right:1px solid var(--line); }
+      .toolbar-meta { margin-left:0; }
+    }
+    @media(max-width:599px) {
+      :root { --control:44px; }
+      .prototype-strip { padding:8px 12px; min-height:40px; gap:8px; }
+      .prototype-strip .scope { display:none; }
+      .appbar { padding:0 12px; gap:8px; }
+      .brand { gap:8px; }
+      .brand-mark { display:none; }
+      .brand-name { font-size:14px; }
+      .appbar nav { gap:0; }
+      .appbar .icon-button { min-height:40px; width:36px; padding:8px; }
+      .appbar .account { display:none; }
+      main { padding:12px 12px 24px; }
+      .breadcrumb { margin-bottom:8px; }
+      h1 { font-size:20px; line-height:28px; }
+      .page-head { display:block; margin-bottom:12px; }
+      .head-actions { margin-top:12px; }
+      .page-head p { font-size:12px; }
+      .head-actions .button { min-height:40px; }
+      .directory { grid-template-columns:1fr; gap:20px; }
+      .tabs { gap:20px; }
+      .tab { min-height:44px; }
+      .toolbar { gap:8px; padding:12px 0; }
+      .toolbar .search { width:100%; }
+      .toolbar select { flex:1; min-width:96px; }
+      .master-grid { grid-template-columns:1fr; gap:12px; }
+      .sheet-nav { display:flex; overflow:auto; padding:0 0 8px; border-right:0; border-bottom:1px solid var(--line); gap:8px; }
+      .sheet-nav button { width:auto; flex-shrink:0; gap:8px; white-space:nowrap; padding:8px; min-height:40px; }
+      .sheet-main .toolbar { padding-bottom:12px; }
+      .snapshot { padding:0 0 8px; font-size:11px; }
+      .desktop-table { display:none; }
+      .mobile-records { display:block; }
+      .pagination { align-items:flex-start; flex-wrap:wrap; }
+      .pagination .icon-button { min-height:36px; width:36px; }
+      .pagination select { min-height:36px; }
+      .summary-line { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:12px 0; }
+      .summary-value { font-size:22px; line-height:28px; }
+      .compact-line { gap:12px; }
+      .compact-line .head-actions { margin-top:0; margin-left:0; }
+      .settings-grid,.form-grid,.import-grid { grid-template-columns:1fr; }
+      .settings-row { gap:12px; }
+      .settings-row .field { width:140px; }
+      .import-grid { padding:16px 0; }
+      .notice { margin:12px 0; }
+      th,td { padding:8px; }
+      .section-title { margin-top:20px; }
+      .preview-pane { padding:12px; }
+      dialog { width:calc(100% - 24px); }
+      .dialog-body { padding:16px; }
+      .dialog-head { padding:12px 16px; }
+      .dialog-foot { padding:12px 16px; }
+      #toast { bottom:16px; width:max-content; }
+    }
+    @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; transition:none!important; } }
+  </style>
+</head>
+<body>
+  <div class="prototype-strip">
+    <span><strong>布局参考稿</strong> · 基于 v2.4.7 <span class="scope">／ 示例数据，仅在本页演示</span></span>
+    <a href="后台布局评估与优化方案.md">查看评估说明</a>
+  </div>
+  <header class="appbar">
+    <div class="row">
+      <button class="icon-button mobile-only" id="menu" aria-label="打开管理导航" title="管理导航"><svg class="ico"><use href="#i-menu"/></svg></button>
+      <div class="brand"><span class="brand-mark">知</span><span class="brand-name">样品管理系统</span></div>
+    </div>
+    <nav aria-label="全局导航">
+      <button class="button quiet desktop-nav" data-preview="主页"><svg class="ico"><use href="#i-home"/></svg>主页</button>
+      <button class="button quiet desktop-nav" data-preview="帮助与反馈"><svg class="ico"><use href="#i-help"/></svg>帮助与反馈</button>
+      <button class="button quiet selected desktop-nav" data-view="overview"><svg class="ico"><use href="#i-settings"/></svg>管理</button>
+      <button class="icon-button" title="公告" aria-label="公告" data-preview="系统公告"><svg class="ico"><use href="#i-campaign"/></svg></button>
+      <button class="icon-button notification" title="我的通知" aria-label="我的通知，3条未读" data-preview="我的通知"><svg class="ico"><use href="#i-bell"/></svg><b>3</b></button>
+      <span class="account">管理员</span>
+    </nav>
+  </header>
+  <div class="shell">
+    <aside class="sidebar" aria-label="管理导航">
+      <div class="sidebar-top">
+        <span class="sidebar-title">管理工作区</span>
+        <button class="icon-button" id="collapse" title="折叠管理导航" aria-label="折叠管理导航" aria-expanded="true"><svg class="ico"><use href="#i-left"/></svg></button>
+        <button class="icon-button mobile-menu-close" id="close-menu" title="关闭导航" aria-label="关闭导航"><svg class="ico"><use href="#i-close"/></svg></button>
+      </div>
+      <div class="nav-scroll" id="navigation"></div>
+      <div class="nav-foot">知微 · 管理端<br><span class="small">当前正式版 v2.4.7</span></div>
+    </aside>
+    <main id="main">
+      <div class="breadcrumb"><span>管理工作区</span><svg class="ico"><use href="#i-right"/></svg><span id="crumb">全部管理入口</span></div>
+      <div class="page-head">
+        <div class="title-block"><h1 id="page-title">管理工作区</h1><p id="page-description"></p></div>
+        <div class="head-actions" id="head-actions"></div>
+      </div>
+      <div id="content"></div>
+      <div class="tip" style="margin-top:20px;border-top:1px solid var(--line)">
+        <svg class="ico"><use href="#i-info"/></svg>
+        <span>参考稿使用虚构数据；筛选、配置和编辑只在本页生效，刷新恢复初始状态。其余管理入口展示布局占位，不代表新增功能。<br>设计评估参考 unslop · Damir Sokolovsky (@heydamir) · CC BY 4.0</span>
+      </div>
+    </main>
+  </div>
+  <dialog id="dialog" aria-labelledby="dialog-title">
+    <form id="dialog-form">
+      <div class="dialog-head between"><h2 id="dialog-title"></h2><button type="button" class="icon-button" data-close title="关闭" aria-label="关闭"><svg class="ico"><use href="#i-close"/></svg></button></div>
+      <div class="dialog-body" id="dialog-body"></div>
+      <div class="dialog-foot"><button type="button" class="button" data-close>取消</button><button type="submit" class="button primary" id="dialog-submit">保存示例</button></div>
+    </form>
+  </dialog>
+  <div id="toast" role="status" hidden></div>
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m12 3-10 9h3v9h6v-6h2v6h6v-9h3L12 3z"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 17h-2v-2h2v2zm2.1-7.8-.9.9c-.7.6-1.2 1.2-1.2 2.9h-2v-.5c0-1.1.5-2.1 1.2-2.8l1.2-1.2c.4-.4.6-.9.6-1.5a2 2 0 0 0-4 0H8a4 4 0 0 1 8 0c0 1-.4 2-1 2.8z"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="m19.4 13 .1-1-.1-1 2.1-1.7-2-3.5-2.6 1a8 8 0 0 0-1.7-1L14.8 3h-4l-.4 2.8c-.6.2-1.2.6-1.7 1l-2.6-1-2 3.5L6.2 11l-.1 1 .1 1-2.1 1.7 2 3.5 2.6-1c.5.4 1.1.8 1.7 1l.4 2.8h4l.4-2.8c.6-.2 1.2-.6 1.7-1l2.6 1 2-3.5-2.1-1.7zM12.8 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></symbol>
+    <symbol id="i-campaign" viewBox="0 0 24 24"><path d="M18 11V3h-2v1L4 8H2v8h3l1 5h3l-1-5 8 3v1h2v-8l4 1V9l-4 2zM4 10h3v4H4v-4zm12 6.9-7-2.4v-5l7-2.4v9.8z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.1-1.6-5.7-4.5-6.4V4a1.5 1.5 0 0 0-3 0v.6C7.6 5.3 6 7.9 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.5 1.5-4.5 4-4.5s4 2 4 4.5v6z"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="m15.4 7.4-1.4-1.4-6 6 6 6 1.4-1.4-4.6-4.6z"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="m8.6 16.6 1.4 1.4 6-6-6-6-1.4 1.4 4.6 4.6z"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="m20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20v-2z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m18.3 5.7-1.4-1.4L12 9.2 7.1 4.3 5.7 5.7l4.9 4.9-4.9 4.9 1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 13.7 15l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M17.7 6.3A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.8-4.2L13 11h8V3l-3.3 3.3z"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v3h14v-3H5z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M5 18h14v3H5v-3zm7-15-7 7h4v6h6v-6h4l-7-7z"/></symbol>
+    <symbol id="i-add" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M3 17.3V21h3.7L17.8 9.9l-3.7-3.7L3 17.3zM20.7 7c.4-.4.4-1 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-1.8 1.8 3.7 3.7L20.7 7z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></symbol>
+    <symbol id="i-science" viewBox="0 0 24 24"><path d="M19.8 18.4 14 10.7V6.5l1.4-1.7c.2-.3 0-.8-.4-.8H9c-.4 0-.6.5-.4.8L10 6.5v4.2l-5.8 7.7c-.5.7 0 1.6.8 1.6h14c.8 0 1.3-.9.8-1.6z"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M3 5h2v2H3V5zm4 0h14v2H7V5zM3 11h2v2H3v-2zm4 0h14v2H7v-2zM3 17h2v2H3v-2zm4 0h14v2H7v-2z"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 2c-2.3 0-7 1.2-7 3.5V19h14v-2.5C15 14.2 10.3 13 8 13zm8 0h-.9c1.2.8 1.9 2 1.9 3.5V19h6v-2.5c0-2.3-4.7-3.5-7-3.5z"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M10 4H2v16h20V6H12l-2-2z"/></symbol>
+    <symbol id="i-storage" viewBox="0 0 24 24"><path d="M2 3h20v5H2V3zm0 6.5h20v5H2v-5zM2 16h20v5H2v-5zM4 5v1h2V5H4zm0 6.5v1h2v-1H4zM4 18v1h2v-1H4z"/></symbol>
+    <symbol id="i-backup" viewBox="0 0 24 24"><path d="M19.4 10A7.5 7.5 0 0 0 5.5 8.1 6 6 0 0 0 6 20h13a5 5 0 0 0 .4-10zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M17 3H3v18h18V7l-4-4zM12 19a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm3-10H5V5h10v4z"/></symbol>
+  </svg>
+  <script>
+    'use strict';
+    const $ = (selector,root=document) => root.querySelector(selector);
+    const $$ = (selector,root=document) => [...root.querySelectorAll(selector)];
+    const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const icon = name => `<svg class="ico" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+    const btn = (text,attrs='',type='') => `<button class="button ${type}" ${attrs}>${text}</button>`;
+    const badge = (label,tone='good') => `<span class="status ${tone}">${esc(label)}</span>`;
+    const groups = [
+      ['主数据',[
+        ['projects','研发项目','项目状态、关联实验室和检测方法','list'],
+        ['groups','实验室','实验室及项目映射关系','folder'],
+        ['divisions','部门','部门及下属实验室','people'],
+        ['methods','检测方法','方法类型、系数和单价','science'],
+        ['auxiliary','辅助工作','独立事项、区域、分类与系数','list'],
+        ['sampleinfo','样品信息登记','检测类型、登记字段和记录查询','science'],
+        ['master','主数据管理','在线预览、导入导出及关联关系','storage']]],
+      ['权限与人员',[
+        ['users','用户','账号、组织归属、角色和启用状态','people'],
+        ['roles','角色与权限','角色模板、权限矩阵和数据范围','people'],
+        ['sessions','登录会话','登录设备和有效会话','list']]],
+      ['数据治理',[
+        ['governance','业务数据管理','业务记录的导入、导出及受控维护','storage'],
+        ['audit','审计日志','操作记录和变更时间线','list'],
+        ['backup','数据备份','备份、恢复、自动备份和云端副本','backup'],
+        ['notifications','通知中心','身份绑定、模板、渠道、规则和发送记录','bell'],
+        ['trash','回收站','恢复已删除的业务记录和主数据','folder']]],
+      ['系统配置',[
+        ['layouts','页面布局','页面区块、功能文案及自定义外观','settings'],
+        ['announcements','系统公告','业务入口和首页公告','campaign'],
+        ['fields','录入表单','录入字段、可见范围及顺序','list'],
+        ['personnel','人员反馈字段','人员变动类型和通知字段','people'],
+        ['exports','导出模板','工作表、字段与显示配置','list'],
+        ['help','教程与帮助','帮助文档和操作说明','help'],
+        ['stats','统计管理','统计门户、数据范围和卡片权限','list'],
+        ['maintenance','日志与维护','日志留存和数据库维护','settings']]]
+    ];
+    const detailed = new Set(['overview','master','methods','auxiliary','notifications','fields','backup','roles']);
+    const names = Object.fromEntries(groups.flatMap(g=>g[1]).map(i=>[i[0],i[1]]));
+    const descriptions = Object.fromEntries(groups.flatMap(g=>g[1]).map(i=>[i[0],i[2]]));
+    const methods = [
+      {name:'D002-260624-DAD',instrument:'LC-20',type:'液相',coefficient:28,price:35,enabled:true},
+      {name:'D006-260921-VWD',instrument:'LC-15',type:'液相',coefficient:24,price:35,enabled:true},
+      {name:'HYLY-230106-1-低温8℃-VWD',instrument:'LC-09',type:'液相',coefficient:20,price:35,enabled:true},
+      {name:'环糊精-250310-RID',instrument:'LC-20',type:'液相',coefficient:22,price:40,enabled:true},
+      {name:'J001-260706',instrument:'GC-01',type:'气相',coefficient:18,price:30,enabled:true},
+      {name:'甲乙醇-410实验室',instrument:'GC-02',type:'气相',coefficient:16,price:30,enabled:true},
+      {name:'顶空氯乙烷-乙醇200119-1',instrument:'GC-04',type:'气相',coefficient:20,price:35,enabled:false},
+      {name:'氟离子（直接检测）',instrument:'普通滴定',type:'理化',coefficient:8,price:15,enabled:true},
+      {name:'水分-特殊处理',instrument:'水分',type:'理化',coefficient:10,price:20,enabled:true},
+      {name:'ICP-OES',instrument:'ICP-OES-01',type:'ICP',coefficient:30,price:65,enabled:true},
+      {name:'DSC',instrument:'DSC-01',type:'热分析',coefficient:25,price:60,enabled:true},
+      {name:'杂质制备-01',instrument:'ZBLC-01',type:'杂质制备',coefficient:40,price:80,enabled:false}
+    ];
+    const auxiliaries = [
+      {name:'流动相配制',area:'液相区域',category:'日常准备',coefficient:6,enabled:true},
+      {name:'流动相瓶清洗',area:'液相区域',category:'器皿清洗',coefficient:2,enabled:true},
+      {name:'进样针维护',area:'气相区域',category:'仪器维护',coefficient:4,enabled:true},
+      {name:'水分仪标定',area:'理化区域',category:'仪器校准',coefficient:8,enabled:true},
+      {name:'天平校验',area:'公共区域',category:'仪器校准',coefficient:3,enabled:true},
+      {name:'危废整理',area:'公共区域',category:'现场维护',coefficient:5,enabled:true},
+      {name:'旧版物料整理',area:'公共区域',category:'现场维护',coefficient:3,enabled:false}
+    ];
+    const fields = [
+      {label:'项目代号',key:'project_name',form:true,list:true,export:true,required:true,width:120},
+      {label:'样品名称',key:'sample_name',form:true,list:true,export:true,required:true,width:160},
+      {label:'批号',key:'batch_no',form:true,list:true,export:true,required:false,width:140},
+      {label:'数量',key:'quantity',form:true,list:true,export:true,required:true,width:80},
+      {label:'送样时间',key:'created_at',form:false,list:true,export:true,required:false,width:160},
+      {label:'注意事项',key:'notes',form:true,list:true,export:true,required:false,width:180}
+    ];
+    const events = [
+      {no:'TZ-1106-018',time:'11-06 10:32',type:'送样提交',source:'410-研究院 · D002',channel:'分析检测群',state:'发送失败',tone:'bad',reason:'网络连接超时'},
+      {no:'TZ-1106-017',time:'11-06 10:26',type:'研发送样驳回',source:'412-研究院 · FB01',channel:'程序内通知',state:'已发送',tone:'good',reason:'已生成个人通知'},
+      {no:'TZ-1106-016',time:'11-06 10:18',type:'送样提交',source:'417-研究院 · HYLY',channel:'分析检测群',state:'待发送',tone:'warn',reason:'等待队列处理'},
+      {no:'TZ-1106-015',time:'11-06 10:06',type:'人员变动反馈',source:'415-研究院',channel:'管理员通知群',state:'已发送',tone:'good',reason:'群消息发送成功'},
+      {no:'TZ-1106-014',time:'11-06 09:48',type:'送样提交',source:'410-研究院 · Q008',channel:'分析检测群',state:'已发送',tone:'good',reason:'已取样，相关个人通知已读'}
+    ];
+    const roles = [
+      ['系统管理员','内置','全部管理权限','全部'],
+      ['分析检测组长','分析组长模板','分析业务及授权范围维护','42'],
+      ['分析检测员','分析人员模板','分析录入和本人工作量','26'],
+      ['研发送样组长','研发组长模板','关联实验室送样维护','29'],
+      ['研发送样员','研发人员模板','本实验室送样与记录','18']
+    ];
+    const state = {view:'overview',tab:'preview',sheet:'检测方法',query:'',type:'',status:'',page:1,pageSize:10,compact:false,dialogSave:null,areas:['液相区域','气相区域','理化区域','公共区域']};
+    let toastTimer;
+    function toast(message) {
+      clearTimeout(toastTimer); $('#toast').textContent=message; $('#toast').hidden=false;
+      toastTimer=setTimeout(()=>$('#toast').hidden=true,3600);
+    }
+    function closeMenu() {
+      document.body.classList.remove('menu-open'); $('#menu').setAttribute('aria-expanded','false');
+    }
+    function showDialog(title,body,onSave,submit='保存示例') {
+      $('#dialog-title').textContent=title; $('#dialog-body').innerHTML=body;
+      $('#dialog-submit').textContent=submit; state.dialogSave=onSave;
+      $('#dialog').showModal();
+    }
+    function renderNav() {
+      $('#navigation').innerHTML=`<button class="nav-item ${state.view==='overview'?'active':''}" data-view="overview" title="管理工作区">${icon('home')}<span class="label">管理工作区</span></button>`+
+        groups.map(g=>`<div class="nav-group"><div class="nav-group-title">${g[0]}</div>${g[1].map(i=>`<button class="nav-item ${state.view===i[0]?'active':''} ${detailed.has(i[0])?'':'undetailed'}" data-view="${i[0]}" title="${i[1]}${detailed.has(i[0])?'':' · 入口布局示意'}">${icon(i[3])}<span class="label">${i[1]}</span></button>`).join('')}</div>`).join('');
+    }
+    function go(view) {
+      state.view=view; state.query='';state.type='';state.status='';state.page=1;state.tab='preview';state.sheet='检测方法';
+      closeMenu(); render(); window.scrollTo({top:0,behavior:'instant'});
+    }
+    function search(placeholder,id='search') {
+      return `<label class="search">${icon('search')}<input id="${id}" type="search" placeholder="${placeholder}" aria-label="${placeholder}" value="${esc(state.query)}"></label>`;
+    }
+    function filterOptions(values,selected='',empty='全部类型') {
+      return `<option value="">${empty}</option>${values.map(v=>`<option value="${esc(v)}" ${selected===v?'selected':''}>${esc(v)}</option>`).join('')}`;
+    }
+    function table(headers,body,cls='') {
+      return `<div class="table-wrap ${cls}"><table><thead><tr>${headers.map(h=>`<th ${['系数','单价','权限数'].includes(h)?'class="right"':''}>${h}</th>`).join('')}</tr></thead><tbody>${body||`<tr><td class="empty" colspan="${headers.length}">暂无符合条件的数据</td></tr>`}</tbody></table></div>`;
+    }
+    function pager(total) {
+      const pages=Math.max(1,Math.ceil(total/state.pageSize));state.page=Math.min(state.page,pages);
+      return `<div class="pagination"><span class="num">${total?((state.page-1)*state.pageSize+1):0}–${Math.min(state.page*state.pageSize,total)} / ${total} 条</span><div class="row"><label>每页 <select id="page-size" aria-label="每页条数">${[5,10,20,50].map(n=>`<option ${n===state.pageSize?'selected':''}>${n}</option>`).join('')}</select> 条</label><span class="num">${state.page} / ${pages}</span><button class="icon-button" id="prev" ${state.page===1?'disabled':''} aria-label="上一页" title="上一页">${icon('left')}</button><button class="icon-button" id="next" ${state.page>=pages?'disabled':''} aria-label="下一页" title="下一页">${icon('right')}</button></div></div>`;
+    }
+    function render() {
+      renderNav();
+      const overview=state.view==='overview';
+      $('#page-title').textContent=overview?'管理工作区':names[state.view];
+      $('#crumb').textContent=overview?'全部管理入口':names[state.view];
+      $('#page-description').textContent=overview?'主数据、权限与人员、数据治理和系统配置':descriptions[state.view];
+      $('#head-actions').innerHTML=(overview?'':btn(icon('back')+'返回管理工作区','data-view="overview"','back'))+pageActions();
+      $('#content').innerHTML=pageContent();
+      bindContent();
+    }
+    function pageActions() {
+      switch(state.view) {
+        case 'master': return btn(icon('refresh')+'刷新','data-toast="示例快照已刷新"')+btn(icon('download')+'导出','data-export="master"');
+        case 'methods': return btn(icon('add')+'新增方法','data-add-method','primary');
+        case 'auxiliary': return btn('区域管理','data-areas')+btn(icon('add')+'新增事项','data-add-aux','primary');
+        case 'notifications': return btn(icon('refresh')+'刷新','data-toast="示例页面已刷新"')+btn('处理待发送','data-process','primary');
+        case 'fields': return btn(icon('save')+'保存配置','data-toast="示例字段配置已保存，仅本页有效"','primary');
+        case 'backup': return btn(icon('download')+'下载最新全量备份','data-toast="正式界面使用已有备份下载；本稿不生成业务备份"')+btn('立即备份','data-toast="仅演示按钮位置，未创建真实备份"','primary');
+        case 'roles': return btn('从模板创建','data-preview="从模板创建角色"')+btn(icon('add')+'新增角色','data-preview="新增空白角色"','primary');
+        default:return '';
+      }
+    }
+    function pageContent() {
+      switch(state.view) {
+        case 'overview':return overviewContent();
+        case 'methods':return methodContent(false);
+        case 'master':return masterContent();
+        case 'auxiliary':return auxContent();
+        case 'notifications':return notificationContent();
+        case 'fields':return fieldContent();
+        case 'backup':return backupContent();
+        case 'roles':return rolesContent();
+        default:return `<div class="notice">本稿保留现有入口位置；该模块未展开交互样例。</div><div class="section-title"><h2>${esc(names[state.view])}</h2></div><p class="secondary">${esc(descriptions[state.view])}</p><div class="toolbar">${btn('查看主数据表样例','data-view="master"')}${btn('查看字段配置样例','data-view="fields"')}</div>`;
+      }
+    }
+    function overviewContent() {
+      return `<div class="notice">本稿展开主数据管理、检测方法、辅助工作、角色与权限、通知中心、录入表单、数据备份七类页面。其余入口保留原分组。</div><div class="directory">${groups.map(g=>`<section class="directory-group"><h2>${g[0]}</h2>${g[1].map(i=>`<button class="directory-item" data-view="${i[0]}"><span><span class="item-title">${i[1]}</span><span class="item-desc" style="display:block">${i[2]}</span></span>${icon('right')}</button>`).join('')}</section>`).join('')}</div>`;
+    }
+    function methodContent(preview) {
+      const filtered=methods.map((m,index)=>({...m,index})).filter(m=>(!state.query||`${m.name} ${m.instrument} ${m.type}`.toLowerCase().includes(state.query.toLowerCase()))&&(!state.type||m.type===state.type)&&(!state.status||String(m.enabled)===state.status));
+      const pages=Math.max(1,Math.ceil(filtered.length/state.pageSize));state.page=Math.min(state.page,pages);
+      const shown=filtered.slice((state.page-1)*state.pageSize,state.page*state.pageSize);
+      const action=m=>preview?'<span class="muted small">只读</span>':`<button class="text-action" data-method="${m.index}">编辑</button>`;
+      return `<div class="toolbar">${search('搜索方法名称、仪器')}<select id="type-filter" aria-label="检测类型">${filterOptions([...new Set(methods.map(m=>m.type))],state.type)}</select><select id="status-filter" aria-label="启用状态">${filterOptions(['true','false'],state.status,'全部状态').replace('>true<','>启用<').replace('>false<','>停用<')}</select><span class="toolbar-meta num">${filtered.length} 条${preview?' · 只读快照':''}</span></div>
+        ${table(['方法名称','仪器','类型','系数','单价','状态','操作'],shown.map(m=>`<tr><td class="name">${esc(m.name)}</td><td>${esc(m.instrument)}</td><td>${esc(m.type)}</td><td class="right">${m.coefficient}</td><td class="right">${m.price.toFixed(2)}</td><td>${badge(m.enabled?'启用':'停用',m.enabled?'good':'')}</td><td><div class="row-actions">${action(m)}</div></td></tr>`).join(''),'desktop-table')}
+        <div class="mobile-records">${shown.map(m=>`<article class="mobile-record"><div class="between"><span class="mobile-record-title">${esc(m.name)}</span>${badge(m.enabled?'启用':'停用',m.enabled?'good':'')}</div><div class="data-line"><span>${esc(m.type)} · ${esc(m.instrument)}</span><span class="num">系数 ${m.coefficient} · 单价 ${m.price.toFixed(2)}</span></div><div class="row-actions">${action(m)}</div></article>`).join('')||'<div class="empty">暂无符合条件的数据</div>'}</div>
+        ${pager(filtered.length)}${preview?'':`<div class="tip">${icon('info')}<span>主数据系数调整不重算历史工作量；历史修正继续从业务数据管理预览确认。</span></div>`}`;
+    }
+    function masterContent() {
+      const tabs=[['preview','在线预览'],['export','主数据导出'],['import','主数据导入'],['aux','辅助事项配置']];
+      let body='';
+      if(state.tab==='preview'){
+        const sheets=[['部门',3],['实验室',6],['检测类型',8],['仪器',12],['检测方法',methods.length],['研发项目',4],['项目关联',6],['辅助区域',state.areas.length],['辅助工作',auxiliaries.length]];
+        body=`<div class="master-grid"><nav class="sheet-nav" aria-label="主数据工作表">${sheets.map(s=>`<button data-sheet="${s[0]}" class="${state.sheet===s[0]?'active':''}">${s[0]}<small>${s[1]}</small></button>`).join('')}</nav><div class="sheet-main"><div class="snapshot">数据快照：2026-11-06 10:36 · 示例数据</div>${state.sheet==='检测方法'?methodContent(true):sheetPreview(state.sheet)}</div></div>`;
+      }else if(state.tab==='import'){
+        body=`<div class="import-grid"><label class="field">导入文件<input class="file-input" id="import-file" type="file" accept=".xlsx,.xls"></label><div class="field">导入方式<div class="segments"><label><input type="radio" name="import-mode" value="merge" checked><span>合并更新</span></label><label><input type="radio" name="import-mode" value="skip"><span>跳过已有</span></label><label><input type="radio" name="import-mode" value="replace"><span>全量覆盖</span></label></div></div>${btn('开始预检','data-precheck','primary')}</div><div class="notice">方法与事项按稳定身份匹配；更新保留原 ID，新建留空。全量覆盖继续执行引用保护，历史工作量不自动重算。</div><div id="precheck-result"></div><div class="toolbar">${btn(icon('download')+'下载模板','data-export="template"')}</div>`;
+      }else if(state.tab==='export'){
+        body=`<div class="section-title"><h2>主数据导出</h2></div><p class="secondary">导出当前主数据及关联关系，保留停用项、归档项目与回导识别字段。</p><div class="toolbar">${btn(icon('download')+'导出全部主数据','data-export="master"','primary')}</div><div class="notice">辅助区域与辅助事项仅对具备相应管理权限的系统管理员提供。日常页面不展示事项 ID，Excel 保留识别字段。</div>`;
+      }else body=auxContent();
+      return `<div class="tabs" role="tablist" aria-label="主数据操作">${tabs.map(t=>`<button role="tab" aria-selected="${state.tab===t[0]}" class="tab ${state.tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div>${body}`;
+    }
+    function sheetPreview(sheet) {
+      const items={
+        '部门':[['研究院','启用'],['质量部','启用'],['分析中心','启用']],
+        '实验室':[['410-研究院','研究院'],['412-研究院','研究院'],['415-研究院','研究院'],['417-研究院','研究院'],['805QA','质量部'],['707车间','质量部']],
+        '检测类型':[['液相','启用'],['气相','启用'],['理化','启用'],['ICP','启用'],['热分析','启用'],['质谱','启用'],['杂质制备','启用'],['其它','启用']],
+        '仪器':methods.map(m=>[m.instrument,m.type]),
+        '研发项目':[['D002','进行中'],['D006','进行中'],['HYLY','进行中'],['J001','进行中']],
+        '项目关联':[['D002','410-研究院'],['D006','412-研究院'],['HYLY','417-研究院'],['J001','415-研究院'],['D006','415-研究院'],['HYLY','410-研究院']],
+        '辅助区域':state.areas.map(a=>[a,'启用']),
+        '辅助工作':auxiliaries.map(a=>[a.name,a.area,a.category,a.coefficient])
+      };
+      const headers=sheet==='辅助工作'?['事项名称','区域','分类','系数']:[sheet+'名称',sheet==='实验室'?'部门':sheet==='仪器'?'类型':sheet==='项目关联'?'实验室':'状态'];
+      return `<div class="section-title"><h2>${esc(sheet)}</h2><span class="flag">只读预览</span></div>${table(headers,(items[sheet]||[]).map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join(''))}`;
+    }
+    function auxContent() {
+      const items=auxiliaries.map((a,index)=>({...a,index})).filter(a=>(!state.query||`${a.name} ${a.area} ${a.category}`.includes(state.query))&&(!state.type||a.area===state.type));
+      return `<div class="toolbar">${search('搜索辅助事项、区域、分类')}<select id="type-filter" aria-label="辅助区域">${filterOptions(state.areas,state.type,'全部区域')}</select><span class="toolbar-meta">${items.length} 项 · 独立辅助配置</span>${state.view==='master'?btn('区域管理','data-areas'):''}</div>
+        ${table(['辅助事项','区域','分类','系数','状态','操作'],items.map(a=>`<tr><td class="name">${esc(a.name)}</td><td>${esc(a.area)}</td><td>${esc(a.category)}</td><td class="right">${a.coefficient}</td><td>${badge(a.enabled?'启用':'停用',a.enabled?'good':'')}</td><td><div class="row-actions"><button class="text-action" data-aux="${a.index}">编辑</button></div></td></tr>`).join(''),'desktop-table')}
+        <div class="mobile-records">${items.map(a=>`<article class="mobile-record"><div class="between"><span class="mobile-record-title">${esc(a.name)}</span>${badge(a.enabled?'启用':'停用',a.enabled?'good':'')}</div><div class="data-line"><span>${esc(a.area)} · ${esc(a.category)}</span><span>系数 ${a.coefficient}</span></div><div class="row-actions"><button class="text-action" data-aux="${a.index}">编辑</button></div></article>`).join('')||'<div class="empty">暂无符合条件的事项</div>'}</div>
+        <div class="tip">${icon('info')}<span>辅助工作仅计入人员公共工作量，不参与实验室归属和金额计算。每个事项独立配置系数；历史快照保持原值。</span></div>`;
+    }
+    function notificationContent() {
+      const filtered=events.map((e,index)=>({...e,index})).filter(e=>(!state.query||`${e.no} ${e.type} ${e.source}`.includes(state.query))&&(!state.status||e.state===state.status));
+      return `<div class="jumpbar" aria-label="通知配置定位">${[['contacts','身份绑定'],['template','内容模板'],['summary','状态概览'],['channels','通知渠道'],['rules','通知规则'],['events','通知事件'],['deliveries','发送记录']].map(x=>`<a href="#${x[0]}">${x[1]}</a>`).join('')}</div>
+        <section id="contacts" class="compact-line section-anchor"><h2>钉钉身份绑定</h2><span class="small secondary">示例：4个已绑定账号</span><div class="head-actions">${btn('绑定 / 修改','data-preview="钉钉身份绑定"')}${btn('测试 @','data-toast="仅演示，不向钉钉发送消息"')}</div></section>
+        <section id="template" class="compact-line section-anchor"><div><h2>通知内容模板</h2><span class="small muted">研发送样 · 项目、数量、注意事项等字段</span></div><div class="head-actions">${btn('字段配置','data-template')}${btn('示例预览','data-message-preview')}</div></section>
+        <section id="summary" class="summary-line section-anchor">${[['待发送',events.filter(e=>e.state==='待发送').length,''],['发送失败',events.filter(e=>e.state==='发送失败').length,'bad'],['部分失败',0,''],['今日已发送',38,'good'],['未配置规则',0,'']].map(s=>`<div><div class="summary-label">${s[0]}</div><div class="summary-value ${s[2]}">${s[1]}</div></div>`).join('')}</section>
+        <section id="channels" class="section-anchor"><div class="section-title"><h2>钉钉通知渠道</h2>${btn(icon('add')+'新增渠道','data-preview="新增通知渠道"')}</div>${table(['渠道名称','加签','状态','操作'],[['分析检测群','已配置'],['管理员通知群','已配置']].map(c=>`<tr><td>${c[0]}</td><td>${c[1]}</td><td>${badge('启用')}</td><td><div class="row-actions"><button class="text-action" data-toast="仅演示，不向钉钉发送测试">测试</button><button class="text-action" data-preview="编辑通知渠道">编辑</button></div></td></tr>`).join(''))}</section>
+        <section id="rules" class="section-anchor"><div class="section-title"><h2>通知规则</h2>${btn(icon('add')+'新增规则','data-preview="新增通知规则"')}</div>${table(['规则 / 范围','目标渠道','接收范围','状态','操作'],[['研发常规送样','全部关联实验室','分析检测群','本规则分析人员'],['人员变动反馈','已授权实验室','管理员通知群','有详情权限的管理员与组长']].map(r=>`<tr><td>${r[0]}<div class="small muted">${r[1]}</div></td><td>${r[2]}</td><td class="small">${r[3]}</td><td>${badge('启用')}</td><td><button class="text-action" data-preview="编辑通知规则">编辑</button></td></tr>`).join(''))}</section>
+        <section id="events" class="section-anchor"><div class="section-title"><h2>通知事件</h2><span class="small muted">最近200条匹配事件</span></div><div class="toolbar">${search('搜索通知编号、事件或来源')}<select id="status-filter" aria-label="事件状态">${filterOptions(['发送失败','待发送','已发送'],state.status,'全部状态')}</select><span class="toolbar-meta">${filtered.length} 条</span></div>
+        ${table(['时间 / 编号','事件 / 来源','状态','处理说明','操作'],filtered.map(e=>`<tr><td class="num">${e.time}<div class="small muted">${e.no}</div></td><td>${e.type}<div class="small muted">${e.source}</div></td><td>${badge(e.state,e.tone)}</td><td class="small secondary">${e.reason}</td><td><div class="row-actions"><button class="text-action" data-event="${e.index}">详情</button>${e.state==='发送失败'?btn('补发',`data-retry="${e.index}"`,'tiny'):''}</div></td></tr>`).join(''),'desktop-table')}
+        <div class="mobile-records">${filtered.map(e=>`<article class="mobile-record"><div class="between"><strong class="mobile-record-title">${e.type}</strong>${badge(e.state,e.tone)}</div><div class="data-line"><span>${e.source}</span><span>${e.time}</span></div><div class="data-line"><span>${e.reason}</span></div><div class="row-actions"><button class="text-action" data-event="${e.index}">详情</button>${e.state==='发送失败'?btn('补发',`data-retry="${e.index}"`,'tiny'):''}</div></article>`).join('')||'<div class="empty">暂无匹配事件</div>'}</div></section>
+        <section id="deliveries" class="section-anchor"><div class="section-title"><h2>发送记录</h2><span class="small muted">群投递与站内回执分开显示</span></div>${table(['时间','渠道','投递状态','结果'],events.slice(0,3).map(e=>`<tr><td class="num">${e.time}</td><td>${e.channel}</td><td>${badge(e.state,e.tone)}</td><td class="small secondary">${e.reason}</td></tr>`).join(''))}</section>`;
+    }
+    function fieldContent() {
+      return `<div class="tabs" aria-label="表单类型"><button class="tab active">研发送样</button><button class="tab" data-preview="样品信息登记字段配置">样品信息登记</button><button class="tab" data-preview="分析检测表单配置">分析检测</button></div><div class="toolbar"><h2 class="grow">字段与显示范围</h2><span class="small muted">6个字段</span>${btn(icon('add')+'新增字段','data-preview="新增自定义字段"')}</div><div class="field-edit-layout"><div>${table(['字段名称','表单','列表','导出','必填','操作'],fields.map((f,i)=>`<tr><td>${f.label}<div class="small muted">${f.key}</div></td>${['form','list','export','required'].map(k=>`<td><input type="checkbox" data-field="${i}" data-prop="${k}" ${f[k]?'checked':''} aria-label="${f.label}${{form:'表单显示',list:'列表显示',export:'导出显示',required:'必填'}[k]}"></td>`).join('')}<td><button class="text-action" data-edit-field="${i}">编辑</button></td></tr>`).join(''))}<div class="tip">${icon('info')}<span>字段顺序、类型范围、列宽、启停及自定义规则继续保留；本稿只展示排版。</span></div></div><aside class="preview-pane"><h2>表单预览</h2><div id="form-preview">${fieldPreview()}</div></aside></div>`;
+    }
+    function fieldPreview() {return fields.filter(f=>f.form).map(f=>`<div class="preview-line"><span>${esc(f.label)}${f.required?' *':''}</span><span>${({project_name:'D002',sample_name:'中间体样品',batch_no:'20261106-01',quantity:'2',notes:'避光保存'})[f.key]||'—'}</span></div>`).join('');}
+    function backupContent() {
+      return `<div class="tabs" aria-label="备份类别"><button class="tab active">本地备份</button><button class="tab" data-cloud>云端副本</button><button class="tab" data-backup-config>自动备份设置</button></div><div class="section-title"><h2>备份文件</h2><span class="small muted">最近备份：2026-11-06 08:30</span></div>${table(['备份名称','类型','大小','状态','操作'],[['labflow_full_20261106_083000.zip','全量','96.24 MB'],['labflow_db_20261105_200000.dump','数据库','12.80 MB'],['labflow_full_20261105_083000.zip','全量','96.08 MB']].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="num">${r[2]}</td><td>${badge('可用')}</td><td><div class="row-actions"><button class="text-action" data-toast="正式界面调用已有下载授权；本稿不下载真实备份">下载</button><button class="text-action" data-restore="${r[0]}">恢复</button></div></td></tr>`).join(''))}<div class="section-title"><h2>备份状态</h2>${btn('配置','data-backup-config')}</div><div class="settings-grid"><div><div class="settings-row"><span>自动备份</span>${badge('已启用')}</div><div class="settings-row"><span>备份类型</span><span>全量备份</span></div><div class="settings-row"><span>保留数量</span><span class="num">10份</span></div></div><div><div class="settings-row"><span>云端接入</span><span>WebDAV</span></div><div class="settings-row"><span>目标目录</span><span>/LabFlowBackup</span></div><div class="settings-row"><span>云端任务</span><span>无待处理任务</span></div></div></div><div class="notice">恢复入口继续保留权限校验、备份校验和覆盖确认；危险操作不与普通下载使用同一强调色。</div>`;
+    }
+    function rolesContent() {
+      const action=i=>`<button class="text-action" data-role="${i}">查看权限</button>${i?`<button class="text-action" data-role="${i}">编辑</button>`:''}`;
+      return `<div class="toolbar"><span class="small muted">固定角色与自定义角色 · 示例5个角色</span></div>${table(['角色名称','来源模板','说明','权限数','操作'],roles.map((r,i)=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td class="right">${r[3]}</td><td><div class="row-actions">${action(i)}</div></td></tr>`).join(''),'desktop-table')}<div class="mobile-records">${roles.map((r,i)=>`<article class="mobile-record"><div class="between"><span class="mobile-record-title">${r[0]}</span><span class="flag">${r[3]==='全部'?'全部权限':r[3]+'项权限'}</span></div><div class="data-line"><span>${r[1]}</span><span>${r[2]}</span></div><div class="row-actions">${action(i)}</div></article>`).join('')}</div><div class="tip">${icon('info')}<span>页面和按钮显示继续按现有授权；查看汇总不会获得编辑或管理权限。未勾选的数据范围不解释为全部。</span></div>`;
+    }
+    function bindContent() {
+      const input=$('#search');if(input)input.addEventListener('input',()=>{const pos=input.selectionStart;state.query=input.value;state.page=1;refreshData();const replacement=$('#search');replacement.focus();if(replacement.type!=='search')replacement.setSelectionRange(pos,pos);});
+      $('#type-filter')?.addEventListener('change',e=>{state.type=e.target.value;state.page=1;refreshData();});
+      $('#status-filter')?.addEventListener('change',e=>{state.status=e.target.value;state.page=1;refreshData();});
+      $('#page-size')?.addEventListener('change',e=>{state.pageSize=Number(e.target.value);state.page=1;refreshData();});
+      $('#prev')?.addEventListener('click',()=>{state.page--;refreshData();});
+      $('#next')?.addEventListener('click',()=>{state.page++;refreshData();});
+      $$('[data-field]').forEach(c=>c.addEventListener('change',()=>{fields[Number(c.dataset.field)][c.dataset.prop]=c.checked;$('#form-preview').innerHTML=fieldPreview();}));
+    }
+    function refreshData() {
+      const y=window.scrollY;
+      $('#content').innerHTML=pageContent();bindContent();window.scrollTo({top:y,behavior:'instant'});
+    }
+    function editMethod(index) {
+      const creating=index===null;
+      const m=creating?{name:'',instrument:'LC-20',type:'液相',coefficient:1,price:0,enabled:true}:methods[index];
+      showDialog(creating?'新增检测方法':'编辑检测方法',`<div class="form-grid"><label class="field full">方法名称<input name="name" required maxlength="180" value="${esc(m.name)}"></label><label class="field">绑定仪器<input name="instrument" required value="${esc(m.instrument)}"></label><label class="field">检测类型<select name="type">${['液相','气相','理化','ICP','热分析','杂质制备'].map(t=>`<option ${m.type===t?'selected':''}>${t}</option>`).join('')}</select></label><label class="field">工作量系数<input name="coefficient" type="number" min="0" step="0.01" required value="${m.coefficient}"></label><label class="field">单价<input name="price" type="number" min="0" step="0.01" required value="${m.price}"></label><label class="check"><input name="enabled" type="checkbox" ${m.enabled?'checked':''}>启用方法</label></div><div class="notice">修改名称、仪器和系数仍归于原方法身份；本页不改变历史记录。</div>`,form=>{
+        const updated={name:form.get('name').trim(),instrument:form.get('instrument').trim(),type:form.get('type'),coefficient:Number(form.get('coefficient')),price:Number(form.get('price')),enabled:form.has('enabled')};
+        if(!updated.name||!updated.instrument)return false;
+        if(creating)methods.push(updated);else methods[index]=updated;
+        refreshData();toast('方法配置已更新，仅本页有效');return true;
+      });
+    }
+    function editAux(index) {
+      const creating=index===null;
+      const a=creating?{name:'',area:state.areas[0],category:'',coefficient:1,enabled:true}:auxiliaries[index];
+      showDialog(creating?'新增辅助事项':'编辑辅助事项',`<div class="form-grid"><label class="field full">辅助事项<input name="name" required maxlength="120" value="${esc(a.name)}"></label><label class="field">区域<select name="area">${state.areas.map(x=>`<option ${a.area===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label><label class="field">分类<input name="category" value="${esc(a.category)}"></label><label class="field">工作量系数<input name="coefficient" type="number" min="0" step="0.01" required value="${a.coefficient}"></label><label class="check"><input name="enabled" type="checkbox" ${a.enabled?'checked':''}>启用事项</label></div><div class="notice">事项身份由程序识别，日常配置不显示。区域独立维护，不复用检测类型；不设置实验室或金额。</div>`,form=>{
+        const updated={name:form.get('name').trim(),area:form.get('area'),category:form.get('category').trim(),coefficient:Number(form.get('coefficient')),enabled:form.has('enabled')};
+        if(!updated.name)return false;if(creating)auxiliaries.push(updated);else auxiliaries[index]=updated;refreshData();toast('辅助事项已更新，仅本页有效');return true;
+      });
+    }
+    function showAreas() {
+      showDialog('辅助区域管理',`${table(['区域','状态'],state.areas.map(a=>`<tr><td>${esc(a)}</td><td>${badge('启用')}</td></tr>`).join(''))}<label class="field" style="margin-top:16px">新增区域名称<input name="area" required maxlength="120" placeholder="例如：制备区域"></label><div class="form-error" id="area-error" role="alert" hidden></div>`,form=>{
+        const name=form.get('area').trim();if(!name)return false;
+        if(state.areas.includes(name)){$('#area-error').textContent='该区域已存在';$('#area-error').hidden=false;return false;}
+        state.areas.push(name);refreshData();toast('示例区域已新增');return true;
+      },'新增区域');
+    }
+    function exportExample(kind) {
+      const data=kind==='template'?'方法名称,仪器,检测类型,系数,单价,方法ID\n':'方法名称,仪器,检测类型,系数,单价\n'+methods.map(m=>[m.name,m.instrument,m.type,m.coefficient,m.price].join(',')).join('\n');
+      const url=URL.createObjectURL(new Blob(['\ufeff'+data],{type:'text/csv;charset=utf-8'}));
+      const a=document.createElement('a');a.href=url;a.download=kind==='template'?'布局参考-模板结构示例.csv':'布局参考-方法示例.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      toast('已下载示例CSV；正式Excel模板仍使用现有导出器');
+    }
+    function previewOnly(name) {
+      showDialog(name,`<p class="secondary">此处展示“${esc(name)}”的入口位置与弹窗层级。正式业务继续复用现有权限、字段及接口。</p><div class="notice">本参考稿没有连接后台，不会创建账号、保存身份绑定或发送通知。</div>`,()=>true,'关闭预览');
+    }
+    document.addEventListener('click',event=>{
+      const target=event.target.closest('button,a');if(!target)return;
+      if(target.dataset.view){go(target.dataset.view);return;}
+      if(target.dataset.toast){toast(target.dataset.toast);return;}
+      if(target.hasAttribute('data-close')){$('#dialog').close();return;}
+      if(target.dataset.preview){previewOnly(target.dataset.preview);return;}
+      if(target.dataset.tab){state.tab=target.dataset.tab;state.query='';state.page=1;refreshData();return;}
+      if(target.dataset.sheet){state.sheet=target.dataset.sheet;state.query='';state.page=1;refreshData();return;}
+      if(target.hasAttribute('data-add-method')){editMethod(null);return;}
+      if(target.dataset.method!==undefined){editMethod(Number(target.dataset.method));return;}
+      if(target.hasAttribute('data-add-aux')){editAux(null);return;}
+      if(target.dataset.aux!==undefined){editAux(Number(target.dataset.aux));return;}
+      if(target.hasAttribute('data-areas')){showAreas();return;}
+      if(target.dataset.export){exportExample(target.dataset.export);return;}
+      if(target.dataset.event!==undefined){const e=events[Number(target.dataset.event)];showDialog('通知发送详情',`<div class="preview-line"><span>通知编号</span><span>${e.no}</span></div><div class="preview-line"><span>事件来源</span><span>${e.source}</span></div><div class="preview-line"><span>投递渠道</span><span>${e.channel}</span></div><div class="preview-line"><span>投递状态</span>${badge(e.state,e.tone)}</div><div class="preview-line"><span>处理说明</span><span>${e.reason}</span></div><div class="notice">业务状态、群投递状态与个人通知已读状态分开保存及展示。</div>`,()=>true,'关闭');return;}
+      if(target.dataset.retry!==undefined){const index=Number(target.dataset.retry);showDialog('确认补发通知',`<p>${events[index].no}</p><label class="field" style="margin-top:16px">补发原因<textarea name="reason" required rows="3"></textarea></label><div class="notice">仅失败渠道重新入队，成功渠道不重复发送；实际操作继续写入审计。</div>`,form=>{if(!form.get('reason').trim())return false;events[index].state='待发送';events[index].tone='warn';events[index].reason='示例补发已排队';refreshData();toast('示例状态已更新，未发送真实消息');return true;},'确认补发');return;}
+      if(target.hasAttribute('data-process')){toast('示例：只展示队列操作位置，不触发真实发送');return;}
+      if(target.hasAttribute('data-template')){showDialog('研发送样 · 通知字段配置',`${table(['字段','通知显示'],['项目代号','样品名称','数量','注意事项'].map(x=>`<tr><td>${x}</td><td><input type="checkbox" checked aria-label="${x}通知显示"></td></tr>`).join(''))}<div class="notice">字段继续从实际表单配置读取；原有字段名称、顺序、加粗和隐藏配置保持可用。</div>`,()=>{toast('模板布局已预览，未保存真实配置');return true;});return;}
+      if(target.hasAttribute('data-message-preview')){showDialog('送样通知示例','<h3>研发送样通知</h3><div class="preview-line"><span>实验室</span><span>410-研究院</span></div><div class="preview-line"><span>项目代号</span><span>D002</span></div><div class="preview-line"><span>数量</span><span>2</span></div><div class="preview-line"><span>注意事项</span><span>避光保存</span></div>',()=>true,'关闭');return;}
+      if(target.dataset.editField!==undefined){const f=fields[Number(target.dataset.editField)];showDialog('编辑字段',`<div class="form-grid"><label class="field">显示名称<input name="label" value="${esc(f.label)}" required></label><label class="field">列宽（px）<input name="width" value="${f.width}" type="number" min="60" max="800" step="4"></label><div class="field full">字段标识<span class="secondary">${f.key}</span></div></div><div class="notice">样品信息各检测类型独立的表单、列表、导出、必填规则仍在原编辑流程维护。</div>`,form=>{if(!form.get('label').trim())return false;f.label=form.get('label').trim();f.width=Number(form.get('width'));refreshData();return true;});return;}
+      if(target.hasAttribute('data-precheck')){const file=$('#import-file').files[0];if(!file){toast('请先选择一个Excel文件');return;}$('#precheck-result').innerHTML=`<div class="notice">已选择：${esc(file.name)}。本稿不解析或上传文件；正式预检继续使用现有导入校验与引用保护。</div>`;return;}
+      if(target.dataset.role!==undefined){const r=roles[Number(target.dataset.role)];showDialog(r[0]+' · 权限范围',`<div class="preview-line"><span>来源模板</span><span>${r[1]}</span></div><div class="preview-line"><span>权限数量</span><span>${r[3]}</span></div><div class="notice">复用现有角色权限矩阵、业务部门和实验室范围。此处仅用于检查弹窗排版。</div>`,()=>true,'关闭');return;}
+      if(target.hasAttribute('data-backup-config')){showDialog('自动备份设置','<div class="form-grid"><label class="field">备份类型<select><option>全量备份</option><option>数据库备份</option></select></label><label class="field">保留数量<input type="number" min="1" value="10"></label><label class="check full"><input type="checkbox" checked>启用自动备份</label></div><div class="notice">本稿仅展示表单规格，不保存真实备份配置。</div>',()=>{toast('示例配置已查看，未改变备份任务');return true;});return;}
+      if(target.hasAttribute('data-cloud')){showDialog('云端副本','<div class="form-grid"><label class="field full">接入类型<select><option>WebDAV</option><option>Nextcloud / ownCloud</option><option>OpenList 网关</option><option>OneDrive 全球版</option></select></label><label class="field full">远端目录<input value="/LabFlowBackup"></label></div><div class="notice">密码和授权信息继续在原安全配置流程维护，不在本稿填写或保存。</div>',()=>true,'关闭');return;}
+      if(target.dataset.restore){showDialog('恢复备份',`<p style="overflow-wrap:anywhere">${esc(target.dataset.restore)}</p><div class="notice">正式操作会校验备份内容并覆盖当前数据。本稿只展示恢复确认层级，不执行恢复。</div><label class="check" style="margin-top:16px"><input type="checkbox" required>已了解这是离线恢复示例</label>`,()=>{toast('未连接后台，未执行恢复');return true;},'关闭示例');}
+    });
+    $('#dialog-form').addEventListener('submit',event=>{event.preventDefault();if(!event.currentTarget.reportValidity())return;const data=new FormData(event.currentTarget);if(state.dialogSave?.(data)!==false)$('#dialog').close();});
+    $('#collapse').addEventListener('click',()=>{state.compact=!state.compact;document.body.classList.toggle('collapsed',state.compact);$('#collapse').setAttribute('aria-expanded',String(!state.compact));$('#collapse').setAttribute('aria-label',state.compact?'展开管理导航':'折叠管理导航');$('#collapse').title=state.compact?'展开管理导航':'折叠管理导航';$('#collapse').innerHTML=icon(state.compact?'right':'left');});
+    $('#menu').addEventListener('click',()=>{document.body.classList.add('menu-open');$('#menu').setAttribute('aria-expanded','true');$('#close-menu').focus();});
+    $('#close-menu').addEventListener('click',()=>{closeMenu();$('#menu').focus();});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.body.classList.contains('menu-open')){closeMenu();$('#menu').focus();}});
+    document.addEventListener('pointerdown',event=>{if(document.body.classList.contains('menu-open')&&!event.target.closest('.sidebar,#menu'))closeMenu();});
+    window.addEventListener('resize',()=>{if(window.innerWidth>=900)closeMenu();});
+    render();
+  </script>
+</body>
+</html>
