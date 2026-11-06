@@ -1,7 +1,7 @@
 # labflow
 
-当前正式应用版本：**v2.4.8**。当前业务源码：`source/LabFlow-PostgreSQL-v2.4.8/`。
-本版按已确认方案优化后台布局，Windows 两包、GitHub Release 和 GHCR 均已发布并核验；保留原业务、权限、历史数据与自定义配置。
+当前正式应用版本：**v2.4.9**。当前业务源码：`source/LabFlow-PostgreSQL-v2.4.9/`。
+本版按 B 方案采用模块栏与当前模块菜单，整理手机导航、方法、主数据和通知布局。Windows 两包、GitHub Release、GHCR及本地正式包取回校验均已完成。原业务、权限、历史数据及自定义配置保留。
 
 ## 开始开发
 
@@ -15,7 +15,7 @@
 $projectRoot = Read-Host '输入实际项目目录'
 git clone --branch main --filter=blob:none --sparse https://github.com/HotLL233/labflow.git $projectRoot
 Set-Location -LiteralPath $projectRoot
-git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2.4.8
+git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2.4.9
 ```
 
 根 README、PROJECT_MEMORY、AGENTS 自动保留。版本目录以当时根 README 为准，不能把目录最大值当正式版。
@@ -23,7 +23,7 @@ git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2
 
 ```powershell
 git sparse-checkout add build-resources
-pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.4.8 -InstallDependencies
+pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.4.9 -InstallDependencies
 ```
 
 开发环境：Git、PowerShell 7、Node.js 24、Rust stable MSVC/C++ Build Tools；Windows本地出包需要 Inno Setup 6。
@@ -32,15 +32,15 @@ pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-
 
 ## 下载正式软件
 
-- [v2.4.8 Release及校验文件](https://github.com/HotLL233/labflow/releases/tag/v2.4.8)
-- [已有完整服务器安装的热更新包](https://github.com/HotLL233/labflow/releases/download/v2.4.8/labflow-v2.4.8-hotupdate.exe)
-- [首次安装完整包](https://github.com/HotLL233/labflow/releases/download/v2.4.8/labflow-v2.4.8.exe)
+- [v2.4.9 Release及校验文件](https://github.com/HotLL233/labflow/releases/tag/v2.4.9)
+- [已有完整服务器安装的热更新包](https://github.com/HotLL233/labflow/releases/download/v2.4.9/labflow-v2.4.9-hotupdate.exe)
+- [首次安装完整包](https://github.com/HotLL233/labflow/releases/download/v2.4.9/labflow-v2.4.9.exe)
 
-包版本为 2.4.8.0 / labflow / HotLL；升级前备份数据库、附件和配置。
-正式标签源码6171bea009e06322c4c47b50a7f51abc5f481d50，Windows42160035197、Docker42160035238已完成。
-GHCR `ghcr.io/hotll233/labflow:2.4.8` 与 `latest` 当前同摘要52bc2e5f44909ec1e97cf28045057008db7e8c1eca9aa720945e6fcb2e78e301。
-269项前端测试、130项实际前端浏览器检查、Rust检查与Release构建通过。正式两包已取回并逐项匹配Release摘要、交付清单与PE元数据。
-真实数据库、现场升级、手机实机和容器运行不在本次验收范围；详见当前版本安装包说明。
+包版本为 2.4.9.0 / labflow / HotLL；升级前备份数据库、附件和配置。
+正式标签源码6cf426be625581baa337b78e0beb2dbfa02ea7e1，Windows42194767135、Docker42194767048已成功。
+GHCR `ghcr.io/hotll233/labflow:2.4.9` 与 `latest` 同摘要929c9a9bb38fcf58d4ccc997897a01be6a94899e223d711325a87e299a1966ba。
+271项前端测试、Rust检查与Release构建通过。Windows静态资源通过135项浏览器检查；已发布镜像静态资源另行通过同套135项检查，两个范围分别记录。正式两包已取回，逐项匹配Release摘要、交付清单及PE元数据。
+真实业务API/数据库、现场升级、手机实机和容器运行不在本次验收范围；详见当前版本安装包说明。
 
 ## 仓库与发布约定
 
