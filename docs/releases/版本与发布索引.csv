@@ -100,5 +100,6 @@ v2.4.5,LabFlow-PostgreSQL-v2.4.5,True,True,published,
 v2.4.6,LabFlow-PostgreSQL-v2.4.6,True,True,published,
 v2.4.7,LabFlow-PostgreSQL-v2.4.7,True,True,published,历史正式软件；原标签及业务源码保留
 v2.4.8,LabFlow-PostgreSQL-v2.4.8,True,True,published,后台布局优化；历史正式版本与标签保留
-v2.4.9,LabFlow-PostgreSQL-v2.4.9,True,True,current-official,B方案双栏管理布局；Windows两包/Release/GHCR及本地取回校验完成
+v2.4.9,LabFlow-PostgreSQL-v2.4.9,True,True,published,B方案双栏管理布局；Windows两包/Release/GHCR及本地取回校验完成
+v2.4.10,LabFlow-PostgreSQL-v2.4.10,True,True,current-official,23个管理入口及二三级页面整改；Windows两包/Release/GHCR及本地取回核验完成
 archive/legacy-binaries-20261105,,True,True,historical-assets-archive,4份唯一历史字节及校验清单；非软件版本，不更新latest
