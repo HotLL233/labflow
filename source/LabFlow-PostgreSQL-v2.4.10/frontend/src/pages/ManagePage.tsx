@@ -2790,14 +2790,14 @@ const ManagePage: React.FC = () => {
         {projectDetail?.project_status === 'archived' && <Typography variant="body2">归档时间：{projectDetail.archived_at || '—'} · 操作人：{projectDetail.archived_by || '—'}</Typography>}
         <Typography fontWeight={600} sx={{ my: 1 }}>实验室</Typography><Typography sx={{ overflowWrap: 'anywhere' }}>{projectDetail?.lab_names?.join('、') || '未关联'}</Typography>
         <Typography fontWeight={600} sx={{ my: 1 }}>检测方法</Typography><TextField fullWidth size="small" label="搜索方法、类型或仪器" value={projectDetailSearch} onChange={e => setProjectDetailSearch(e.target.value)} sx={{ mb: 1 }} />
-        {(projectDetail?.method_ids || []).map((id, index) => {
+        {(projectDetail?.method_ids || []).map(id => {
           const method = ml.find(item => item.id === id);
-          const name = method?.name || projectDetail?.method_names?.[index] || `关联方法 #${id}`;
-          const text = `${name} ${method?.instrument_code || ''} ${method?.type_names?.join(' ') || ''}`;
+          if (!method) return null;
+          const text = `${method.name} ${method.instrument_code || ''} ${method.type_names?.join(' ') || ''}`;
           if (!text.toLowerCase().includes(projectDetailSearch.trim().toLowerCase())) return null;
-          return <Box key={id} sx={{ py: 1, borderBottom: '1px solid', borderColor: 'divider', overflowWrap: 'anywhere' }}><Typography variant="body2">{name}</Typography><Typography variant="caption" color="text.secondary">{method ? `${method.type_names?.join('、') || '未分类'} · ${method.instrument_code || method.instrument_name || '未绑定仪器'} · ${method.is_common ? '通用方法' : '项目方法'}` : '原关联名称保留，方法库详情暂不可用'}</Typography></Box>;
+          return <Box key={id} sx={{ py: 1, borderBottom: '1px solid', borderColor: 'divider', overflowWrap: 'anywhere' }}><Typography variant="body2">{method.name}</Typography><Typography variant="caption" color="text.secondary">{`${method.type_names?.join('、') || '未分类'} · ${method.instrument_code || method.instrument_name || '未绑定仪器'} · ${method.is_common ? '通用方法' : '项目方法'}`}</Typography></Box>;
         })}
-        {!projectDetail?.method_ids?.length && <Typography sx={{ overflowWrap: 'anywhere' }}>{projectDetail?.method_names?.join('、') || '未关联方法'}</Typography>}
+        {(!projectDetail?.method_ids?.length || projectDetail.method_ids.some(id => !ml.some(method => method.id === id))) && <Box sx={{ mt: 1 }}><Typography variant="caption" color="text.secondary">原始关联摘要（方法详情暂不可用；名称顺序不用于推断身份）</Typography><Typography sx={{ overflowWrap: 'anywhere' }}>{projectDetail?.method_names?.filter(name => name.toLowerCase().includes(projectDetailSearch.trim().toLowerCase())).join('、') || '未关联方法或没有匹配名称'}</Typography></Box>}
         {projectDetail?.notes && <Typography variant="body2" sx={{ mt: 2, whiteSpace: 'pre-wrap' }}>备注：{projectDetail.notes}</Typography>}
       </DialogContent><DialogActions><Button onClick={() => setProjectDetail(null)}>关闭</Button></DialogActions>
     </Dialog>

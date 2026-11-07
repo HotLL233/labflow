@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import ts from 'typescript';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 function action(file, name, environment) {
   const source = ts.createSourceFile(file, readFileSync(new URL(file, import.meta.url), 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
@@ -97,4 +99,26 @@ test('a created division keeps its identity when its separate laboratory relatio
   assert.deepEqual(form.group_ids, [1]);
   assert.equal(closed, false);
   assert.deepEqual(messages, [{ text: '实验室关联冲突', error: true }]);
+});
+
+test('project method details use actual IDs even when original names have an unrelated aggregation order', () => {
+  const source = ts.createSourceFile('ManagePage.tsx', readFileSync(new URL('../pages/ManagePage.tsx', import.meta.url), 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let expression;
+  const visit = node => {
+    if (ts.isJsxExpression(node) && node.expression?.getText(source).includes('const method = ml.find')) expression = node.expression;
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  assert.ok(expression);
+  const compiled = ts.transpileModule(`const result = (${expression.getText(source)});`, { compilerOptions: { target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.React } }).outputText;
+  const Container = ({ children }) => React.createElement('div', null, children);
+  const result = new Function('React', 'Box', 'Typography', 'projectDetail', 'ml', 'projectDetailSearch', compiled + '\nreturn result;')(
+    React, Container, Container,
+    { method_ids: [77, 11], method_names: ['不能按位置使用的旧名称', '另一旧名称'] },
+    [{ id: 11, name: '真实方法', type_names: ['液相'], instrument_code: 'LC-20', is_common: false }], '',
+  );
+  const html = renderToStaticMarkup(React.createElement(React.Fragment, null, result));
+  assert.match(html, /真实方法/);
+  assert.match(html, /LC-20/);
+  assert.doesNotMatch(html, /不能按位置|另一旧名称|#77/);
 });
