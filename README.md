@@ -1,9 +1,7 @@
 # labflow
 
-当前正式应用版本：**v2.4.13**。当前业务源码：`source/LabFlow-PostgreSQL-v2.4.13/`。
-本版实现实际计量方法改选、公共账号实际送样人及角色权限管理优化。保留原送样习惯和旧权限；Windows 两包、Release、GHCR 及正式文件取回核验均已完成。
-
-待正式发布：**v2.4.14**，源码 `source/LabFlow-PostgreSQL-v2.4.14/`。权限与录入精简、可维护角色模板及自定义公共用途已完成本地验证；前端 303 项、方法 HTTP 36 项、权限及真实旧版升级 HTTP 95 项、两套静态浏览器 20/39 组通过。数据库初轮 404 项通过、1 项测试夹具失败，补齐夹具后该项精确复验通过，另 3 项备份恢复忽略；未宣称最终整库重跑通过。正式版暂不变，证据与范围见 [实施与验收对照](docs/ui-permission-simplify/v2.4.14-实施与验收对照.md)。
+当前正式应用版本：**v2.4.14**。当前业务源码：`source/LabFlow-PostgreSQL-v2.4.14/`。
+本版精简用户管理和工作量录入布局，集中角色权限维护，补齐自定义公共用途和角色模板维护。保留原送样习惯及旧授权；Windows 两包、Release、GHCR 及正式文件取回核验均已完成。源码映射和验证范围见 [实施与验收对照](docs/ui-permission-simplify/v2.4.14-实施与验收对照.md)。
 
 ## 开始开发
 
@@ -17,7 +15,7 @@
 $projectRoot = Read-Host '输入实际项目目录'
 git clone --branch main --filter=blob:none --sparse https://github.com/HotLL233/labflow.git $projectRoot
 Set-Location -LiteralPath $projectRoot
-git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2.4.13
+git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2.4.14
 ```
 
 根 README、PROJECT_MEMORY、AGENTS 自动保留。版本目录以当时根 README 为准，不能把目录最大值当正式版。
@@ -25,7 +23,7 @@ git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2
 
 ```powershell
 git sparse-checkout add build-resources
-pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.4.13 -InstallDependencies
+pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.4.14 -InstallDependencies
 ```
 
 开发环境：Git、PowerShell 7、Node.js 24、Rust stable MSVC/C++ Build Tools；Windows本地出包需要 Inno Setup 6。
@@ -34,16 +32,16 @@ pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-
 
 ## 下载正式软件
 
-- [v2.4.13 Release 及校验文件](https://github.com/HotLL233/labflow/releases/tag/v2.4.13)
-- [已有完整服务器安装的热更新包](https://github.com/HotLL233/labflow/releases/download/v2.4.13/labflow-v2.4.13-hotupdate.exe)
-- [首次安装完整包](https://github.com/HotLL233/labflow/releases/download/v2.4.13/labflow-v2.4.13.exe)
+- [v2.4.14 Release 及校验文件](https://github.com/HotLL233/labflow/releases/tag/v2.4.14)
+- [已有完整服务器安装的热更新包](https://github.com/HotLL233/labflow/releases/download/v2.4.14/labflow-v2.4.14-hotupdate.exe)
+- [首次安装完整包](https://github.com/HotLL233/labflow/releases/download/v2.4.14/labflow-v2.4.14.exe)
 
-包版本为 2.4.13.0 / labflow / HotLL；升级前备份数据库、附件和配置。程序内“知微 / 样品管理系统”及管理员品牌配置保留。
-正式标签源码 `3616c171f93e10f3bcf598c07d2ab99ec85d3241`。Windows 43154818003、Docker 43154818113 成功，必要发布步骤逐项通过；Release 442505349 的两份正式安装包和三份交付文件已全部取回核验。GHCR `2.4.13` 与 `latest` 同摘要 `sha256:1b965618ffd50b04b5e7370610099fea768f57e48e0e9522d31446f6a0af0d65`。
+包版本为 2.4.14.0 / labflow / HotLL；升级前备份数据库、附件和配置。程序内“知微 / 样品管理系统”及管理员品牌配置保留。
+正式标签源码 `c2c01051004ac533fe172d07a4863f7febdd8287`。Windows 43174672398、Docker 43174672385 成功，必要发布步骤逐项通过；Release 442622678 的两份正式安装包和三份交付文件已全部取回核验。GHCR `2.4.14` 与 `latest` 同摘要 `sha256:8a742347bf4a16d3d733c249b2893225d39c115d003e215a5800fb38f41d96e3`。
 
-前端 288 项、后端隔离库 401 项通过（另 3 项备份恢复测试未运行）；真实方法/送样人 HTTP 36 项、权限及 v2.4.12→v2.4.13 升级 HTTP 35 项通过。真实升级后再次重启，角色、权限、三类范围、模板及人员角色关联快照一致，已撤销通知权限不被补回。各套 HTTP 包含环境/版本检查，不累计为独立业务场景总数。
+前端 303 项通过；后端隔离库初轮 404 项通过、1 项测试夹具失败、3 项备份恢复忽略。仅补公共身份测试标志后，该项精确定向复验通过；未在最终指纹下重跑全库，原失败记录保留。真实方法/送样人 HTTP 36 项、权限及 v2.4.13→v2.4.14 升级 HTTP 95 项通过。真实升级后再次重启，原角色、权限、三类配对范围、模板及人员关联快照一致，归属与业务快照保留，已撤销通知权限不被补回。HTTP 包含环境/版本检查，不累计为独立业务场景总数。
 
-生产静态配合合成 API 的录入 39 项、权限 22 项浏览器检查通过；正式 Windows 静态与本地同摘要，镜像静态另行同套复验，不叠加功能计数。不同构建的程序、输入指纹和静态摘要分别保留。未执行现场安装升级、安装/卸载生命周期、手机实机、完整 Excel 金额报表、全量备份恢复、真实群/网盘及容器业务运行；不连接生产数据库或 8000，不自动改写历史业务记录。详细正式包摘要、下载方式及验收范围见 [本版安装包说明](source/LabFlow-PostgreSQL-v2.4.13/安装包说明.md)。
+生产静态配合合成 API 的录入 39 组、权限/用户 20 组浏览器检查通过；正式 Windows 静态与本地同摘要，镜像静态另行同套复验，不叠加功能计数。三套输入指纹已分别精确重现，511 个受控文件清单一致、去除换行差异后的内容一致；不同构建的程序和静态摘要分别保留。本地数据库与 HTTP 不属于两次正式 CI 的执行范围。未执行现场安装升级、安装/卸载生命周期、手机实机、完整 Excel 金额报表、全量备份恢复、真实群/网盘及容器业务运行；不连接生产数据库或 8000，不自动改写历史业务记录。详细正式包摘要、下载方式及验收范围见 [本版安装包说明](source/LabFlow-PostgreSQL-v2.4.14/安装包说明.md)。
 
 ## 仓库与发布约定
 
