@@ -1,9 +1,7 @@
 # labflow
 
-当前正式应用版本：**v2.4.14**。当前业务源码：`source/LabFlow-PostgreSQL-v2.4.14/`。
-本版精简用户管理和工作量录入布局，集中角色权限维护，补齐自定义公共用途和角色模板维护。保留原送样习惯及旧授权；Windows 两包、Release、GHCR 及正式文件取回核验均已完成。源码映射和验证范围见 [实施与验收对照](docs/ui-permission-simplify/v2.4.14-实施与验收对照.md)。
-
-v2.5.0 AI 助手版本正在最终验证，源码位于 `source/LabFlow-PostgreSQL-v2.5.0/`。新增管理员多模型配置、头像旁助手、按原权限查询与工作量总结、语音转写和四类原表单草稿；默认关闭，不自动授予旧角色 AI 使用资格。实现及验证边界见 [本轮实施对照](docs/ui-ai-assistant/v2.5.0-实施与验收对照.md)。正式安装包和镜像完成后再更新当前正式版本。
+当前正式应用版本：**v2.5.0**。当前业务源码：`source/LabFlow-PostgreSQL-v2.5.0/`。
+本版新增管理员多上游模型配置、头像旁 AI 助手、按原权限查询与工作量总结、语音转写和四类原表单草稿。默认关闭，不自动授予旧角色 AI 使用资格；保留原送样习惯、权限、历史快照和业务口径。Windows 两包、Release、GHCR 及正式文件取回核验均已完成，范围和限制见 [实施与验收对照](docs/ui-ai-assistant/v2.5.0-实施与验收对照.md)。
 
 ## 开始开发
 
@@ -17,7 +15,7 @@ v2.5.0 AI 助手版本正在最终验证，源码位于 `source/LabFlow-PostgreS
 $projectRoot = Read-Host '输入实际项目目录'
 git clone --branch main --filter=blob:none --sparse https://github.com/HotLL233/labflow.git $projectRoot
 Set-Location -LiteralPath $projectRoot
-git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2.4.14
+git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2.5.0
 ```
 
 根 README、PROJECT_MEMORY、AGENTS 自动保留。版本目录以当时根 README 为准，不能把目录最大值当正式版。
@@ -25,7 +23,7 @@ git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2
 
 ```powershell
 git sparse-checkout add build-resources
-pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.4.14 -InstallDependencies
+pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.5.0 -InstallDependencies
 ```
 
 开发环境：Git、PowerShell 7、Node.js 24、Rust stable MSVC/C++ Build Tools；Windows本地出包需要 Inno Setup 6。
@@ -34,16 +32,18 @@ pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-
 
 ## 下载正式软件
 
-- [v2.4.14 Release 及校验文件](https://github.com/HotLL233/labflow/releases/tag/v2.4.14)
-- [已有完整服务器安装的热更新包](https://github.com/HotLL233/labflow/releases/download/v2.4.14/labflow-v2.4.14-hotupdate.exe)
-- [首次安装完整包](https://github.com/HotLL233/labflow/releases/download/v2.4.14/labflow-v2.4.14.exe)
+- [v2.5.0 Release 及校验文件](https://github.com/HotLL233/labflow/releases/tag/v2.5.0)
+- [已有完整服务器安装的热更新包](https://github.com/HotLL233/labflow/releases/download/v2.5.0/labflow-v2.5.0-hotupdate.exe)
+- [首次安装完整包](https://github.com/HotLL233/labflow/releases/download/v2.5.0/labflow-v2.5.0.exe)
 
-包版本为 2.4.14.0 / labflow / HotLL；升级前备份数据库、附件和配置。程序内“知微 / 样品管理系统”及管理员品牌配置保留。
-正式标签源码 `c2c01051004ac533fe172d07a4863f7febdd8287`。Windows 43174672398、Docker 43174672385 成功，必要发布步骤逐项通过；Release 442622678 的两份正式安装包和三份交付文件已全部取回核验。GHCR `2.4.14` 与 `latest` 同摘要 `sha256:8a742347bf4a16d3d733c249b2893225d39c115d003e215a5800fb38f41d96e3`。
+包版本为 2.5.0.0 / labflow / HotLL；升级前备份数据库、附件和配置。程序内“知微 / 样品管理系统”及管理员品牌配置保留。
+正式标签源码 `6b29afd257ce20c6fc52ea8ed76bef31ff7c3712`。Windows 43423927871、Docker 43423927849 成功，必要发布步骤逐项通过；Release 444203920 的两份正式安装包和三份交付文件已从同次 CI 完整归档取回，并与 Release 大小和摘要独立交叉核验。GHCR `2.5.0` 与 `latest` 同摘要 `sha256:0b8ef81e2185b5b8a094721c4accddff3effed9863cd0576c019072b66db7bcb`。
 
-前端 303 项通过；后端隔离库初轮 404 项通过、1 项测试夹具失败、3 项备份恢复忽略。仅补公共身份测试标志后，该项精确定向复验通过；未在最终指纹下重跑全库，原失败记录保留。真实方法/送样人 HTTP 36 项、权限及 v2.4.13→v2.4.14 升级 HTTP 95 项通过。真实升级后再次重启，原角色、权限、三类配对范围、模板及人员关联快照一致，归属与业务快照保留，已撤销通知权限不被补回。HTTP 包含环境/版本检查，不累计为独立业务场景总数。
+本地前端 313 项、最终同输入后端隔离库 427 项通过，3 项既有备份恢复测试忽略。真实 AI HTTP 52 项、方法/送样人 36 项、权限及 v2.4.14→v2.5.0 升级 HTTP 96 项通过；AI 上游使用本机模拟协议服务，HTTP 数量包含环境和版本检查。旧角色、权限范围、模板、人员归属和业务快照在升级及重启后保留，AI 不自动授权。
 
-生产静态配合合成 API 的录入 39 组、权限/用户 20 组浏览器检查通过；正式 Windows 静态与本地同摘要，镜像静态另行同套复验，不叠加功能计数。三套输入指纹已分别精确重现，511 个受控文件清单一致、去除换行差异后的内容一致；不同构建的程序和静态摘要分别保留。本地数据库与 HTTP 不属于两次正式 CI 的执行范围。未执行现场安装升级、安装/卸载生命周期、手机实机、完整 Excel 金额报表、全量备份恢复、真实群/网盘及容器业务运行；不连接生产数据库或 8000，不自动改写历史业务记录。详细正式包摘要、下载方式及验收范围见 [本版安装包说明](source/LabFlow-PostgreSQL-v2.4.14/安装包说明.md)。
+生产静态配合合成 API 的浏览器 11 组通过；Docker 实际解包静态、Windows 与正式报告同摘要的重现静态分别同套复验通过，不叠加功能计数。Windows 静态不是从安装包解出，未运行正式程序做业务验收。526 个受控文件清单及去除换行后的内容一致，三套输入指纹精确重现；不同构建的程序和静态摘要分开保留。Windows CI 为 All Build（12 项通过、5 项未运行），Docker 为 Frontend Build（9 项通过、4 项未运行）；本地数据库、HTTP 和浏览器不属于两次正式 CI。未执行现场安装升级、安装/卸载生命周期、实机麦克风、真实模型/语音供应商、完整 Excel 金额报表、全量备份恢复、真实群/网盘及容器业务运行；不连接生产数据库或 8000，不自动改写历史业务记录。详细摘要、下载和验收边界见 [本版安装包说明](source/LabFlow-PostgreSQL-v2.5.0/安装包说明.md)。
+
+启用入口为“系统管理 → AI 助手”，角色资格在“角色权限管理 → 使用 AI 助手”分配。业务数据外发需使用者明确允许。AI 私密配置不在业务全量备份中，换主机后重新配置和测试；远程录音需受信任 HTTPS，局域网 HTTP 可使用文字或短音频上传。
 
 ## 仓库与发布约定
 

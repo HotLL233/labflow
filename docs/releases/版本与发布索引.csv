@@ -105,5 +105,6 @@ v2.4.10,LabFlow-PostgreSQL-v2.4.10,True,True,published,23个管理入口及二�
 v2.4.11,LabFlow-PostgreSQL-v2.4.11,True,True,published,未配置系统设置误报修复；Windows两包/Release/GHCR及本地取回核验完成
 v2.4.12,LabFlow-PostgreSQL-v2.4.12,True,True,published,分析检测统计保留现有习惯布局；Windows两包/Release/GHCR及正式文件取回核验完成
 v2.4.13,LabFlow-PostgreSQL-v2.4.13,True,True,published,实际计量方法与公共账号送样人及旧权限兼容优化；Windows两包/Release/GHCR及正式文件取回核验完成
-v2.4.14,LabFlow-PostgreSQL-v2.4.14,True,True,current-official,用户权限与录入精简及自定义公共用途和角色模板；Windows两包/Release/GHCR及正式文件取回核验完成
+v2.4.14,LabFlow-PostgreSQL-v2.4.14,True,True,published,用户权限与录入精简及自定义公共用途和角色模板；Windows两包/Release/GHCR及正式文件取回核验完成
+v2.5.0,LabFlow-PostgreSQL-v2.5.0,True,True,current-official,AI助手多模型配置与权限内查询总结及语音草稿；Windows两包/Release/GHCR及正式文件取回核验完成
 archive/legacy-binaries-20261105,,True,True,historical-assets-archive,4份唯一历史字节及校验清单；非软件版本，不更新latest
