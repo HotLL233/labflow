@@ -21,8 +21,11 @@ fn tool(name: &str, description: &str, properties: Value, required: &[&str]) -> 
         "parameters":{"type":"object","properties":properties,"required":required,"additionalProperties":false}}})
 }
 
-fn target_schema() -> Value {
-    json!({"type":"string","enum":["sample_info","rd_sample","workload","auxiliary"]})
+pub(crate) fn draft_targets(ctx: &AuthContext) -> Vec<&'static str> {
+    ["sample_info", "rd_sample", "workload", "auxiliary"]
+        .into_iter()
+        .filter(|target| require_target(ctx, target).is_ok())
+        .collect()
 }
 
 fn query_domains(ctx: &AuthContext) -> Vec<&'static str> {
@@ -72,22 +75,15 @@ pub fn tool_definitions(ctx: &AuthContext, caps: &AiCapabilities) -> Vec<Value> 
             "method_id":{"type":"integer"},"kind":{"type":"string","enum":["detection","auxiliary"]}
         }), &["start","end"]));
     }
-    if caps.draft
-        && [
-            "entry:sample-info",
-            "entry:sample",
-            "entry:workload",
-            "entry:auxiliary",
-        ]
-        .iter()
-        .any(|p| ctx.has_permission(p))
-    {
-        tools.push(tool("entry_metadata", "起草前先读取真实可用字段和主数据。用返回的ID选择实验室、项目、方法、辅助事项及实际人员；多候选不得擅自匹配。keyword只筛选名称，不改变授权范围。", json!({
-            "target":target_schema(),"group_id":{"type":"integer"},"project_id":{"type":"integer"},
+    let targets = draft_targets(ctx);
+    if caps.draft && !targets.is_empty() {
+        let target_schema = json!({"type":"string","enum":targets});
+        tools.push(tool("entry_metadata", "起草前先读取真实可用字段和主数据。用返回的ID选择实验室、项目、方法、辅助事项及实际人员；多候选不得擅自匹配。keyword在完整授权候选内筛选实验室、项目、方法或事项的名称；已指定ID的实验室或项目保留，不被方法关键词排除。逐步明确实验室、项目和方法，不改变授权范围。columns的field_path指明填写位置。", json!({
+            "target":target_schema,"group_id":{"type":"integer"},"project_id":{"type":"integer"},
             "type_key":{"type":"string"},"keyword":{"type":"string"}
         }), &["target"]));
         tools.push(tool("prepare_entry_draft", "生成待用户核对的原表单草稿，绝不写入记录。必须先读取entry_metadata；不得编造ID、系数、金额、送样时间。公共账号须明确实际送样人。fields仅接受原表单可填写字段。", json!({
-            "target":target_schema(),"fields":{"type":"object","properties":{
+            "target":target_schema,"fields":{"type":"object","properties":{
                 "group_id":{"type":"integer"},"project_id":{"type":"integer"},"method_id":{"type":"integer"},
                 "original_method_id":{"type":"integer"},"sender_user_id":{"type":"integer"},"user_id":{"type":"integer"},
                 "auxiliary_work_item_id":{"type":"integer"},"division_id":{"type":"integer"},
@@ -236,6 +232,179 @@ fn candidates(items: &Value, fields: &[&str], keyword: Option<&str>) -> Value {
         })
         .collect::<Vec<_>>();
     json!({"total":found.len(),"truncated":found.len()>100,"items":found.into_iter().take(100).map(|v|keep_fields(v,fields)).collect::<Vec<_>>()})
+}
+
+fn native_draft_field(target: &str, key: &str) -> bool {
+    matches!(key, "quantity" | "batch_no" | "notes")
+        || (target == "sample_info" && matches!(key, "user_name" | "main_components"))
+}
+
+fn draft_column_key<'a>(target: &str, column: &'a Value) -> Option<&'a str> {
+    let key = column[if target == "sample_info" {
+        "field_key"
+    } else {
+        "name"
+    }]
+    .as_str()?;
+    if column["is_active"].as_bool() != Some(true)
+        || column["show_in_form"].as_bool() != Some(true)
+        || matches!(column["data_type"].as_str(), Some("action" | "attachment"))
+        || key.starts_with("action_")
+    {
+        return None;
+    }
+    if native_draft_field(target, key) {
+        return Some(key);
+    }
+    if column["is_predefined"].as_bool() == Some(true)
+        || [
+            "seq_no",
+            "division_id",
+            "lab_name",
+            "project_name",
+            "method_name",
+            "submitted_at",
+            "detection_type",
+            "detection_date",
+            "type_key",
+            "status",
+            "sampled_by",
+            "sampled_at",
+            "detected_by",
+            "attachment_files",
+        ]
+        .contains(&key)
+    {
+        return None;
+    }
+    Some(key)
+}
+
+fn draft_columns(target: &str, columns: &Value) -> Value {
+    json!(columns
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|column| {
+            let key = draft_column_key(target, column)?;
+            let mut column = column.clone();
+            column["field_path"] = json!(if native_draft_field(target, key) {
+                format!("fields.{key}")
+            } else {
+                format!("fields.extra_fields.{key}")
+            });
+            Some(column)
+        })
+        .collect::<Vec<_>>())
+}
+
+fn draft_column_applies(column: &Value, detection_type: Option<&str>) -> bool {
+    let source = column["applicable_types"].as_str().unwrap_or("").trim();
+    let configured = serde_json::from_str::<Vec<String>>(source).unwrap_or_else(|_| {
+        source
+            .split([',', '，', '\n'])
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(str::to_owned)
+            .collect()
+    });
+    configured.is_empty()
+        || detection_type.is_some_and(|selected| configured.iter().any(|t| t.trim() == selected))
+}
+
+/// Bind only fields the original form can actually accept. Identity and status
+/// fields keep their original ID-based validation and are never free-text extras.
+fn normalize_draft_fields(
+    target: &str,
+    fields: &mut Value,
+    columns: &Value,
+) -> std::result::Result<Map<String, Value>, String> {
+    let extra = match fields.get("extra_fields") {
+        None | Some(Value::Null) => Map::new(),
+        Some(Value::Object(extra)) => extra.clone(),
+        _ => return Err("自定义字段必须是对象".into()),
+    };
+    let available = columns
+        .as_array()
+        .ok_or("当前表单字段不可用，请重新读取字段配置")?;
+    let detection_type = text(fields, "detection_type").map(str::to_owned);
+    let mut labels = Map::new();
+    let mut retained = Map::new();
+    for (key, value) in &extra {
+        if value.is_object() || value.is_array() {
+            return Err(format!("{key} 只能填写原表单的单值内容"));
+        }
+        let base = key.strip_suffix("__detail").unwrap_or(key);
+        let column = available
+            .iter()
+            .find(|column| {
+                draft_column_key(target, column) == Some(base)
+                    && draft_column_applies(column, detection_type.as_deref())
+            })
+            .ok_or_else(|| {
+                format!("字段 {key} 未启用、不可起草或不适用于当前类型，请重新读取字段配置")
+            })?;
+        let label = column["label"]
+            .as_str()
+            .filter(|s| !s.trim().is_empty())
+            .unwrap_or(base);
+        if key.ends_with("__detail") {
+            let rules: Vec<crate::models::rd_record_column::RdOptionDetailRule> =
+                serde_json::from_str(column["option_detail_rules"].as_str().unwrap_or(""))
+                    .unwrap_or_default();
+            let selected = fields
+                .get(base)
+                .or_else(|| extra.get(base))
+                .and_then(Value::as_str)
+                .unwrap_or("");
+            let rule = rules
+                .iter()
+                .find(|rule| rule.trigger_value == selected)
+                .ok_or_else(|| format!("字段 {label} 的补充内容未匹配当前选项"))?;
+            labels.insert(rule.label.clone(), value.clone());
+            retained.insert(key.clone(), value.clone());
+        } else if native_draft_field(target, base) {
+            if fields.get(base).is_some_and(|existing| existing != value) {
+                return Err(format!("字段 {label} 在顶层和自定义字段中内容冲突，请保留 fields.{base} 并重新生成草稿"));
+            }
+            if (base == "quantity" && value.as_i64().is_none())
+                || (base != "quantity" && !value.is_string() && !value.is_null())
+            {
+                return Err(format!("字段 {label} 的填写类型无效"));
+            }
+            fields[base] = value.clone();
+        } else {
+            let mut review_label = label.to_owned();
+            let mut suffix = 2;
+            while labels.contains_key(&review_label) {
+                review_label = format!("{label}（{suffix}）");
+                suffix += 1;
+            }
+            labels.insert(review_label, value.clone());
+            retained.insert(key.clone(), value.clone());
+        }
+    }
+    for key in ["batch_no", "notes", "main_components"] {
+        if fields
+            .get(key)
+            .is_some_and(|value| !value.is_string() && !value.is_null())
+        {
+            return Err(format!("字段 {key} 的填写类型无效"));
+        }
+        if fields.get(key).is_some()
+            && native_draft_field(target, key)
+            && !available.iter().any(|column| {
+                draft_column_key(target, column) == Some(key)
+                    && draft_column_applies(column, detection_type.as_deref())
+            })
+        {
+            return Err(format!("字段 {key} 当前未开放填写，请重新读取字段配置"));
+        }
+    }
+    if fields.get("extra_fields").is_some() {
+        fields["extra_fields"] = Value::Object(retained);
+    }
+    Ok(labels)
 }
 
 async fn metadata(
@@ -395,7 +564,9 @@ async fn metadata(
                 .collect::<Vec<_>>())
         })
         .unwrap_or(projects);
-    let mut result = json!({"target":target,"groups":candidates(&selected_groups,&["id","name","division_id"],None),"projects":candidates(&selected_projects,&["id","name","lab_ids","method_ids"],None)});
+    let mut result = json!({"target":target,
+        "groups":candidates(&selected_groups,&["id","name","division_id"],group_id.is_none().then_some(keyword).flatten()),
+        "projects":candidates(&selected_projects,&["id","name","lab_ids","method_ids"],project_id.is_none().then_some(keyword).flatten())});
     if target == "sample_info" {
         let mut types = sample_types;
         if !ctx.is_system_admin() {
@@ -440,7 +611,7 @@ async fn metadata(
         )
         .await?;
         result["types"] = types;
-        result["columns"] = columns;
+        result["columns"] = draft_columns(target, &columns);
         result["requires_actual_sender"] = json!(
             ctx.user.require_actual_submitter
                 || ctx.is_rd_public_account()
@@ -529,12 +700,13 @@ async fn metadata(
             .map(|p| json!({"id":p.id,"username":p.username,"group_id":p.group_id}))
             .collect::<Vec<_>>());
         if target == "rd_sample" {
-            result["columns"] = get(
+            let columns = get(
                 api::rd_record_column_handler::router(pool.clone()),
                 headers,
                 "/api/rd-record-columns".into(),
             )
             .await?;
+            result["columns"] = draft_columns(target, &columns);
         }
     }
     Ok(result)
@@ -802,10 +974,13 @@ async fn prepare(
         _ => return Err("不支持的业务表单".into()),
     };
     validate_args(&fields, &allowed)?;
-    if fields.get("quantity").is_some_and(|v| v.as_i64().is_none()) {
+    let entered_quantity = fields
+        .get("quantity")
+        .or_else(|| fields["extra_fields"].get("quantity"));
+    if entered_quantity.is_some_and(|v| v.as_i64().is_none()) {
         return Err("数量必须是整数".into());
     }
-    let quantity = fields["quantity"].as_i64().unwrap_or(1);
+    let quantity = entered_quantity.and_then(Value::as_i64).unwrap_or(1);
     if !(1..=1_000_000).contains(&quantity) {
         return Err("数量应为1至100万的整数".into());
     }
@@ -893,6 +1068,11 @@ async fn prepare(
             let type_key = text(&fields, "type_key")
                 .ok_or("请选择样品类型")?
                 .to_owned();
+            labels.extend(normalize_draft_fields(
+                target,
+                &mut fields,
+                &meta["columns"],
+            )?);
             if let Some(false) = authz_service::sample_info_scope_allows(
                 pool,
                 ctx,
@@ -933,19 +1113,6 @@ async fn prepare(
                 issues.push("请填写并核对实际送样人，不能使用公共账号名称".to_string());
             } else if sender.is_empty() {
                 fields["user_name"] = json!(ctx.user.username);
-            }
-            let column_keys = meta["columns"]
-                .as_array()
-                .into_iter()
-                .flatten()
-                .filter(|c| c["show_in_form"].as_bool() != Some(false))
-                .filter_map(|c| c["field_key"].as_str())
-                .collect::<Vec<_>>();
-            if fields["extra_fields"]
-                .as_object()
-                .is_some_and(|extra| extra.keys().any(|key| !column_keys.contains(&key.as_str())))
-            {
-                return Err("草稿包含当前样品类型未启用的自定义字段".into());
             }
             format!(
                 "/sample-info/entry?type={}",
@@ -1012,6 +1179,11 @@ async fn prepare(
                 )
                 .map_err(|e| e.public_message())?;
                 fields["detection_type"] = json!(detection_type);
+                labels.extend(normalize_draft_fields(
+                    target,
+                    &mut fields,
+                    &meta["columns"],
+                )?);
                 let public = ctx.is_rd_public_account();
                 let person_id = fields["sender_user_id"]
                     .as_i64()
@@ -1237,10 +1409,7 @@ pub async fn execute_tool(
     match name {
         "program_help" => {
             validate_args(&args, &["topic"])?;
-            let targets = ["sample_info", "rd_sample", "workload", "auxiliary"]
-                .into_iter()
-                .filter(|target| require_target(&ctx, target).is_ok())
-                .collect::<Vec<_>>();
+            let targets = draft_targets(&ctx);
             Ok(
                 json!({"version":env!("CARGO_PKG_VERSION"),"topic":text(&args,"topic"),
                 "knowledge_kind":"本版本内置操作指引，非任意未来功能或私密配置的自动理解",
@@ -1316,6 +1485,96 @@ pub async fn execute_tool(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn keywords_search_the_full_candidate_set_before_bounding() {
+        let all = json!((1..=125)
+            .map(|id| json!({"id":id,"name":format!("实验室{id}"),"is_active":true}))
+            .collect::<Vec<_>>());
+        let initial = candidates(&all, &["id", "name"], None);
+        assert_eq!(initial["total"], 125);
+        assert_eq!(initial["items"].as_array().unwrap().len(), 100);
+        assert_eq!(initial["truncated"], true);
+        let found = candidates(&all, &["id", "name"], Some("实验室125"));
+        assert_eq!(found["total"], 1);
+        assert_eq!(found["items"][0]["id"], 125);
+        let inactive = json!([{"id":126,"name":"不可见","is_active":false}]);
+        assert_eq!(candidates(&inactive, &["id"], Some("不可见"))["total"], 0);
+    }
+
+    fn draft_test_columns(target: &str) -> Value {
+        let key = if target == "sample_info" {
+            "field_key"
+        } else {
+            "name"
+        };
+        let mut columns = Vec::new();
+        for (name, label, predefined, kind) in [
+            ("notes", "注意事项", true, "text"),
+            ("quantity", "数量", true, "number"),
+            ("ai_custom", "检测要求", false, "text"),
+            ("ai_number", "温度", false, "number"),
+            ("ai_bool", "确认", false, "text"),
+            ("ai_attachment", "附件", false, "attachment"),
+            ("status", "状态", true, "text"),
+        ] {
+            let mut column = json!({"label":label,"is_active":true,"show_in_form":true,"is_predefined":predefined,"data_type":kind});
+            column[key] = json!(name);
+            columns.push(column);
+        }
+        json!(columns)
+    }
+
+    #[test]
+    fn drafts_bind_native_values_and_review_all_custom_values_with_real_labels() {
+        for target in ["sample_info", "rd_sample"] {
+            let columns = draft_columns(target, &draft_test_columns(target));
+            assert_eq!(columns[0]["field_path"], "fields.notes");
+            assert_eq!(columns[2]["field_path"], "fields.extra_fields.ai_custom");
+            let mut fields = json!({"extra_fields":{"notes":"低温保存","quantity":2,"ai_custom":"当天检测","ai_number":0,"ai_bool":false}});
+            let labels = normalize_draft_fields(target, &mut fields, &columns).unwrap();
+            assert_eq!(fields["notes"], "低温保存");
+            assert_eq!(fields["quantity"], 2);
+            assert!(fields["extra_fields"].get("notes").is_none());
+            assert_eq!(fields["extra_fields"]["ai_custom"], "当天检测");
+            assert_eq!(labels["检测要求"], "当天检测");
+            assert_eq!(labels["温度"], 0);
+            assert_eq!(labels["确认"], false);
+            assert!(!labels.contains_key("ai_custom"));
+        }
+    }
+
+    #[test]
+    fn drafts_reject_conflicts_unknown_and_unavailable_fields_without_overwriting() {
+        let columns = draft_test_columns("sample_info");
+        let mut conflict = json!({"notes":"原值","extra_fields":{"notes":"新值"}});
+        assert!(
+            normalize_draft_fields("sample_info", &mut conflict, &columns)
+                .unwrap_err()
+                .contains("内容冲突")
+        );
+        assert_eq!(conflict["notes"], "原值");
+        for field in ["unknown", "status", "ai_attachment"] {
+            let mut fields = json!({"extra_fields":{}});
+            fields["extra_fields"][field] = json!("test");
+            assert!(normalize_draft_fields("sample_info", &mut fields, &columns).is_err());
+        }
+        for setting in ["is_active", "show_in_form"] {
+            let mut columns = columns.clone();
+            columns[2][setting] = json!(false);
+            let mut fields = json!({"extra_fields":{"ai_custom":"保留输入"}});
+            assert!(normalize_draft_fields("sample_info", &mut fields, &columns).is_err());
+            assert_eq!(fields["extra_fields"]["ai_custom"], "保留输入");
+        }
+        let mut fields = json!({"extra_fields":"invalid"});
+        assert!(normalize_draft_fields("sample_info", &mut fields, &columns).is_err());
+        let mut columns = draft_test_columns("rd_sample");
+        columns[2]["applicable_types"] = json!("[\"液相\"]");
+        let mut fields = json!({"detection_type":"气相","extra_fields":{"ai_custom":"test"}});
+        assert!(normalize_draft_fields("rd_sample", &mut fields, &columns).is_err());
+        fields["detection_type"] = json!("液相");
+        assert!(normalize_draft_fields("rd_sample", &mut fields, &columns).is_ok());
+    }
+
     #[test]
     fn program_guides_filter_entries_and_actions_by_actual_permissions() {
         let guides = program_guides(|p| matches!(p, "entry:sample" | "sample:collect"), false);

@@ -231,6 +231,9 @@ const SampleInfoEntry: React.FC = () => {
 
   // 列配置
   const [columns, setColumns] = useState<SampleInfoColumn[]>([]);
+  const [formColumnLoad, setFormColumnLoad] = useState({ key: '', error: '' });
+  const [formColumnRetry, setFormColumnRetry] = useState(0);
+  const formColumnLoadKey = JSON.stringify([dt, user?.id]);
   const [recordColumns, setRecordColumns] = useState<SampleInfoColumn[]>([]);
   const [recordColumnsScope, setRecordColumnsScope] = useState<string | null>(null);
   const tableConfig = useTableConfig('form_sample_entry');
@@ -540,27 +543,29 @@ const SampleInfoEntry: React.FC = () => {
   formDefaultsRef.current = { user, defaultDivisionId, defaultLabName, defaultProjectName };
   useEffect(() => {
     let disposed = false;
+    setFormColumnLoad({ key: '', error: '' });
     getActiveSampleInfoColumns(dt || undefined).then(response => {
-      if (disposed || response.code !== 0 || !response.data) return;
-      const cols = response.data;
+      const cols = requireApiSuccess(response, '样品类型字段配置加载失败');
+      if (!cols) throw new Error('未返回样品类型字段配置，请重新加载');
+      if (disposed) return;
       setColumns(cols);
       setRows(previous => {
         const defaults = formDefaultsRef.current;
-        if (previous.length === 0 || (previous.length === 1 && !previous[0].user_name && !previous[0].project_name)) {
-          return [emptyRow(cols, defaults.user, defaults.defaultDivisionId, defaults.defaultLabName, defaults.defaultProjectName)];
-        }
+        const defaultRow = emptyRow(cols, defaults.user, defaults.defaultDivisionId, defaults.defaultLabName, defaults.defaultProjectName);
+        if (previous.length === 0) return [defaultRow];
         return previous.map(row => {
-          const next: any = { checked: row.checked || false, _extra: { ...(row._extra || {}) }, user_name: row.user_name ?? defaultSubmitterName(defaults.user), _submitterConfirmed: row._submitterConfirmed };
+          const next: any = { ...row, checked: row.checked || false, _extra: { ...(row._extra || {}) }, user_name: row.user_name ?? defaultSubmitterName(defaults.user), _submitterConfirmed: row._submitterConfirmed };
           cols.forEach(column => {
-            if (column.is_predefined) next[column.field_key] = row[column.field_key] ?? '';
+            if (column.is_predefined) next[column.field_key] = row[column.field_key] ?? defaultRow[column.field_key] ?? '';
             else next._extra[column.field_key] = row._extra?.[column.field_key] ?? '';
           });
           return next;
         });
       });
-    }).catch(() => {});
+      setFormColumnLoad({ key: formColumnLoadKey, error: '' });
+    }).catch(reason => { if (!disposed) setFormColumnLoad({ key: '', error: reason instanceof Error ? reason.message : '样品类型字段配置加载失败' }); });
     return () => { disposed = true; };
-  }, [dt, user?.id]);
+  }, [dt, user?.id, formColumnRetry]);
 
   // Focus refresh is retained; only the latest read for the current type may update columns.
   useEffect(() => {
@@ -1384,6 +1389,8 @@ const SampleInfoEntry: React.FC = () => {
   const changeEditForm = useCallback((field: string, value: string) => setEditForm(previous => ({ ...previous, [field]: value })), []);
 
   const applyAiDraft = (draft: AiEntryDraft) => {
+    if (organizationError) throw new Error(organizationError);
+    if (organizationLoading || formColumnLoad.key !== formColumnLoadKey) throw new Error('请等待当前样品类型字段及组织选项加载完成后再添加草稿');
     if (!canCreate || draft.fields.type_key !== dt) throw new Error('当前类型或权限已变化，请重新生成草稿');
     const fields = draft.fields;
     const lab = labs.find(item => item.id === Number(fields.group_id));
@@ -1423,7 +1430,8 @@ const SampleInfoEntry: React.FC = () => {
       
 
       {/* === 部分 A：登记表单 === */}
-      {!hasNotificationRecord && <AiDraftReview draft={aiDraft} onApply={applyAiDraft} onDismiss={dismissAiDraft} disabled={organizationLoading || submitting} />}
+      {!hasNotificationRecord && aiDraft && formColumnLoad.error && <Alert severity="error" sx={{ mb: 1 }} action={<Button color="inherit" size="small" onClick={() => setFormColumnRetry(value => value + 1)}>重新加载字段</Button>}>{formColumnLoad.error}</Alert>}
+      {!hasNotificationRecord && <AiDraftReview draft={aiDraft} onApply={applyAiDraft} onDismiss={dismissAiDraft} disabled={organizationLoading || Boolean(organizationError) || formColumnLoad.key !== formColumnLoadKey || submitting} />}
       
       {canCreate && !hasNotificationRecord && <Paper elevation={0} sx={{ p: { xs: 1.25, md: 2 }, mb: 2, borderRadius: '6px', border: '1px solid #d9e2dc', borderTop: '3px solid #2e7d32', bgcolor: '#fff' }}>
         {organizationError && <Alert severity="error" sx={{ mb: 2 }}>{organizationError}</Alert>}

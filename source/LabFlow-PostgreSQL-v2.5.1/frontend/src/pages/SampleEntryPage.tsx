@@ -226,6 +226,8 @@ const SampleEntryPage: React.FC = () => {
   const [mts, setMts] = useState<MethodType[]>([]);
   const [divs, setDivs] = useState<Division[]>([]);
   const [senders, setSenders] = useState<User[]>([]);
+  const [senderLoad, setSenderLoad] = useState({ key: '', error: '' });
+  const [senderRetry, setSenderRetry] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // v0.4.36: 页面布局字段
@@ -282,6 +284,7 @@ const SampleEntryPage: React.FC = () => {
   const dt = 'rd';
   const isPublicAccount = Boolean(user?.is_rd_public_account ?? user?.is_public_account);
   const canSelectSender = Boolean(user && (isPublicAccount || hasPermission('records:rd:select-sender')));
+  const senderLoadKey = JSON.stringify([gid, user?.id]);
   const defaultSenderName = isPublicAccount ? '' : (user?.username || '');
   const defaultSenderId = isPublicAccount ? null : (user?.id ?? null);
 
@@ -345,10 +348,21 @@ const SampleEntryPage: React.FC = () => {
   useEffect(() => { void loadTodayRecords(); return () => { todayRecordRequest.current += 1; }; }, [loadTodayRecords]);
   useEffect(() => {
     if (!gid || !user) return;
+    let disposed = false;
+    setSenderLoad({ key: '', error: '' });
     getRdSenders(gid)
-      .then(response => { if (response.code === 0 && response.data) setSenders(response.data); })
-      .catch(() => setSenders([]));
-  }, [gid, user?.id]);
+      .then(response => {
+        const people = requireApiSuccess(response, '实际送样人员加载失败');
+        if (!people) throw new Error('未返回实际送样人员，请重新加载');
+        if (disposed) return;
+        setSenders(people); setSenderLoad({ key: senderLoadKey, error: '' });
+      })
+      .catch(reason => {
+        if (disposed) return;
+        setSenders([]); setSenderLoad({ key: '', error: reason instanceof Error ? reason.message : '实际送样人员加载失败' });
+      });
+    return () => { disposed = true; };
+  }, [gid, user?.id, senderRetry]);
   // 表单和列表统一使用管理员维护的研发送样列配置。
   useEffect(() => {
     const loadFields = async () => {
@@ -984,6 +998,7 @@ const SampleEntryPage: React.FC = () => {
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress /></Box>;
 
   const applyAiDraft = (draft: AiEntryDraft) => {
+    if (loading || (canSelectSender && senderLoad.key !== senderLoadKey)) throw new Error('请等待实际送样人员及表单选项加载完成后再添加草稿');
     const fields = draft.fields;
     if (Number(fields.group_id) !== gid) throw new Error('草稿实验室与当前页面不同，请重新打开草稿');
     const project = projects.find(item => item.id === Number(fields.project_id));
@@ -1007,7 +1022,8 @@ const SampleEntryPage: React.FC = () => {
   const pageContent = (
     
     <Box sx={{ p: { xs: 0.75, sm: 2 } }}>
-      <AiDraftReview draft={aiDraft} onApply={applyAiDraft} onDismiss={dismissAiDraft} disabled={loading} />
+      {aiDraft && canSelectSender && senderLoad.error && <Alert severity="error" sx={{ mb: 1 }} action={<Button color="inherit" size="small" onClick={() => setSenderRetry(value => value + 1)}>重新加载人员</Button>}>{senderLoad.error}</Alert>}
+      <AiDraftReview draft={aiDraft} onApply={applyAiDraft} onDismiss={dismissAiDraft} disabled={loading || (canSelectSender && senderLoad.key !== senderLoadKey)} />
 
       {/* === 卡片式白色容器，绿色边框 — 与样品信息登记一致 === */}
       <Paper elevation={0} sx={{ p: { xs: 1, sm: 1.5 }, mb: 2, borderRadius: R, border: '2px solid #2e7d32', background: 'linear-gradient(145deg,#ffffff,#f1f8e9)' }}>

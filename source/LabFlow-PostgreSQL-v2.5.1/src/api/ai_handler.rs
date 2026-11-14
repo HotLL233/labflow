@@ -104,10 +104,13 @@ async fn capabilities(
     c.report &= has("workload_summary");
     let p = s.provider(None).ok();
     let speech_enabled = allowed && s.speech_ready();
-    let can_work = c.draft && user.has_permission("entry:workload");
-    let can_aux = c.draft && user.has_permission("entry:auxiliary");
+    let targets = ai_business_service::draft_targets(&user);
+    let can_work = c.draft && targets.contains(&"workload");
+    let can_aux = c.draft && targets.contains(&"auxiliary");
     let can_sample = c.draft
-        && (user.has_permission("sample-info:create") || user.has_permission("entry:sample"));
+        && targets
+            .iter()
+            .any(|target| matches!(*target, "sample_info" | "rd_sample"));
     let settings = &s;
     let model_list = if allowed {
         s.providers
@@ -299,16 +302,19 @@ fn conversation_system(context: &AiChatContext, tools: &[Value], tools_ready: bo
         system.push_str("当前模型尚未通过本次配置的流式工具完整往返测试，旧版非流式工具测试不再作为依据，本次未提供工具。请管理员在“系统管理 → AI 助手”重新执行工具测试。");
     }
     if !context.include_business.unwrap_or(false) {
-        system.push_str("本次尚未允许业务查询，管理员启用业务能力不能代替使用者同意。只能使用本次列表中的程序帮助工具，不可查询业务或主数据、准备业务草稿。请引导用户点击助手中的“选择查询范围”（本次上下文），允许业务查询；区间查询或统计还需选择起止日期，再重新发送问题。");
+        system.push_str("本次尚未允许业务辅助，管理员启用业务能力不能代替使用者同意。只能使用本次列表中的程序帮助工具，不可查询业务或主数据、准备业务草稿。请引导用户点击助手中的“业务授权与范围”，勾选“允许本次会话使用已开放的业务辅助”，复核记录查询、填报信息核对或草稿整理，并将必要信息发送到所选模型服务后重新发送问题。填报草稿及所需主数据核对无需日期，记录查询和工作量总结需确认日期。");
     } else {
-        system.push_str("本次已允许业务查询，仍必须遵循实际工具及当前账号原业务权限。");
+        system.push_str("本次已允许业务辅助，仍必须遵循实际工具及当前账号原业务权限。");
+        if names.contains(&"entry_metadata") && names.contains(&"prepare_entry_draft") {
+            system.push_str("当用户要求填写、起草或整理送样、样品信息或工作量时，主动调用 entry_metadata 读取当前目标的真实字段和完整授权候选；按实验室、项目、方法逐步核对，已明确ID时保留ID并用关键词找剩余候选。候选存在歧义时先向用户询问，不擅自猜测身份。信息足够后必须调用 prepare_entry_draft 生成可带入原表单的草稿卡片，不可只口头表示可以起草或只给填写示例。fields 按 columns.field_path 填写，原生字段放顶层，自定义字段使用真实键放 extra_fields；不得编造ID或静默丢弃用户已提供的信息。填报草稿及所需主数据核对无需日期，记录查询和工作量总结需确认日期。");
+        }
         if tools_ready && !names.iter().any(|name| *name != "program_help") {
             system.push_str("本次未开放业务工具：当前账号原业务权限或管理员能力开关未提供业务能力，请管理员核对对应权限和能力配置。");
         }
         if context.date_from.is_none() || context.date_to.is_none() {
-            system.push_str("本次尚未确认完整查询日期。区间查询和工作量统计需用户点击助手中的“选择查询范围”（本次上下文），选择开始、结束日期后重新发送，不得自行把“最近一周”等文字当成已确认范围。仅 query_records 的正整数 record_id 精确查询可免日期限制；entry_metadata 与草稿无需日期，仍须在本次可用工具及授权内执行。");
+            system.push_str("本次尚未确认完整查询日期。区间查询和工作量统计需用户点击助手中的“业务授权与范围”，选择开始、结束日期后重新发送，不得自行把“最近一周”等文字当成已确认范围。仅 query_records 的正整数 record_id 精确查询可免日期限制；entry_metadata 与草稿无需日期，仍须在本次可用工具及授权内执行。");
         } else {
-            system.push_str("区间查询和统计不得超出本次确认日期；如需扩大范围，请用户点击助手中的“选择查询范围”（本次上下文），调整日期并重新发送。");
+            system.push_str("区间查询和统计不得超出本次确认日期；如需扩大范围，请用户点击助手中的“业务授权与范围”，调整日期并重新发送。");
         }
     }
     system
@@ -586,9 +592,11 @@ mod tests {
         );
         assert!(system.contains(&format!("当前程序版本 {}", env!("CARGO_PKG_VERSION"))));
         assert!(system.contains("本次实际可用工具：program_help。"));
-        assert!(system.contains("本次尚未允许业务查询"));
+        assert!(system.contains("本次尚未允许业务辅助"));
         assert!(system.contains("不能代替使用者同意"));
-        assert!(system.contains("点击助手中的“选择查询范围”（本次上下文）"));
+        assert!(system.contains("点击助手中的“业务授权与范围”"));
+        assert!(system.contains("不可查询业务或主数据、准备业务草稿"));
+        assert!(!system.contains("主动调用 entry_metadata"));
         assert!(system.contains("不能声称程序永久没有查询、分析或填报能力"));
     }
     #[test]
@@ -605,7 +613,10 @@ mod tests {
         ]);
         let system = conversation_system(&context, &tools, true);
         assert!(system.contains("本次实际可用工具：query_records、workload_summary、entry_metadata、prepare_entry_draft。"));
-        assert!(system.contains("本次已允许业务查询"));
+        assert!(system.contains("本次已允许业务辅助"));
+        assert!(system.contains("主动调用 entry_metadata"));
+        assert!(system.contains("候选存在歧义时先向用户询问"));
+        assert!(system.contains("必须调用 prepare_entry_draft 生成可带入原表单的草稿卡片"));
         assert!(system.contains("本次尚未确认完整查询日期"));
         assert!(system.contains("不得自行把“最近一周”等文字当成已确认范围"));
         assert!(system.contains("正整数 record_id 精确查询可免日期限制"));
