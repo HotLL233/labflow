@@ -1,0 +1,3108 @@
+use super::export_data;
+use crate::db::DbPool;
+use crate::error::{AppError, Result};
+use crate::models::{ApiResponse, PaginatedResponse};
+use crate::service::authz_service::{self, AuthContext};
+use axum::{
+    extract::{Query, State},
+    http::{header, HeaderMap},
+    response::{IntoResponse, Response},
+    routing::get,
+    Json, Router,
+};
+use chrono::{Datelike, NaiveDate};
+use postgres_compat::{Connection, Row};
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashMap};
+
+#[derive(Default, Deserialize)]
+pub struct ReportQuery {
+    pub start: Option<String>,
+    pub end: Option<String>,
+    pub view: Option<String>,
+    pub subject_user_id: Option<i64>,
+    pub division_id: Option<i64>,
+    pub group_id: Option<i64>,
+    pub project_id: Option<i64>,
+    pub method_id: Option<i64>,
+    pub instrument_id: Option<i64>,
+    pub method_key: Option<String>,
+    pub instrument_key: Option<String>,
+    pub detection_division_ids: Option<String>,
+    pub sending_division_ids: Option<String>,
+    #[serde(rename = "type")]
+    pub type_name: Option<String>,
+    pub source: Option<String>,
+    pub kind: Option<String>,
+    pub auxiliary_category: Option<String>,
+    pub auxiliary_area: Option<String>,
+    pub auxiliary_key: Option<String>,
+    pub compact_type_summary: Option<bool>,
+    pub include_people: Option<bool>,
+    pub group_by: Option<String>,
+    pub include_pending_ownership: Option<bool>,
+    pub include_zero_users: Option<bool>,
+    pub page: Option<i64>,
+    pub page_size: Option<i64>,
+}
+
+#[derive(Default, Serialize)]
+pub struct Metrics {
+    detection_quantity: i64,
+    detection_workload: f64,
+    auxiliary_quantity: i64,
+    auxiliary_workload: f64,
+    total_workload: f64,
+    record_count: i64,
+}
+
+#[derive(Serialize)]
+struct PersonRow {
+    user_id: Option<i64>,
+    user_name: String,
+    #[serde(flatten)]
+    metrics: Metrics,
+}
+
+#[derive(Serialize)]
+struct MatrixRow {
+    user_id: Option<i64>,
+    user_name: String,
+    #[serde(rename = "type")]
+    type_name: String,
+    #[serde(flatten)]
+    metrics: Metrics,
+}
+
+#[derive(Serialize)]
+struct BreakdownRow {
+    key: String,
+    name: String,
+    #[serde(flatten)]
+    metrics: Metrics,
+}
+
+#[derive(Serialize)]
+struct TrendRow {
+    period: String,
+    #[serde(flatten)]
+    metrics: Metrics,
+}
+
+#[derive(Serialize)]
+struct DetailRow {
+    id: i64,
+    origin: String,
+    kind: String,
+    user_id: Option<i64>,
+    user_name: String,
+    recorded_at: String,
+    department: String,
+    lab: String,
+    project: String,
+    method: String,
+    instrument: String,
+    #[serde(rename = "type")]
+    type_name: String,
+    source: String,
+    quantity: i64,
+    coefficient: f64,
+    workload: f64,
+    source_record_id: Option<i64>,
+    ownership_status: String,
+    auxiliary_key: String,
+    auxiliary_category: String,
+    auxiliary_area: String,
+}
+
+#[derive(Serialize)]
+struct PersonRecordRow {
+    #[serde(flatten)]
+    detail: DetailRow,
+    normal_record: Option<crate::models::record::RecordResponse>,
+    auxiliary_maintenance: Option<super::auxiliary_handler::RecordMaintenance>,
+    maintenance_target: Option<crate::models::record::RecordMaintenanceTarget>,
+    notes: String,
+    status: String,
+    created_by_name: String,
+}
+
+#[derive(Serialize)]
+struct Details {
+    page: i64,
+    page_size: i64,
+    total: i64,
+    items: Vec<DetailRow>,
+}
+
+#[derive(Serialize)]
+struct ReportScope {
+    view: String,
+    can_view_scope: bool,
+    subject_user_id: Option<i64>,
+    allowed_division_ids: Option<Vec<i64>>,
+}
+
+#[derive(Serialize)]
+struct Report {
+    scope: ReportScope,
+    summary: Metrics,
+    people: Vec<PersonRow>,
+    matrix: Vec<MatrixRow>,
+    breakdowns: BTreeMap<String, Vec<BreakdownRow>>,
+    trend: Vec<TrendRow>,
+    details: Details,
+}
+
+pub fn router(pool: DbPool) -> Router {
+    Router::new()
+        .route("/api/stats/workload-report", get(report))
+        .route("/api/stats/workload-report.xlsx", get(export_report))
+        .route("/api/stats/person-records", get(person_records))
+        .with_state(pool)
+}
+
+pub(crate) fn scoped_subject(
+    ctx: &AuthContext,
+    requested: Option<i64>,
+    mine: bool,
+) -> Result<Option<i64>> {
+    if requested.is_some_and(|id| id <= 0) {
+        return Err(AppError::Validation("人员筛选值无效".into()));
+    }
+    if mine || !ctx.can_view_workload_scope() {
+        if requested.is_some_and(|id| id != ctx.user.id) {
+            return Err(AppError::Forbidden(
+                "当前账号只能查看自己的工作量；查看所选人员需要授权范围统计权限".into(),
+            ));
+        }
+        return Ok(Some(ctx.user.id));
+    }
+    Ok(requested)
+}
+
+fn scope(
+    pool: &DbPool,
+    headers: &HeaderMap,
+    q: &ReportQuery,
+    export: bool,
+) -> Result<(AuthContext, ReportScope)> {
+    let ctx = authz_service::authenticate(pool, headers)?;
+    authz_service::require_permission(&ctx, "stats:portal:workload")?;
+    if export {
+        authz_service::require_permission(&ctx, "stats:workload:export")?;
+    }
+    let mine = match q.view.as_deref().unwrap_or("mine") {
+        "mine" => true,
+        "scope" if ctx.can_view_workload_scope() => false,
+        "scope" => return Err(AppError::Forbidden("没有授权范围统计权限".into())),
+        _ => return Err(AppError::Validation("统计视图无效".into())),
+    };
+    let scope = ReportScope {
+        view: if mine { "mine" } else { "scope" }.into(),
+        can_view_scope: ctx.can_view_workload_scope(),
+        subject_user_id: scoped_subject(&ctx, q.subject_user_id, mine)?,
+        allowed_division_ids: authz_service::work_allowed_division_ids(pool, &ctx)?,
+    };
+    Ok((ctx, scope))
+}
+
+fn dates(q: &ReportQuery) -> Result<(String, String)> {
+    let now = chrono::Local::now().date_naive();
+    let start = match q.start.as_deref() {
+        Some(value) => NaiveDate::parse_from_str(value, "%Y-%m-%d")
+            .map_err(|_| AppError::Validation("开始日期无效".into()))?,
+        None => now.with_day(1).unwrap(),
+    };
+    let end = match q.end.as_deref() {
+        Some(value) => NaiveDate::parse_from_str(value, "%Y-%m-%d")
+            .map_err(|_| AppError::Validation("结束日期无效".into()))?,
+        None => now,
+    };
+    if start > end {
+        return Err(AppError::Validation("开始日期不能晚于结束日期".into()));
+    }
+    let next = end
+        .succ_opt()
+        .ok_or_else(|| AppError::Validation("结束日期超出范围".into()))?;
+    Ok((format!("{start}T00:00:00"), format!("{next}T00:00:00")))
+}
+
+// Both the screen and workbook query this authorized, one-row-per-record set.
+fn report_cte(
+    conn: &Connection,
+    q: &ReportQuery,
+    scope: &ReportScope,
+    viewer_user_id: i64,
+    created_by_user_id: Option<i64>,
+    personnel_page: bool,
+) -> Result<(String, Vec<String>)> {
+    let (start, end) = if personnel_page {
+        let (start, end) = crate::repo::record_repo::work_record_date_bounds(
+            q.start.as_deref(),
+            q.end.as_deref(),
+        )?;
+        (
+            start.unwrap_or_else(|| "-infinity".into()),
+            end.unwrap_or_else(|| "infinity".into()),
+        )
+    } else {
+        dates(q)?
+    };
+    let work_time = if personnel_page {
+        "CAST(labflow_rd_timestamp_or_null(wr.recorded_at) AS TIMESTAMPTZ)"
+    } else {
+        "CAST(wr.recorded_at AS TIMESTAMPTZ)"
+    };
+    let start_bound = "CAST(CAST(?1 AS TEXT) AS TIMESTAMPTZ)";
+    let end_bound = "CAST(CAST(?2 AS TEXT) AS TIMESTAMPTZ)";
+    let end_operator = if personnel_page { "<=" } else { "<" };
+    let categories = crate::repo::settings_repo::workload_auxiliary_categories_on_conn(conn)?;
+    let mut params = vec![start, end, serde_json::json!(categories).to_string()];
+    let department = authz_service::work_record_authorization_division_sql("wr");
+    let auxiliary_record = export_data::legacy_auxiliary_record_sql("wr");
+    let work_scope = match scope.allowed_division_ids.as_deref() {
+        None => String::new(),
+        Some([]) => " AND FALSE".into(),
+        Some(ids) => format!(
+            " AND {department} IN ({})",
+            ids.iter().map(i64::to_string).collect::<Vec<_>>().join(",")
+        ),
+    };
+    let work_subject = scope
+        .subject_user_id
+        .map(|id| format!(" AND wr.subject_user_id={id}"))
+        .unwrap_or_default();
+    let aux_subject = scope
+        .subject_user_id
+        .map(|id| format!(" AND awr.user_id={id}"))
+        .unwrap_or_default();
+    let work_creator = created_by_user_id
+        .map(|id| format!(" AND wr.created_by_user_id={id}"))
+        .unwrap_or_default();
+    let auxiliary_creator = created_by_user_id
+        .map(|id| format!(" AND awr.created_by={id}"))
+        .unwrap_or_default();
+    let pending = if q.include_pending_ownership.unwrap_or(false) {
+        ""
+    } else {
+        " AND COALESCE(wr.ownership_status,'confirmed')<>'pending_confirmation'"
+    };
+    let aux_scope = export_data::auxiliary_scope_sql(
+        "awr",
+        scope.allowed_division_ids.as_deref(),
+        Some(viewer_user_id),
+    );
+    let mut filters = Vec::new();
+    if let Some(kind) = q.kind.as_deref() {
+        if kind != "detection" && kind != "auxiliary" {
+            return Err(AppError::Validation("工作类别筛选值无效".into()));
+        }
+        params.push(kind.into());
+        filters.push(format!("kind=?{}", params.len()));
+    }
+    for (column, raw, label) in [
+        (
+            "detection_department_id",
+            q.detection_division_ids.as_deref(),
+            "检测部门",
+        ),
+        (
+            "sending_department_id",
+            q.sending_division_ids.as_deref(),
+            "送样部门",
+        ),
+    ] {
+        if let Some(ids) = crate::repo::record_repo::parse_dimension_ids(raw, label)? {
+            if ids.is_empty() || ids.iter().any(|id| *id <= 0) {
+                return Err(AppError::Validation(format!("{label}筛选值无效")));
+            }
+            let values = ids.iter().map(i64::to_string).collect::<Vec<_>>().join(",");
+            let predicate = format!("{column} IN ({values})");
+            // Sending filters retain public auxiliary work, just like the existing personnel report.
+            filters.push(if column == "sending_department_id" {
+                format!("(kind='auxiliary' OR {predicate})")
+            } else {
+                predicate
+            });
+        }
+    }
+    for (column, value) in [
+        ("department_id", q.division_id),
+        ("lab_id", q.group_id),
+        ("project_id", q.project_id),
+        ("method_id", q.method_id),
+        ("instrument_id", q.instrument_id),
+    ] {
+        if let Some(id) = value {
+            if id <= 0 {
+                return Err(AppError::Validation("分类筛选值无效".into()));
+            }
+            // Auxiliary work has no laboratory/project/method/instrument allocation.
+            filters.push(if column == "department_id" {
+                format!("{column}={id}")
+            } else {
+                format!("(kind='auxiliary' OR {column}={id})")
+            });
+        }
+    }
+    for (column, value) in [
+        ("type_name", q.type_name.as_deref()),
+        ("source", q.source.as_deref()),
+        ("auxiliary_category", q.auxiliary_category.as_deref()),
+        ("auxiliary_area", q.auxiliary_area.as_deref()),
+        ("auxiliary_key", q.auxiliary_key.as_deref()),
+    ] {
+        if let Some(value) = value.filter(|value| !value.is_empty()) {
+            params.push(value.into());
+            filters.push(format!("{column}=?{}", params.len()));
+        }
+    }
+    for (id, name, value) in [
+        ("method_id", "method", q.method_key.as_deref()),
+        ("instrument_id", "instrument", q.instrument_key.as_deref()),
+    ] {
+        if let Some(value) = value.filter(|value| !value.is_empty()) {
+            params.push(value.into());
+            filters.push(format!(
+                "COALESCE(CAST({id} AS TEXT),'legacy:'||{name})=?{}",
+                params.len()
+            ));
+        }
+    }
+    let filter = if filters.is_empty() {
+        "TRUE".into()
+    } else {
+        filters.join(" AND ")
+    };
+    Ok((
+        format!(
+            r#"WITH auxiliary_categories AS (SELECT CAST(CAST(?3 AS TEXT) AS JSONB) AS value), raw_records AS (
+        SELECT wr.id, CASE WHEN {auxiliary_record} THEN 'auxiliary' ELSE 'detection' END AS kind,
+          wr.subject_user_id AS user_id, COALESCE(u.username, '历史未绑定：' || wr.user_name) AS user_name,
+          CASE WHEN wr.subject_user_id IS NULL THEN wr.user_name ELSE '' END AS legacy_name,
+          {work_time} AS recorded_at,
+          {department} AS department_id,
+          wr.detection_division_id AS detection_department_id,
+          {sending_department} AS sending_department_id,
+          COALESCE(NULLIF(wr.detection_division_name_snapshot,''),d.name,'未绑定部门') AS department,
+          CASE WHEN {auxiliary_record} THEN NULL::BIGINT ELSE wr.group_id END AS lab_id,
+          CASE WHEN {auxiliary_record} THEN '' ELSE COALESCE(NULLIF(wr.lab_name_snapshot,''),g.name,'未绑定实验室') END AS lab,
+          CASE WHEN {auxiliary_record} THEN NULL::BIGINT ELSE wr.project_id END AS project_id,
+          CASE WHEN {auxiliary_record} THEN '' ELSE COALESCE(NULLIF(wr.project_name_snapshot,''),p.name,'未绑定项目') END AS project,
+          wr.method_id, COALESCE(NULLIF(linked_aux.auxiliary_work_name_snapshot,''),NULLIF(wr.method_name_snapshot,''),m.name,'未绑定方法') AS method,
+          CASE WHEN {auxiliary_record} THEN NULL::BIGINT ELSE wr.instrument_id_snapshot END AS instrument_id,
+          CASE WHEN {auxiliary_record} THEN '' ELSE COALESCE(NULLIF(wr.instrument_code_snapshot,''),i.code,'未绑定仪器') END AS instrument,
+          CASE WHEN {auxiliary_record} THEN '辅助工作'
+            ELSE COALESCE(NULLIF(wr.detection_type_snapshot,''),(SELECT string_agg(DISTINCT mt.name, '、' ORDER BY mt.name) FROM method_type_links ml JOIN method_types mt ON mt.id=ml.method_type_id WHERE ml.method_id=wr.method_id),NULLIF(wr.instrument_type_snapshot,''),'未分类') END AS type_name,
+          CASE WHEN {auxiliary_record} THEN 'auxiliary_work' ELSE COALESCE(NULLIF(wr.source_type,''),'analysis') END AS source,
+          wr.quantity, COALESCE(wr.coefficient_snapshot,1.0)::DOUBLE PRECISION AS coefficient,
+          (wr.quantity*COALESCE(wr.coefficient_snapshot,1.0))::DOUBLE PRECISION AS workload,
+          wr.source_record_id, COALESCE(wr.ownership_status,'confirmed') AS ownership_status,
+          CASE WHEN NOT {auxiliary_record} THEN ''
+            WHEN legacy_aux.id IS NOT NULL THEN 'item:'||CAST(legacy_aux.auxiliary_work_item_id AS TEXT)
+            WHEN linked_aux.id IS NOT NULL THEN COALESCE('item:'||CAST(linked_aux.auxiliary_work_item_id AS TEXT),'legacy:item:'||linked_aux.auxiliary_work_name_snapshot)
+            ELSE COALESCE('method:'||CAST(wr.method_id AS TEXT),'legacy:method:'||COALESCE(NULLIF(wr.method_name_snapshot,''),'未绑定方法')) END AS auxiliary_key,
+          CASE WHEN NOT {auxiliary_record} THEN ''
+            WHEN legacy_aux.id IS NOT NULL THEN COALESCE(NULLIF(legacy_aux.category_snapshot,''),'未分类')
+            ELSE COALESCE(NULLIF(wr.auxiliary_type_snapshot,''),NULLIF(linked_aux.auxiliary_type_snapshot,''),
+              NULLIF((SELECT value FROM auxiliary_categories)->>CASE WHEN linked_aux.id IS NOT NULL THEN 'item:'||CAST(linked_aux.auxiliary_work_item_id AS TEXT) ELSE 'method:'||CAST(wr.method_id AS TEXT) END,''),'未分类') END AS auxiliary_category,
+          CASE WHEN NOT {auxiliary_record} THEN ''
+            WHEN legacy_aux.id IS NOT NULL THEN COALESCE(NULLIF(legacy_aux.area_name_snapshot,''),'未分区')
+            ELSE COALESCE(NULLIF(linked_aux.area_name_snapshot,''),'未分区') END AS auxiliary_area,
+          CASE WHEN NOT {auxiliary_record} THEN '' ELSE COALESCE(mapped_item.name,linked_item.name,
+            NULLIF(linked_aux.auxiliary_work_name_snapshot,''),NULLIF(wr.method_name_snapshot,''),m.name,'未绑定辅助事项') END AS auxiliary_name,
+          'work_record' AS origin
+        FROM work_records wr LEFT JOIN users u ON u.id=wr.subject_user_id LEFT JOIN projects p ON p.id=wr.project_id
+          LEFT JOIN project_groups g ON g.id=wr.group_id LEFT JOIN divisions d ON d.id={department}
+          LEFT JOIN methods m ON m.id=wr.method_id LEFT JOIN instruments i ON i.id=wr.instrument_id_snapshot
+          LEFT JOIN auxiliary_work_records linked_aux ON wr.source_type='auxiliary_work' AND wr.source_record_id=linked_aux.id
+          LEFT JOIN legacy_auxiliary_links legacy_aux ON legacy_aux.source_table='work_records' AND legacy_aux.source_record_id=wr.id AND legacy_aux.revoked_at IS NULL
+          LEFT JOIN auxiliary_work_items mapped_item ON mapped_item.id=legacy_aux.auxiliary_work_item_id
+          LEFT JOIN auxiliary_work_items linked_item ON linked_item.id=linked_aux.auxiliary_work_item_id
+        WHERE wr.deleted_at IS NULL AND {work_time}>={start_bound}
+          AND {work_time}{end_operator}{end_bound}{work_scope}{work_subject}{work_creator}{pending}
+        UNION ALL
+        SELECT awr.id, 'auxiliary', awr.user_id, COALESCE(u.username,'历史未绑定：' || awr.user_name_snapshot),
+          CASE WHEN awr.user_id IS NULL THEN awr.user_name_snapshot ELSE '' END, awr.recorded_at,
+          awr.detection_division_id, awr.detection_division_id, NULL::BIGINT, COALESCE(NULLIF(awr.detection_division_name_snapshot,''),d.name,'历史未归属部门'),
+          NULL::BIGINT, '', NULL::BIGINT, '', NULL::BIGINT, awr.auxiliary_work_name_snapshot,
+          NULL::BIGINT, '', '辅助工作', 'auxiliary_work', awr.quantity, awr.coefficient_snapshot,
+          (awr.quantity*awr.coefficient_snapshot)::DOUBLE PRECISION, NULL::BIGINT, 'confirmed',
+          COALESCE('item:'||CAST(awr.auxiliary_work_item_id AS TEXT),'legacy:item:'||awr.auxiliary_work_name_snapshot),
+          COALESCE(NULLIF(awr.auxiliary_type_snapshot,''),NULLIF((SELECT value FROM auxiliary_categories)->>('item:'||CAST(awr.auxiliary_work_item_id AS TEXT)),''),'未分类'),
+          COALESCE(NULLIF(awr.area_name_snapshot,''),'未分区'),
+          COALESCE(report_item.name,awr.auxiliary_work_name_snapshot),
+          'auxiliary_record'
+        FROM auxiliary_work_records awr LEFT JOIN users u ON u.id=awr.user_id LEFT JOIN divisions d ON d.id=awr.detection_division_id
+          LEFT JOIN auxiliary_work_items report_item ON report_item.id=awr.auxiliary_work_item_id
+        WHERE awr.deleted_at IS NULL AND awr.recorded_at>={start_bound} AND awr.recorded_at{end_operator}{end_bound}{aux_subject}{aux_scope}{auxiliary_creator}
+      ), records AS (SELECT * FROM raw_records WHERE {filter}) "#,
+            sending_department = authz_service::work_record_sending_division_sql("wr")
+        ),
+        params,
+    ))
+}
+
+const METRICS: &str = "COALESCE(SUM(quantity) FILTER(WHERE kind='detection'),0)::BIGINT, COALESCE(SUM(workload) FILTER(WHERE kind='detection'),0)::DOUBLE PRECISION, COALESCE(SUM(quantity) FILTER(WHERE kind='auxiliary'),0)::BIGINT, COALESCE(SUM(workload) FILTER(WHERE kind='auxiliary'),0)::DOUBLE PRECISION, COALESCE(SUM(workload),0)::DOUBLE PRECISION, COUNT(*)::BIGINT";
+
+fn metrics(row: &Row, offset: usize) -> postgres_compat::Result<Metrics> {
+    Ok(Metrics {
+        detection_quantity: row.get(offset)?,
+        detection_workload: row.get(offset + 1)?,
+        auxiliary_quantity: row.get(offset + 2)?,
+        auxiliary_workload: row.get(offset + 3)?,
+        total_workload: row.get(offset + 4)?,
+        record_count: row.get(offset + 5)?,
+    })
+}
+
+fn rows<T>(
+    conn: &Connection,
+    sql: &str,
+    params: &[String],
+    map: impl FnMut(&Row) -> postgres_compat::Result<T>,
+) -> Result<Vec<T>> {
+    let mut stmt = conn.prepare(sql)?;
+    let data = stmt.query_map(postgres_compat::params_from_iter(params.iter()), map)?;
+    Ok(data.collect::<std::result::Result<Vec<_>, _>>()?)
+}
+
+fn details(
+    conn: &Connection,
+    cte: &str,
+    params: &[String],
+    limit: i64,
+    offset: i64,
+) -> Result<Vec<DetailRow>> {
+    rows(conn, &format!("{cte} SELECT id,kind,user_id,user_name,CAST(recorded_at AS TEXT),department,lab,project,method,instrument,type_name,source,quantity,coefficient,workload,source_record_id,ownership_status,auxiliary_key,auxiliary_category,auxiliary_area,origin FROM records ORDER BY recorded_at DESC,origin,id DESC LIMIT {limit} OFFSET {offset}"), params,
+      |row| Ok(DetailRow { id: row.get(0)?, origin: row.get(20)?, kind: row.get(1)?, user_id: row.get(2)?, user_name: row.get(3)?, recorded_at: row.get(4)?, department: row.get(5)?, lab: row.get(6)?, project: row.get(7)?, method: row.get(8)?, instrument: row.get(9)?, type_name: row.get(10)?, source: row.get(11)?, quantity: row.get(12)?, coefficient: row.get(13)?, workload: row.get(14)?, source_record_id: row.get(15)?, ownership_status: row.get(16)?, auxiliary_key: row.get(17)?, auxiliary_category: row.get(18)?, auxiliary_area: row.get(19)? }))
+}
+
+fn query_report(
+    conn: &Connection,
+    q: &ReportQuery,
+    scope: ReportScope,
+    viewer: i64,
+) -> Result<Report> {
+    let (cte, params) = report_cte(conn, q, &scope, viewer, None, false)?;
+    let summary = rows(
+        conn,
+        &format!("{cte} SELECT {METRICS} FROM records"),
+        &params,
+        |r| metrics(r, 0),
+    )?
+    .remove(0);
+    let compact = q.compact_type_summary.unwrap_or(false);
+    let include_people = !compact || q.include_people.unwrap_or(false);
+    let mut people = if !include_people {
+        Vec::new()
+    } else {
+        rows(conn, &format!("{cte} SELECT user_id,MAX(user_name),{METRICS} FROM records GROUP BY user_id,legacy_name ORDER BY 7 DESC,2"), &params, |r| Ok(PersonRow { user_id: r.get(0)?, user_name: r.get(1)?, metrics: metrics(r,2)? }))?
+    };
+    if include_people && q.include_zero_users.unwrap_or(false) {
+        let mut user_scope = "u.is_active=1 AND u.deleted_at IS NULL".to_string();
+        if let Some(id) = scope.subject_user_id {
+            user_scope.push_str(&format!(" AND u.id={id}"));
+        }
+        if let Some(ids) = scope.allowed_division_ids.as_deref() {
+            if ids.is_empty() {
+                user_scope.push_str(" AND FALSE");
+            } else {
+                let ids = ids.iter().map(i64::to_string).collect::<Vec<_>>().join(",");
+                user_scope.push_str(&format!(" AND (u.division_id IN ({ids}) OR EXISTS(SELECT 1 FROM user_divisions ud WHERE ud.user_id=u.id AND ud.division_id IN ({ids})))"));
+            }
+        }
+        if let Some(id) = q.division_id {
+            user_scope.push_str(&format!(" AND (u.division_id={id} OR EXISTS(SELECT 1 FROM user_divisions ud WHERE ud.user_id=u.id AND ud.division_id={id}))"));
+        }
+        let zero_users = rows(
+            conn,
+            &format!("SELECT u.id,u.username FROM users u WHERE {user_scope} ORDER BY u.username"),
+            &[],
+            |r| Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?)),
+        )?;
+        for (id, name) in zero_users {
+            if !people.iter().any(|p| p.user_id == Some(id)) {
+                people.push(PersonRow {
+                    user_id: Some(id),
+                    user_name: name,
+                    metrics: Metrics::default(),
+                });
+            }
+        }
+    }
+    let matrix = if compact {
+        Vec::new()
+    } else {
+        rows(conn, &format!("{cte} SELECT user_id,MAX(user_name),type_name,{METRICS} FROM records GROUP BY user_id,legacy_name,type_name ORDER BY 2,3"), &params, |r| Ok(MatrixRow { user_id:r.get(0)?,user_name:r.get(1)?,type_name:r.get(2)?,metrics:metrics(r,3)? }))?
+    };
+    let mut breakdowns = BTreeMap::new();
+    for (key, id, name) in [
+        ("department", "department_id", "department"),
+        ("lab", "lab_id", "lab"),
+        ("project", "project_id", "project"),
+        ("method", "method_id", "method"),
+        ("instrument", "instrument_id", "instrument"),
+        ("source", "source", "source"),
+        ("type", "type_name", "type_name"),
+    ] {
+        let only_detection = if key == "source" || key == "type" {
+            ""
+        } else {
+            " WHERE kind='detection'"
+        };
+        let grouping = if key == "source" || key == "type" {
+            id.to_string()
+        } else {
+            format!("{id},CASE WHEN {id} IS NULL THEN {name} END")
+        };
+        let data=rows(conn,&format!("{cte} SELECT COALESCE(CAST({id} AS TEXT),'legacy:'||MAX({name})),MAX({name}),{METRICS} FROM records{only_detection} GROUP BY {grouping} ORDER BY 7 DESC,2"),&params,|r| Ok(BreakdownRow { key:r.get(0)?,name:r.get(1)?,metrics:metrics(r,2)? }))?;
+        breakdowns.insert(key.to_string(), data);
+    }
+    for (key, id, name) in [
+        (
+            "auxiliary_category",
+            "auxiliary_category",
+            "auxiliary_category",
+        ),
+        ("auxiliary_method", "auxiliary_key", "auxiliary_name"),
+        ("auxiliary_area", "auxiliary_area", "auxiliary_area"),
+    ] {
+        let data = rows(conn, &format!("{cte} SELECT {id},MAX({name}),{METRICS} FROM records WHERE kind='auxiliary' GROUP BY {id} ORDER BY 7 DESC,2"), &params,
+            |r| Ok(BreakdownRow { key:r.get(0)?, name:r.get(1)?, metrics:metrics(r,2)? }))?;
+        breakdowns.insert(key.to_string(), data);
+    }
+    let period = match q.group_by.as_deref().unwrap_or("day") {
+        "day" => "YYYY-MM-DD",
+        "week" => "IYYY-\"W\"IW",
+        "month" => "YYYY-MM",
+        _ => return Err(AppError::Validation("趋势周期无效".into())),
+    };
+    let trend = if compact {
+        Vec::new()
+    } else {
+        rows(conn,&format!("{cte} SELECT to_char(recorded_at,'{period}') AS period,{METRICS} FROM records GROUP BY period ORDER BY period"),&params,|r| Ok(TrendRow { period:r.get(0)?,metrics:metrics(r,1)? }))?
+    };
+    let page = q.page.unwrap_or(1).max(1);
+    let page_size = q.page_size.unwrap_or(50).clamp(1, 200);
+    let offset = (page - 1)
+        .checked_mul(page_size)
+        .ok_or_else(|| AppError::Validation("页码超出范围".into()))?;
+    let items = details(conn, &cte, &params, page_size, offset)?;
+    let total = summary.record_count;
+    Ok(Report {
+        scope,
+        summary,
+        people,
+        matrix,
+        breakdowns,
+        trend,
+        details: Details {
+            page,
+            page_size,
+            total,
+            items,
+        },
+    })
+}
+
+async fn report(
+    State(pool): State<DbPool>,
+    headers: HeaderMap,
+    Query(q): Query<ReportQuery>,
+) -> Result<Json<ApiResponse<Report>>> {
+    let (ctx, scope) = scope(&pool, &headers, &q, false)?;
+    let conn = pool.get()?;
+    let tx = conn.unchecked_transaction()?;
+    tx.execute_batch("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")?;
+    let report = query_report(&tx, &q, scope, ctx.user.id)?;
+    Ok(Json(ApiResponse::ok(report)))
+}
+
+fn person_record_scope(
+    pool: &DbPool,
+    ctx: &AuthContext,
+    q: &ReportQuery,
+) -> Result<(ReportScope, Option<i64>)> {
+    authz_service::require_permission(ctx, "stats:portal:workload")?;
+    authz_service::require_permission(ctx, "stats:workload:user-log")?;
+    if ctx.is_analysis_public_account() {
+        authz_service::require_permission(ctx, "records:work:portal-scoped")?;
+    }
+    if q.subject_user_id.is_some_and(|id| id <= 0) {
+        return Err(AppError::Validation("人员筛选值无效".into()));
+    }
+    let record_scope = ctx.workload_scope();
+    let subject = match record_scope {
+        authz_service::RecordScope::Global
+        | authz_service::RecordScope::AnalysisAll
+        | authz_service::RecordScope::PublicCreated => q.subject_user_id,
+        _ => {
+            if q.subject_user_id.is_some_and(|id| id != ctx.user.id) {
+                return Err(AppError::Forbidden(
+                    "当前账号只能查看自己的工作量记录".into(),
+                ));
+            }
+            Some(ctx.user.id)
+        }
+    };
+    Ok((
+        ReportScope {
+            view: if ctx.can_view_workload_scope() {
+                "scope"
+            } else {
+                "mine"
+            }
+            .into(),
+            can_view_scope: ctx.can_view_workload_scope(),
+            subject_user_id: subject,
+            allowed_division_ids: authz_service::work_allowed_division_ids(pool, ctx)?,
+        },
+        matches!(record_scope, authz_service::RecordScope::PublicCreated).then_some(ctx.user.id),
+    ))
+}
+
+fn query_person_records(
+    conn: &Connection,
+    q: &ReportQuery,
+    scope: &ReportScope,
+    viewer: i64,
+    created_by: Option<i64>,
+) -> Result<PaginatedResponse<PersonRecordRow>> {
+    let page = q.page.unwrap_or(1).max(1);
+    let page_size = q.page_size.unwrap_or(50).clamp(1, 500);
+    let offset = (page - 1)
+        .checked_mul(page_size)
+        .ok_or_else(|| AppError::Validation("页码超出范围".into()))?;
+    let (cte, params) = report_cte(conn, q, scope, viewer, created_by, true)?;
+    let total = conn.query_row(
+        &format!("{cte} SELECT COUNT(*) FROM records"),
+        postgres_compat::params_from_iter(params.iter()),
+        |row| row.get(0),
+    )?;
+    let detail = details(conn, &cte, &params, page_size, offset)?;
+    let mut metadata = person_record_metadata(conn, &detail)?;
+    let ids = detail
+        .iter()
+        .filter(|record| record.origin == "work_record")
+        .map(|record| record.id)
+        .collect::<Vec<_>>();
+    let mut normal_records = crate::repo::record_repo::get_by_ids_on_conn(conn, &ids)?
+        .into_iter()
+        .map(|record| (record.id, record))
+        .collect::<HashMap<_, _>>();
+    let items = detail
+        .into_iter()
+        .map(|detail| {
+            let (notes, status, created_by_name) = metadata
+                .remove(&(detail.origin.clone(), detail.id))
+                .ok_or_else(|| AppError::Internal("人员工作记录的只读信息缺失".into()))?;
+            let normal_record = if detail.origin == "work_record" {
+                normal_records.remove(&detail.id)
+            } else {
+                None
+            };
+            Ok(PersonRecordRow {
+                detail,
+                normal_record,
+                auxiliary_maintenance: None,
+                maintenance_target: None,
+                notes,
+                status,
+                created_by_name,
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+    Ok(PaginatedResponse {
+        items,
+        total,
+        page,
+        page_size,
+    })
+}
+
+fn attach_auxiliary_maintenance(
+    conn: &Connection,
+    ctx: &AuthContext,
+    divisions: Option<&[i64]>,
+    page: &mut PaginatedResponse<PersonRecordRow>,
+) -> Result<()> {
+    let ids = page
+        .items
+        .iter()
+        .filter(|row| row.detail.origin == "auxiliary_record")
+        .map(|row| row.detail.id)
+        .collect::<Vec<_>>();
+    let mut maintenance =
+        super::auxiliary_handler::record_maintenance_on_conn(conn, ctx, divisions, &ids)?;
+    let work_ids = page
+        .items
+        .iter()
+        .filter(|row| row.detail.kind == "auxiliary" && row.detail.origin == "work_record")
+        .map(|row| row.detail.id)
+        .collect::<Vec<_>>();
+    let mut work_targets = super::record_handler::work_record_maintenance_targets_on_conn(
+        conn, ctx, divisions, &work_ids,
+    )?;
+    for row in &mut page.items {
+        row.auxiliary_maintenance = if row.detail.origin == "auxiliary_record" {
+            maintenance.remove(&row.detail.id)
+        } else {
+            None
+        };
+        row.maintenance_target = if row.detail.kind != "auxiliary" {
+            None
+        } else if row.detail.origin == "work_record" {
+            work_targets.remove(&row.detail.id)
+        } else {
+            row.auxiliary_maintenance.as_ref().map(|maintenance| {
+                crate::models::record::RecordMaintenanceTarget {
+                    origin: "auxiliary_record",
+                    id: row.detail.id,
+                    revision: maintenance.updated_at.clone(),
+                    can_edit: maintenance.can_edit,
+                    can_delete: maintenance.can_delete,
+                }
+            })
+        };
+    }
+    Ok(())
+}
+
+fn person_record_metadata(
+    conn: &Connection,
+    records: &[DetailRow],
+) -> Result<HashMap<(String, i64), (String, String, String)>> {
+    if records.is_empty() {
+        return Ok(HashMap::new());
+    }
+    let mut params = Vec::with_capacity(records.len() * 2);
+    let selected = records
+        .iter()
+        .map(|record| {
+            params.push(record.origin.clone());
+            let origin = params.len();
+            params.push(record.id.to_string());
+            format!(
+                "(CAST(?{origin} AS TEXT),CAST(CAST(?{} AS TEXT) AS BIGINT))",
+                params.len()
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    let sql=format!(
+        "WITH selected_records(origin,id) AS (VALUES {selected})
+         SELECT selected.origin,wr.id,
+           COALESCE(NULLIF(labflow_try_jsonb(wr.extra_fields)->>'source_notes',''),wr.extra_info,''),
+           '有效'::TEXT,COALESCE(NULLIF(wr.created_by_username_snapshot,''),u.username,'')
+         FROM selected_records selected JOIN work_records wr ON selected.origin='work_record' AND wr.id=selected.id
+           LEFT JOIN users u ON u.id=wr.created_by_user_id
+         UNION ALL
+         SELECT selected.origin,ar.id,COALESCE(ar.notes,''),COALESCE(ar.status,'有效'),COALESCE(u.username,'')
+         FROM selected_records selected JOIN auxiliary_work_records ar ON selected.origin='auxiliary_record' AND ar.id=selected.id
+           LEFT JOIN users u ON u.id=ar.created_by"
+    );
+    let mut stmt = conn.prepare(&sql)?;
+    let rows = stmt.query_map(postgres_compat::params_from_iter(params.iter()), |row| {
+        Ok((
+            (row.get::<_, String>(0)?, row.get::<_, i64>(1)?),
+            (
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
+            ),
+        ))
+    })?;
+    Ok(rows.collect::<postgres_compat::Result<HashMap<_, _>>>()?)
+}
+
+async fn person_records(
+    State(pool): State<DbPool>,
+    headers: HeaderMap,
+    Query(q): Query<ReportQuery>,
+) -> Result<Json<ApiResponse<PaginatedResponse<PersonRecordRow>>>> {
+    tokio::task::spawn_blocking(move || {
+        let ctx = authz_service::authenticate(&pool, &headers)?;
+        let (scope, created_by) = person_record_scope(&pool, &ctx, &q)?;
+        let conn = pool.get()?;
+        let tx = conn.unchecked_transaction()?;
+        tx.execute_batch("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")?;
+        let mut page = query_person_records(&tx, &q, &scope, ctx.user.id, created_by)?;
+        attach_auxiliary_maintenance(&tx, &ctx, scope.allowed_division_ids.as_deref(), &mut page)?;
+        Ok(Json(ApiResponse::ok(page)))
+    })
+    .await
+    .map_err(|error| AppError::Internal(error.to_string()))?
+}
+
+fn write_metrics(
+    ws: &mut rust_xlsxwriter::Worksheet,
+    row: u32,
+    start: u16,
+    m: &Metrics,
+) -> Result<()> {
+    for (i, value) in [
+        m.detection_quantity as f64,
+        m.detection_workload,
+        m.auxiliary_quantity as f64,
+        m.auxiliary_workload,
+        m.total_workload,
+        m.record_count as f64,
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        ws.write_number(row, start + i as u16, value)?;
+    }
+    Ok(())
+}
+
+fn headers(ws: &mut rust_xlsxwriter::Worksheet, leading: &[&str]) -> Result<()> {
+    for (i, name) in leading
+        .iter()
+        .copied()
+        .chain([
+            "检测数量",
+            "检测工作量",
+            "辅助数量",
+            "辅助工作量",
+            "总工作量",
+            "记录数",
+        ])
+        .enumerate()
+    {
+        ws.write_string(0, i as u16, name)?;
+    }
+    ws.set_column_width(0, 25)?;
+    Ok(())
+}
+
+fn source_label(source: &str) -> &str {
+    match source {
+        "analysis" => "分析检测",
+        "rd_sample" => "研发送样取样录入",
+        "sample_info_sample" => "样品信息登记取样录入",
+        "auxiliary_work" => "辅助工作",
+        _ => source,
+    }
+}
+
+async fn export_report(
+    State(pool): State<DbPool>,
+    request_headers: HeaderMap,
+    Query(mut q): Query<ReportQuery>,
+) -> Result<Response> {
+    q.compact_type_summary = Some(false);
+    let (ctx, scope) = scope(&pool, &request_headers, &q, true)?;
+    let conn = pool.get()?;
+    let tx = conn.unchecked_transaction()?;
+    tx.execute_batch("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")?;
+    let (cte, params) = report_cte(&tx, &q, &scope, ctx.user.id, None, false)?;
+    let report = query_report(&tx, &q, scope, ctx.user.id)?;
+    // Excel cannot represent more than 1,048,575 detail records plus its header.
+    if report.details.total > 1_048_575 {
+        return Err(AppError::Validation(
+            "明细超出 Excel 行数上限，请缩小日期范围后导出".into(),
+        ));
+    }
+    let mut wb = rust_xlsxwriter::Workbook::new();
+    let ws = wb.add_worksheet();
+    ws.set_name("工作量总览")?;
+    headers(ws, &["范围"])?;
+    ws.write_string(
+        1,
+        0,
+        if report.scope.view == "mine" {
+            "我的工作量"
+        } else {
+            "授权范围"
+        },
+    )?;
+    write_metrics(ws, 1, 1, &report.summary)?;
+    ws.write_string(3, 0, "工作量=数量×系数快照，辅助工作不分摊实验室/项目/仪器")?;
+    let ws = wb.add_worksheet();
+    ws.set_name("人员汇总")?;
+    headers(ws, &["人员ID", "人员"])?;
+    for (i, p) in report.people.iter().enumerate() {
+        if let Some(id) = p.user_id {
+            ws.write_number(i as u32 + 1, 0, id as f64)?;
+        }
+        ws.write_string(i as u32 + 1, 1, &p.user_name)?;
+        write_metrics(ws, i as u32 + 1, 2, &p.metrics)?;
+    }
+    let ws = wb.add_worksheet();
+    ws.set_name("人员类型矩阵")?;
+    let types = report
+        .matrix
+        .iter()
+        .map(|row| row.type_name.clone())
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    if types.len() > 16_380 {
+        return Err(AppError::Validation(
+            "检测类型超过 Excel 列数上限，请筛选类型后导出".into(),
+        ));
+    }
+    ws.write_string(0, 0, "人员")?;
+    for (i, t) in types.iter().enumerate() {
+        ws.write_string(0, i as u16 + 1, t)?;
+    }
+    ws.write_string(0, types.len() as u16 + 1, "行合计")?;
+    for (i, p) in report.people.iter().enumerate() {
+        let row = i as u32 + 1;
+        ws.write_string(row, 0, &p.user_name)?;
+        for (j, t) in types.iter().enumerate() {
+            let score = report
+                .matrix
+                .iter()
+                .filter(|m| {
+                    m.user_id == p.user_id && m.user_name == p.user_name && &m.type_name == t
+                })
+                .map(|m| m.metrics.total_workload)
+                .sum::<f64>();
+            ws.write_number(row, j as u16 + 1, score)?;
+        }
+        ws.write_number(row, types.len() as u16 + 1, p.metrics.total_workload)?;
+    }
+    let total_row = report.people.len() as u32 + 1;
+    ws.write_string(total_row, 0, "列合计")?;
+    for (i, t) in types.iter().enumerate() {
+        ws.write_number(
+            total_row,
+            i as u16 + 1,
+            report
+                .matrix
+                .iter()
+                .filter(|m| &m.type_name == t)
+                .map(|m| m.metrics.total_workload)
+                .sum::<f64>(),
+        )?;
+    }
+    ws.write_number(
+        total_row,
+        types.len() as u16 + 1,
+        report.summary.total_workload,
+    )?;
+    for (key, name) in [
+        ("department", "部门"),
+        ("lab", "实验室"),
+        ("project", "项目"),
+        ("method", "方法"),
+        ("instrument", "仪器"),
+        ("source", "来源"),
+        ("type", "检测类型"),
+        ("auxiliary_category", "辅助类型"),
+        ("auxiliary_method", "辅助方法事项"),
+        ("auxiliary_area", "辅助区域"),
+    ] {
+        let ws = wb.add_worksheet();
+        ws.set_name(name)?;
+        headers(ws, &[name])?;
+        ws.write_string(0, 7, "分类标识")?;
+        for (i, p) in report.breakdowns[key].iter().enumerate() {
+            ws.write_string(
+                i as u32 + 1,
+                0,
+                if key == "source" {
+                    source_label(&p.name)
+                } else {
+                    &p.name
+                },
+            )?;
+            write_metrics(ws, i as u32 + 1, 1, &p.metrics)?;
+            ws.write_string(i as u32 + 1, 7, &p.key)?;
+        }
+    }
+    let ws = wb.add_worksheet();
+    ws.set_name("趋势")?;
+    headers(ws, &["周期"])?;
+    for (i, p) in report.trend.iter().enumerate() {
+        ws.write_string(i as u32 + 1, 0, &p.period)?;
+        write_metrics(ws, i as u32 + 1, 1, &p.metrics)?;
+    }
+    let ws = wb.add_worksheet();
+    ws.set_name("当前筛选全部明细")?;
+    for (i, name) in [
+        "记录ID",
+        "类别",
+        "人员ID",
+        "人员",
+        "日期",
+        "部门",
+        "实验室",
+        "项目",
+        "方法",
+        "仪器",
+        "类型",
+        "来源",
+        "数量",
+        "系数快照",
+        "工作量",
+        "来源记录ID",
+        "归属状态",
+        "辅助分类标识",
+        "辅助子类型",
+        "维护入口",
+        "辅助区域",
+    ]
+    .iter()
+    .enumerate()
+    {
+        ws.write_string(0, i as u16, *name)?;
+    }
+    let mut offset = 0;
+    while offset < report.details.total {
+        let batch = details(&tx, &cte, &params, 2000, offset)?;
+        for (i, d) in batch.iter().enumerate() {
+            let r = offset as u32 + i as u32 + 1;
+            ws.write_number(r, 0, d.id as f64)?;
+            ws.write_string(
+                r,
+                1,
+                if d.kind == "auxiliary" {
+                    "辅助工作"
+                } else {
+                    "检测工作"
+                },
+            )?;
+            ws.write_string(r, 17, &d.auxiliary_key)?;
+            ws.write_string(r, 18, &d.auxiliary_category)?;
+            ws.write_string(r, 20, &d.auxiliary_area)?;
+            ws.write_string(
+                r,
+                19,
+                if d.origin == "auxiliary_record" {
+                    "辅助工作入口"
+                } else {
+                    "原工作量入口"
+                },
+            )?;
+            if let Some(id) = d.user_id {
+                ws.write_number(r, 2, id as f64)?;
+            }
+            for (j, value) in [
+                &d.user_name,
+                &d.recorded_at,
+                &d.department,
+                &d.lab,
+                &d.project,
+                &d.method,
+                &d.instrument,
+                &d.type_name,
+            ]
+            .iter()
+            .enumerate()
+            {
+                ws.write_string(r, j as u16 + 3, *value)?;
+            }
+            ws.write_string(r, 11, source_label(&d.source))?;
+            ws.write_number(r, 12, d.quantity as f64)?;
+            ws.write_number(r, 13, d.coefficient)?;
+            ws.write_number(r, 14, d.workload)?;
+            if let Some(id) = d.source_record_id {
+                ws.write_number(r, 15, id as f64)?;
+            }
+            ws.write_string(
+                r,
+                16,
+                if d.ownership_status == "pending_confirmation" {
+                    "待确认"
+                } else {
+                    "已确认"
+                },
+            )?;
+        }
+        if batch.is_empty() {
+            break;
+        }
+        offset += batch.len() as i64;
+    }
+    let bytes = wb.save_to_buffer()?;
+    Ok((
+        [
+            (
+                header::CONTENT_TYPE,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ),
+            (
+                header::CONTENT_DISPOSITION,
+                "attachment; filename=LabFlow-workload-report.xlsx",
+            ),
+        ],
+        bytes,
+    )
+        .into_response())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::repo::user_repo;
+    use calamine::Reader;
+
+    fn fixture() -> (DbPool, i64, i64, i64, i64, i64) {
+        let pool = crate::db::init_pool("postgres-test");
+        let conn = pool.get().unwrap();
+        crate::db::test_migrations::run(&conn).unwrap();
+        conn.execute("INSERT INTO divisions(name) VALUES('report_A')", [])
+            .unwrap();
+        let a = conn.last_insert_rowid();
+        conn.execute("INSERT INTO divisions(name) VALUES('report_B')", [])
+            .unwrap();
+        let b = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO users(username,password,division_id) VALUES('report_alice','hash',?1)",
+            [a],
+        )
+        .unwrap();
+        let alice = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO users(username,password,division_id) VALUES('report_bob','hash',?1)",
+            [b],
+        )
+        .unwrap();
+        let bob = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO users(username,password,division_id) VALUES('report_zero','hash',?1)",
+            [a],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO project_groups(name,division_id) VALUES('report_lab',?1)",
+            [a],
+        )
+        .unwrap();
+        let lab = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO projects(name,coefficient,group_id) VALUES('report_project',99,?1)",
+            [lab],
+        )
+        .unwrap();
+        let project = conn.last_insert_rowid();
+        for (owner, division, qty, at, status, source) in [
+            (
+                alice,
+                a,
+                3,
+                "2091-01-31T23:59:59.500",
+                "confirmed",
+                "rd_sample",
+            ),
+            (bob, b, 7, "2091-01-31T12:00:00", "confirmed", "analysis"),
+            (
+                alice,
+                a,
+                11,
+                "2091-01-31T13:00:00",
+                "pending_confirmation",
+                "analysis",
+            ),
+            (alice, a, 13, "2091-02-01T00:00:00", "confirmed", "analysis"),
+        ] {
+            conn.execute("INSERT INTO work_records(project_id,group_id,user_name,subject_user_id,quantity,recorded_at,coefficient_snapshot,multiplier,detection_division_id,ownership_status,source_type,business_no) VALUES(?1,?2,'stale-name',?3,?4,?5,2,99,?6,?7,?8,?9)",postgres_compat::params![project,lab,owner,qty,at,division,status,source,format!("test_{owner}_{qty}")]).unwrap();
+        }
+        for (owner, division, qty) in [
+            (alice, Some(a), 2),
+            (bob, Some(b), 5),
+            (alice, None, 1),
+            (bob, None, 17),
+        ] {
+            conn.execute("INSERT INTO auxiliary_work_records(user_id,user_name_snapshot,auxiliary_work_name_snapshot,quantity,coefficient_snapshot,recorded_at,detection_division_id) VALUES(?1,'stale-name','report_aux',?2,3,'2091-01-31T12:00:00',?3)",postgres_compat::params![owner,qty,division]).unwrap();
+        }
+        // A real linked compatibility row proves duplication; partial RD entries remain separate.
+        conn.execute("INSERT INTO auxiliary_work_records(user_id,user_name_snapshot,auxiliary_work_name_snapshot,quantity,coefficient_snapshot,recorded_at,detection_division_id) VALUES(?1,'stale-name','linked',4,3,'2091-01-31T14:00:00',?2)",postgres_compat::params![alice,a]).unwrap();
+        let linked = conn.last_insert_rowid();
+        conn.execute("INSERT INTO work_records(project_id,user_name,subject_user_id,quantity,recorded_at,coefficient_snapshot,detection_division_id,source_type,source_record_id,instrument_type_snapshot) VALUES(?1,'stale-name',?2,4,'2091-01-31T14:00:00',3,?3,'auxiliary_work',?4,'辅助工作')",postgres_compat::params![project,alice,a,linked]).unwrap();
+        drop(conn);
+        (pool, a, b, alice, bob, lab)
+    }
+
+    fn query() -> ReportQuery {
+        ReportQuery {
+            start: Some("2091-01-31".into()),
+            end: Some("2091-01-31".into()),
+            view: Some("scope".into()),
+            ..Default::default()
+        }
+    }
+    fn report_scope(ids: Option<Vec<i64>>, subject: Option<i64>) -> ReportScope {
+        ReportScope {
+            view: "scope".into(),
+            can_view_scope: true,
+            subject_user_id: subject,
+            allowed_division_ids: ids,
+        }
+    }
+
+    #[test]
+    fn person_records_include_independent_auxiliary_without_id_collisions_or_losing_normal_fields()
+    {
+        let (pool, a, _, alice, _, _) = fixture();
+        let conn = pool.get().unwrap();
+        conn.execute("UPDATE work_records SET high_item_snapshot='saved high item' WHERE source_type='rd_sample'",[]).unwrap();
+        conn.execute("INSERT INTO work_records(id,project_id,user_name,subject_user_id,quantity,coefficient_snapshot,recorded_at,detection_division_id,instrument_type_snapshot,business_no) SELECT 900000,project_id,'old name',?1,1,0,'2091-01-31T12:00',?2,'辅助工作','person-record-zero-main' FROM work_records WHERE source_type='rd_sample'",postgres_compat::params![alice,a]).unwrap();
+        conn.execute("INSERT INTO auxiliary_work_records(id,user_id,user_name_snapshot,auxiliary_work_name_snapshot,quantity,coefficient_snapshot,recorded_at,detection_division_id) VALUES(900000,?1,'old name','zero auxiliary',2,0,'2091-01-31T12:00:00+08:00',?2)",postgres_compat::params![alice,a]).unwrap();
+        conn.execute("UPDATE work_records SET extra_fields=?1,extra_info='legacy fallback note',created_by_user_id=?2,created_by_username_snapshot='legacy frozen operator' WHERE id=900000",postgres_compat::params![serde_json::json!({"source_notes":"legacy source note"}).to_string(),alice]).unwrap();
+        conn.execute("UPDATE auxiliary_work_records SET notes='native auxiliary note',status='历史状态',created_by=?1 WHERE id=900000",[alice]).unwrap();
+        let scope = report_scope(Some(vec![a]), Some(alice));
+        let page = query_person_records(&conn, &query(), &scope, alice, None).unwrap();
+        assert_eq!(page.total, 6);
+        let keys = page
+            .items
+            .iter()
+            .map(|row| format!("{}:{}", row.detail.origin, row.detail.id))
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(keys.len(), page.items.len());
+        assert_eq!(
+            page.items
+                .iter()
+                .filter(|row| row.detail.id == 900000)
+                .count(),
+            2
+        );
+        assert_eq!(
+            page.items
+                .iter()
+                .map(|row| row.detail.workload)
+                .sum::<f64>(),
+            27.0
+        );
+        let legacy_metadata = page
+            .items
+            .iter()
+            .find(|row| row.detail.id == 900000 && row.detail.origin == "work_record")
+            .unwrap();
+        let native_metadata = page
+            .items
+            .iter()
+            .find(|row| row.detail.id == 900000 && row.detail.origin == "auxiliary_record")
+            .unwrap();
+        assert_eq!(
+            (
+                legacy_metadata.notes.as_str(),
+                legacy_metadata.status.as_str(),
+                legacy_metadata.created_by_name.as_str()
+            ),
+            ("legacy source note", "有效", "legacy frozen operator")
+        );
+        assert_eq!(
+            (
+                native_metadata.notes.as_str(),
+                native_metadata.status.as_str(),
+                native_metadata.created_by_name.as_str()
+            ),
+            ("native auxiliary note", "历史状态", "report_alice")
+        );
+        for row in &page.items {
+            if row.detail.origin == "work_record" {
+                let original = row.normal_record.as_ref().unwrap();
+                assert_eq!(original.id, row.detail.id);
+                assert!(original.project_id > 0);
+                assert_eq!(original.coefficient_snapshot, row.detail.coefficient);
+                if row.detail.kind == "detection" {
+                    assert_eq!(original.multiplier, 99.0);
+                    assert_eq!(original.high_item.as_deref(), Some("saved high item"));
+                }
+            } else {
+                assert!(row.normal_record.is_none());
+                assert!(
+                    row.detail.project.is_empty()
+                        && row.detail.lab.is_empty()
+                        && row.detail.instrument.is_empty()
+                );
+            }
+        }
+        let mut auxiliary = query();
+        auxiliary.kind = Some("auxiliary".into());
+        let only = query_person_records(&conn, &auxiliary, &scope, alice, None).unwrap();
+        assert_eq!(only.total, 5);
+        assert!(only.items.iter().all(|row| row.detail.kind == "auxiliary"));
+        conn.execute(
+            "UPDATE work_records SET extra_fields='{}' WHERE id=900000",
+            [],
+        )
+        .unwrap();
+        let fallback = query_person_records(&conn, &auxiliary, &scope, alice, None).unwrap();
+        assert_eq!(
+            fallback
+                .items
+                .iter()
+                .find(|row| row.detail.id == 900000 && row.detail.origin == "work_record")
+                .unwrap()
+                .notes,
+            "legacy fallback note"
+        );
+        assert_eq!(
+            query_person_records(
+                &conn,
+                &query(),
+                &report_scope(Some(vec![a]), Some(alice)),
+                alice,
+                None
+            )
+            .unwrap()
+            .total,
+            6
+        );
+    }
+
+    #[test]
+    fn person_record_read_scope_covers_read_only_owner_supervisor_role_admin_and_public_creator() {
+        let (pool, a, _, alice, bob, _) = fixture();
+        let conn = pool.get().unwrap();
+        conn.execute(
+            "INSERT INTO roles(name) VALUES('person-record-read-only')",
+            [],
+        )
+        .unwrap();
+        let reader = conn.last_insert_rowid();
+        for permission in ["stats:portal:workload", "stats:workload:user-log"] {
+            conn.execute(
+                "INSERT INTO role_permissions(role_id,permission_key) VALUES(?1,?2)",
+                postgres_compat::params![reader, permission],
+            )
+            .unwrap();
+        }
+        conn.execute(
+            "INSERT INTO role_work_division_scopes(role_id,division_id) VALUES(?1,?2)",
+            postgres_compat::params![reader, a],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO user_roles(user_id,role_id) VALUES(?1,?2)",
+            postgres_compat::params![alice, reader],
+        )
+        .unwrap();
+        let context = |id| {
+            let user = user_repo::find_by_id(&pool, id).unwrap().unwrap();
+            AuthContext {
+                role_names: user.role_names.clone(),
+                user,
+            }
+        };
+        let own = context(alice);
+        assert!(!own.has_permission("entry:workload") && !own.has_permission("entry:auxiliary"));
+        let (own_scope, creator) = person_record_scope(&pool, &own, &query()).unwrap();
+        assert_eq!(own_scope.subject_user_id, Some(alice));
+        assert!(creator.is_none());
+        assert!(
+            query_person_records(&conn, &query(), &own_scope, alice, creator)
+                .unwrap()
+                .items
+                .iter()
+                .all(|row| row.detail.user_id == Some(alice))
+        );
+        let mut other = query();
+        other.subject_user_id = Some(bob);
+        assert!(matches!(
+            person_record_scope(&pool, &own, &other),
+            Err(AppError::Forbidden(_))
+        ));
+        conn.execute(
+            "INSERT INTO roles(name) VALUES('person-record-supervisor')",
+            [],
+        )
+        .unwrap();
+        let supervisor = conn.last_insert_rowid();
+        conn.execute("INSERT INTO role_permissions(role_id,permission_key) VALUES(?1,'records:work:view-scope')",[supervisor]).unwrap();
+        conn.execute(
+            "INSERT INTO user_roles(user_id,role_id) VALUES(?1,?2)",
+            postgres_compat::params![alice, supervisor],
+        )
+        .unwrap();
+        let (super_scope, creator) = person_record_scope(&pool, &context(alice), &query()).unwrap();
+        assert!(super_scope.subject_user_id.is_none());
+        assert_eq!(super_scope.allowed_division_ids, Some(vec![a]));
+        assert!(
+            query_person_records(&conn, &query(), &super_scope, alice, creator)
+                .unwrap()
+                .items
+                .iter()
+                .all(|row| row.detail.user_id != Some(bob))
+        );
+        let (foreign_scope, creator) = person_record_scope(&pool, &context(alice), &other).unwrap();
+        assert_eq!(
+            query_person_records(&conn, &other, &foreign_scope, alice, creator)
+                .unwrap()
+                .total,
+            0
+        );
+
+        conn.execute("INSERT INTO user_roles(user_id,role_id) SELECT ?1,id FROM roles WHERE system_key='system_admin'",[bob]).unwrap();
+        let admin = context(bob);
+        assert!(!admin.user.is_admin && admin.is_system_admin());
+        let (global, creator) = person_record_scope(&pool, &admin, &query()).unwrap();
+        assert!(global.allowed_division_ids.is_none() && global.subject_user_id.is_none());
+        assert!(query_person_records(&conn, &query(), &global, bob, creator)
+            .unwrap()
+            .items
+            .iter()
+            .any(|row| row.detail.user_id == Some(bob)));
+
+        conn.execute("INSERT INTO users(username,password,division_id) VALUES('person-record-public','hash',?1)",[a]).unwrap();
+        let public = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO user_roles(user_id,role_id) VALUES(?1,?2)",
+            postgres_compat::params![public, reader],
+        )
+        .unwrap();
+        conn.execute("INSERT INTO user_roles(user_id,role_id) SELECT ?1,id FROM roles WHERE system_key='analysis_public_account'",[public]).unwrap();
+        conn.execute(
+            "UPDATE work_records SET created_by_user_id=?1 WHERE source_type='rd_sample'",
+            [public],
+        )
+        .unwrap();
+        conn.execute("UPDATE auxiliary_work_records SET created_by=?1 WHERE user_id=?2 AND detection_division_id=?3 AND auxiliary_work_name_snapshot='report_aux'",postgres_compat::params![public,alice,a]).unwrap();
+        let public_ctx = context(public);
+        assert!(matches!(
+            public_ctx.workload_scope(),
+            authz_service::RecordScope::PublicCreated
+        ));
+        let (created_scope, creator) = person_record_scope(&pool, &public_ctx, &query()).unwrap();
+        assert_eq!(creator, Some(public));
+        assert!(created_scope.subject_user_id.is_none());
+        let created =
+            query_person_records(&conn, &query(), &created_scope, public, creator).unwrap();
+        assert_eq!(created.total, 2);
+        assert!(created
+            .items
+            .iter()
+            .all(|row| row.detail.user_id == Some(alice)));
+        let (created_other, creator) = person_record_scope(&pool, &public_ctx, &other).unwrap();
+        assert_eq!(
+            query_person_records(&conn, &other, &created_other, public, creator)
+                .unwrap()
+                .total,
+            0
+        );
+        let mut no_portal = public_ctx.clone();
+        no_portal
+            .user
+            .permissions
+            .retain(|permission| permission != "records:work:portal-scoped");
+        assert!(matches!(
+            person_record_scope(&pool, &no_portal, &query()),
+            Err(AppError::Forbidden(_))
+        ));
+    }
+
+    #[test]
+    fn person_records_share_report_time_boundaries_and_keep_stable_mixed_paging() {
+        let (pool, a, _, alice, _, _) = fixture();
+        let conn = pool.get().unwrap();
+        conn.execute("SET TIME ZONE 'UTC'", []).unwrap();
+        conn.execute("UPDATE auxiliary_work_records SET recorded_at='2091-01-31T23:59:59.900+00:00' WHERE user_id=?1 AND detection_division_id=?2 AND auxiliary_work_name_snapshot='report_aux'",postgres_compat::params![alice,a]).unwrap();
+        conn.execute("UPDATE auxiliary_work_records SET recorded_at='2091-02-01T00:00:00+00:00' WHERE user_id=?1 AND detection_division_id IS NULL",[alice]).unwrap();
+        let scope = report_scope(Some(vec![a]), Some(alice));
+        let mut q = query();
+        q.start = Some("2091-01-31T23:59".into());
+        q.end = Some("2091-01-31T23:59:59".into());
+        assert_eq!(
+            query_person_records(&conn, &q, &scope, alice, None)
+                .unwrap()
+                .total,
+            2
+        );
+        q.end = Some("2091-01-31T23:59:59.750".into());
+        let fractional = query_person_records(&conn, &q, &scope, alice, None).unwrap();
+        assert_eq!(fractional.total, 1);
+        assert_eq!(fractional.items[0].detail.origin, "work_record");
+        let same_day = query_person_records(&conn, &query(), &scope, alice, None).unwrap();
+        let report = query_report(
+            &conn,
+            &query(),
+            report_scope(Some(vec![a]), Some(alice)),
+            alice,
+        )
+        .unwrap();
+        let exported = export_data::query_auxiliary_work_details(
+            &conn,
+            "2091-01-31",
+            "2091-01-31",
+            Some(alice),
+            Some(&[a]),
+        )
+        .unwrap();
+        assert_eq!(same_day.total, report.details.total);
+        assert_eq!(
+            same_day
+                .items
+                .iter()
+                .map(|row| row.detail.workload)
+                .sum::<f64>(),
+            report.summary.total_workload
+        );
+        assert_eq!(
+            same_day
+                .items
+                .iter()
+                .filter(|row| row.detail.kind == "auxiliary")
+                .map(|row| row.detail.workload)
+                .sum::<f64>(),
+            exported.iter().map(|row| row.workload).sum::<f64>()
+        );
+        conn.execute("SET TIME ZONE 'Asia/Shanghai'", []).unwrap();
+        conn.execute("UPDATE work_records SET recorded_at='2091-01-31T12:00:00' WHERE source_type IN ('rd_sample','auxiliary_work')",[]).unwrap();
+        conn.execute("UPDATE auxiliary_work_records SET recorded_at='2091-01-31T12:00:00+08:00' WHERE user_id=?1",[alice]).unwrap();
+        let all = query_person_records(&conn, &query(), &scope, alice, None).unwrap();
+        let expected = all
+            .items
+            .iter()
+            .map(|row| format!("{}:{}", row.detail.origin, row.detail.id))
+            .collect::<Vec<_>>();
+        let mut actual = Vec::new();
+        for page in 1..=all.total {
+            let mut q = query();
+            q.page = Some(page);
+            q.page_size = Some(1);
+            let result = query_person_records(&conn, &q, &scope, alice, None).unwrap();
+            assert_eq!(result.total, all.total);
+            actual.extend(
+                result
+                    .items
+                    .iter()
+                    .map(|row| format!("{}:{}", row.detail.origin, row.detail.id)),
+            );
+        }
+        assert_eq!(actual, expected);
+        for (start, end) in [
+            ("2091-02-01", "2091-01-31"),
+            ("2091-02-30", "2091-03-01"),
+            ("bad", "2091-01-31"),
+        ] {
+            let mut q = query();
+            q.start = Some(start.into());
+            q.end = Some(end.into());
+            assert!(query_person_records(&conn, &q, &scope, alice, None).is_err());
+        }
+        let mut q = query();
+        q.page = Some(i64::MAX);
+        q.page_size = Some(500);
+        assert!(query_person_records(&conn, &q, &scope, alice, None).is_err());
+    }
+
+    #[test]
+    fn person_records_preserve_zero_snapshots_and_history_when_item_is_disabled_or_mapping_revoked()
+    {
+        let (pool, a, _, alice, _, _) = fixture();
+        let conn = pool.get().unwrap();
+        conn.execute("INSERT INTO auxiliary_work_items(name,coefficient,enabled) VALUES('person-record-disabled-item',999,FALSE)",[]).unwrap();
+        let item = conn.last_insert_rowid();
+        conn.execute("UPDATE auxiliary_work_records SET auxiliary_work_item_id=?1,coefficient_snapshot=0,area_name_snapshot='historical area',notes='disabled item historical note',created_by=?2 WHERE user_id=?2 AND detection_division_id=?3 AND auxiliary_work_name_snapshot='report_aux'",postgres_compat::params![item,alice,a]).unwrap();
+        let scope = report_scope(Some(vec![a]), Some(alice));
+        let original: i64 = conn
+            .query_row(
+                "SELECT id FROM work_records WHERE source_type='rd_sample'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        let snapshot: String = conn
+            .query_row(
+                "SELECT to_jsonb(wr)::text FROM work_records wr WHERE id=?1",
+                [original],
+                |row| row.get(0),
+            )
+            .unwrap();
+        let before = query_person_records(&conn, &query(), &scope, alice, None).unwrap();
+        let zero = before
+            .items
+            .iter()
+            .find(|row| {
+                row.detail.origin == "auxiliary_record"
+                    && row.detail.auxiliary_area == "historical area"
+            })
+            .unwrap();
+        assert_eq!((zero.detail.coefficient, zero.detail.workload), (0.0, 0.0));
+        assert_eq!(zero.detail.method, "report_aux");
+        assert_eq!(zero.notes, "disabled item historical note");
+        assert_eq!(zero.status, "有效");
+        assert_eq!(zero.created_by_name, "report_alice");
+        conn.execute("INSERT INTO legacy_auxiliary_batches(id,reason,request_fingerprint,created_by,created_by_name,record_count,total_quantity,total_workload) VALUES('person-record-map','review','fingerprint',?1,'reviewer',1,3,6)",[alice]).unwrap();
+        conn.execute("INSERT INTO legacy_auxiliary_links(source_record_id,auxiliary_work_item_id,area_name_snapshot,category_snapshot,batch_id,source_fingerprint,source_snapshot,created_by) SELECT id,?2,'mapped area','mapped category','person-record-map','fingerprint',to_jsonb(wr),?3 FROM work_records wr WHERE id=?1",postgres_compat::params![original,item,alice]).unwrap();
+        let mapped = query_person_records(&conn, &query(), &scope, alice, None).unwrap();
+        assert_eq!(mapped.total, before.total);
+        let old = mapped
+            .items
+            .iter()
+            .find(|row| row.detail.origin == "work_record" && row.detail.id == original)
+            .unwrap();
+        assert_eq!(
+            (
+                old.detail.kind.as_str(),
+                old.detail.coefficient,
+                old.detail.auxiliary_area.as_str()
+            ),
+            ("auxiliary", 2.0, "mapped area")
+        );
+        assert!(
+            old.detail.lab.is_empty()
+                && old.detail.project.is_empty()
+                && old.detail.instrument.is_empty()
+        );
+        conn.execute(
+            "UPDATE legacy_auxiliary_links SET revoked_at=now() WHERE source_record_id=?1",
+            [original],
+        )
+        .unwrap();
+        let revoked = query_person_records(&conn, &query(), &scope, alice, None).unwrap();
+        assert_eq!(revoked.total, before.total);
+        assert!(revoked.items.iter().any(|row| row.detail.id == original
+            && row.detail.origin == "work_record"
+            && row.detail.kind == "auxiliary"));
+        assert_eq!(
+            conn.query_row(
+                "SELECT to_jsonb(wr)::text FROM work_records wr WHERE id=?1",
+                [original],
+                |row| row.get::<_, String>(0)
+            )
+            .unwrap(),
+            snapshot
+        );
+        assert_eq!(
+            mapped
+                .items
+                .iter()
+                .map(|row| row.detail.workload)
+                .sum::<f64>(),
+            revoked
+                .items
+                .iter()
+                .map(|row| row.detail.workload)
+                .sum::<f64>()
+        );
+    }
+
+    #[test]
+    fn person_records_keep_compatibility_main_authoritative_even_after_soft_delete() {
+        let (pool, a, _, alice, _, _) = fixture();
+        let conn = pool.get().unwrap();
+        let scope = report_scope(Some(vec![a]), Some(alice));
+        let mut q = query();
+        q.kind = Some("auxiliary".into());
+        let (main, mirror): (i64, i64) = conn
+            .query_row(
+                "SELECT id,source_record_id FROM work_records WHERE source_type='auxiliary_work'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap();
+        let before = query_person_records(&conn, &q, &scope, alice, None).unwrap();
+        assert!(before
+            .items
+            .iter()
+            .any(|row| row.detail.origin == "work_record" && row.detail.id == main));
+        assert!(!before
+            .items
+            .iter()
+            .any(|row| row.detail.origin == "auxiliary_record" && row.detail.id == mirror));
+        conn.execute(
+            "UPDATE work_records SET deleted_at='2091-01-31T20:00:00' WHERE id=?1",
+            [main],
+        )
+        .unwrap();
+        let removed = query_person_records(&conn, &q, &scope, alice, None).unwrap();
+        assert_eq!(removed.total, before.total - 1);
+        assert!(!removed
+            .items
+            .iter()
+            .any(|row| row.detail.origin == "auxiliary_record" && row.detail.id == mirror));
+        conn.execute(
+            "UPDATE work_records SET deleted_at=NULL WHERE id=?1",
+            [main],
+        )
+        .unwrap();
+        assert_eq!(
+            query_person_records(&conn, &q, &scope, alice, None)
+                .unwrap()
+                .total,
+            before.total
+        );
+        conn.execute("UPDATE auxiliary_work_records SET status='作废' WHERE user_id=?1 AND auxiliary_work_name_snapshot='report_aux' AND detection_division_id=?2",postgres_compat::params![alice,a]).unwrap();
+        assert_eq!(
+            query_person_records(&conn, &q, &scope, alice, None)
+                .unwrap()
+                .total,
+            before.total - 1
+        );
+    }
+
+    #[tokio::test]
+    async fn historical_auxiliary_screenshot_records_delete_and_restore_through_original_routes() {
+        use axum::body::Body;
+        use axum::http::{Method, Request, StatusCode};
+        use tower::Service;
+
+        async fn request(
+            app: &mut Router,
+            method: Method,
+            uri: &str,
+            token: &str,
+        ) -> serde_json::Value {
+            let response = app
+                .call(
+                    Request::builder()
+                        .method(method)
+                        .uri(uri)
+                        .header("authorization", format!("Bearer {token}"))
+                        .body(Body::empty())
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(response.status(), StatusCode::OK);
+            let bytes = axum::body::to_bytes(response.into_body(), 32 * 1024 * 1024)
+                .await
+                .unwrap();
+            serde_json::from_slice(&bytes).unwrap()
+        }
+
+        async fn edit(
+            app: &mut Router,
+            uri: &str,
+            token: &str,
+            body: serde_json::Value,
+        ) -> serde_json::Value {
+            let response = app
+                .call(
+                    Request::builder()
+                        .method(Method::PUT)
+                        .uri(uri)
+                        .header("authorization", format!("Bearer {token}"))
+                        .header("content-type", "application/json")
+                        .body(Body::from(body.to_string()))
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(response.status(), StatusCode::OK);
+            let bytes = axum::body::to_bytes(response.into_body(), 32 * 1024 * 1024)
+                .await
+                .unwrap();
+            serde_json::from_slice(&bytes).unwrap()
+        }
+
+        let (pool, a, _, alice, _, _) = fixture();
+        let conn = pool.get().unwrap();
+        let project: i64 = conn
+            .query_row("SELECT id FROM projects LIMIT 1", [], |row| row.get(0))
+            .unwrap();
+        let admin = user_repo::find_by_username(&pool, "admin")
+            .unwrap()
+            .unwrap();
+        for (id, name, quantity, subject, division) in [
+            (710101, "流动相瓶", 25, Some(alice), Some(a)),
+            (710102, "水相", 1, Some(alice), Some(a)),
+            (710103, "流动相2", 4, Some(alice), Some(a)),
+            (710104, "小瓶", 1950, None, None),
+        ] {
+            conn.execute(
+                "INSERT INTO work_records(id,project_id,user_name,subject_user_id,quantity,coefficient_snapshot,recorded_at,detection_division_id,method_name_snapshot,instrument_type_snapshot,updated_at,business_no)
+                 VALUES(?1,?2,'historical-name',?3,?4,1,'2091-01-31T10:30:00',?5,?6,'辅助工作','',?7)",
+                postgres_compat::params![id,project,subject,quantity,division,name,format!("aux247-{id}")],
+            ).unwrap();
+        }
+        let item: i64 = conn.query_row(
+            "INSERT INTO auxiliary_work_items(name,scope_type,coefficient) VALUES('currently-reconfigured','public',9) RETURNING id",
+            [], |row| row.get(0),
+        ).unwrap();
+        conn.execute(
+            "INSERT INTO legacy_auxiliary_batches(id,reason,request_fingerprint,created_by,created_by_name,record_count,total_quantity,total_workload)
+             VALUES('aux247-delete-links','review','fingerprint',?1,'reviewer',2,5,5)",
+            [admin.id],
+        ).unwrap();
+        for id in [710102, 710103] {
+            conn.execute(
+                "INSERT INTO legacy_auxiliary_links(source_record_id,auxiliary_work_item_id,batch_id,source_fingerprint,source_snapshot,created_by)
+                 SELECT id,?2,'aux247-delete-links','fingerprint',to_jsonb(wr),?3 FROM work_records wr WHERE id=?1",
+                postgres_compat::params![id,item,admin.id],
+            ).unwrap();
+        }
+        conn.execute(
+            "UPDATE legacy_auxiliary_links SET revoked_at=now() WHERE source_record_id=710103",
+            [],
+        )
+        .unwrap();
+        let links_before: String = conn.query_row(
+            "SELECT jsonb_agg(to_jsonb(ll) ORDER BY source_record_id)::text FROM legacy_auxiliary_links ll",
+            [], |row| row.get(0),
+        ).unwrap();
+        let (main, mirror): (i64, i64) = conn
+            .query_row(
+                "SELECT id,source_record_id FROM work_records WHERE source_type='auxiliary_work'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap();
+        let mirror_before: String = conn
+            .query_row(
+                "SELECT to_jsonb(ar)::text FROM auxiliary_work_records ar WHERE id=?1",
+                [mirror],
+                |row| row.get(0),
+            )
+            .unwrap();
+        conn.execute(
+            "INSERT INTO auxiliary_work_records(id,user_id,user_name_snapshot,auxiliary_work_name_snapshot,quantity,coefficient_snapshot,recorded_at,detection_division_id,created_by)
+             VALUES(710101,?1,'same-id','independent-collision',7,3,'2091-01-31T12:00:00+08:00',?2,?1)",
+            postgres_compat::params![alice,a],
+        ).unwrap();
+        let independent_before: String = conn
+            .query_row(
+                "SELECT to_jsonb(ar)::text FROM auxiliary_work_records ar WHERE id=710101",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        let role: i64 = conn
+            .query_row(
+                "INSERT INTO roles(name) VALUES('aux247-reader') RETURNING id",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        for permission in ["stats:portal:workload", "stats:workload:user-log"] {
+            conn.execute(
+                "INSERT INTO role_permissions(role_id,permission_key) VALUES(?1,?2)",
+                postgres_compat::params![role, permission],
+            )
+            .unwrap();
+        }
+        conn.execute(
+            "INSERT INTO role_work_division_scopes(role_id,division_id) VALUES(?1,?2)",
+            postgres_compat::params![role, a],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO user_roles(user_id,role_id) VALUES(?1,?2)",
+            postgres_compat::params![alice, role],
+        )
+        .unwrap();
+        let token_for = |user| {
+            crate::service::auth_service::create_login_response(&pool, user, false, None, None)
+                .unwrap()
+                .token
+        };
+        let admin_token = token_for(admin);
+        let reader_token = token_for(user_repo::find_by_id(&pool, alice).unwrap().unwrap());
+        let mut app = router(pool.clone())
+            .merge(super::super::record_handler::router(pool.clone()))
+            .merge(super::super::auxiliary_handler::router(pool.clone()));
+        let range = "start=2091-01-31&end=2091-01-31&view=scope";
+        let person_uri = format!("/api/stats/person-records?{range}");
+        let auxiliary_uri = format!("{person_uri}&kind=auxiliary");
+        let report_uri = format!("/api/stats/workload-report?{range}");
+        let initial = request(&mut app, Method::GET, &auxiliary_uri, &admin_token).await;
+        assert_eq!(initial["code"], 0);
+        for id in [710101, 710102, 710103, 710104, main] {
+            let row = initial["data"]["items"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|row| row["origin"] == "work_record" && row["id"] == id)
+                .unwrap();
+            assert_eq!(row["maintenance_target"]["origin"], "work_record");
+            assert_eq!(row["maintenance_target"]["id"], id);
+            assert_eq!(row["maintenance_target"]["can_edit"], true);
+            assert_eq!(row["maintenance_target"]["can_delete"], true);
+            assert_eq!(
+                row["maintenance_target"]["revision"]
+                    .as_str()
+                    .unwrap()
+                    .len(),
+                64
+            );
+        }
+        let initial_revision = initial["data"]["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|row| row["origin"] == "work_record" && row["id"] == 710101)
+            .unwrap()["maintenance_target"]["revision"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+        let read_only = request(&mut app, Method::GET, &auxiliary_uri, &reader_token).await;
+        assert_eq!(read_only["code"], 0);
+        assert!(read_only["data"]["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|row| row["maintenance_target"].is_null()));
+        let delete_uri =
+            format!("/api/records/710101?reason=correction&expected_revision={initial_revision}");
+        assert_eq!(
+            request(&mut app, Method::DELETE, &delete_uri, &reader_token).await["code"],
+            1003
+        );
+        let no_reason = format!("/api/records/710101?expected_revision={initial_revision}");
+        assert_eq!(
+            request(&mut app, Method::DELETE, &no_reason, &admin_token).await["code"],
+            1001
+        );
+        conn.execute(
+            "UPDATE work_records SET extra_info='same-timestamp change' WHERE id=710101",
+            [],
+        )
+        .unwrap();
+        assert_eq!(
+            conn.query_row(
+                "SELECT updated_at FROM work_records WHERE id=710101",
+                [],
+                |row| row.get::<_, String>(0)
+            )
+            .unwrap(),
+            ""
+        );
+        assert_eq!(
+            request(&mut app, Method::DELETE, &delete_uri, &admin_token).await["code"],
+            1001,
+            "a same-second edit must invalidate the selected row revision"
+        );
+        let selected = request(&mut app, Method::GET, &auxiliary_uri, &admin_token).await;
+        let edit_revision = selected["data"]["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|row| row["origin"] == "work_record" && row["id"] == 710101)
+            .unwrap()["maintenance_target"]["revision"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+        let edit_uri = format!("/api/records/710101?expected_revision={edit_revision}");
+        assert_eq!(
+            edit(
+                &mut app,
+                &edit_uri,
+                &reader_token,
+                serde_json::json!({"notes":"forbidden"})
+            )
+            .await["code"],
+            1003
+        );
+        assert_eq!(
+            edit(
+                &mut app,
+                &edit_uri,
+                &admin_token,
+                serde_json::json!({"method_id":0,"notes":"must not bind"})
+            )
+            .await["code"],
+            1001
+        );
+        let edited = edit(
+            &mut app,
+            &edit_uri,
+            &admin_token,
+            serde_json::json!({
+                "quantity":26,"recorded_at":"2091-01-30T23:45:00Z","notes":"edited historical note"
+            }),
+        )
+        .await;
+        assert_eq!(edited["code"], 0);
+        assert_eq!(edited["data"]["quantity"], 26);
+        assert_eq!(edited["data"]["recorded_at"], "2091-01-31T07:45:00");
+        assert_eq!(edited["data"]["coefficient_snapshot"], 1.0);
+        let edited_rows = request(&mut app, Method::GET, &auxiliary_uri, &admin_token).await;
+        let edited_row = edited_rows["data"]["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|row| row["origin"] == "work_record" && row["id"] == 710101)
+            .unwrap();
+        assert_eq!(edited_row["notes"], "edited historical note");
+        assert_eq!(edited_row["workload"], 26.0);
+        assert_eq!(
+            edit(
+                &mut app,
+                &edit_uri,
+                &admin_token,
+                serde_json::json!({"notes":"stale edit"})
+            )
+            .await["code"],
+            1001
+        );
+        for id in [710101, 710102, 710103, 710104, main] {
+            let before = request(&mut app, Method::GET, &auxiliary_uri, &admin_token).await;
+            let row = before["data"]["items"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|row| row["origin"] == "work_record" && row["id"] == id)
+                .unwrap();
+            let revision = row["maintenance_target"]["revision"].as_str().unwrap();
+            let workload = row["workload"].as_f64().unwrap();
+            let summary_before = request(&mut app, Method::GET, &report_uri, &admin_token).await;
+            let facts_before: String = conn.query_row(
+                "SELECT (to_jsonb(wr)-'deleted_at'-'updated_at')::text FROM work_records wr WHERE id=?1",
+                [id], |row| row.get(0),
+            ).unwrap();
+            let uri = format!("/api/records/{id}?reason=correction&expected_revision={revision}");
+            assert_eq!(
+                request(&mut app, Method::DELETE, &uri, &admin_token).await["code"],
+                0
+            );
+            for uri in [&person_uri, &auxiliary_uri] {
+                let after = request(&mut app, Method::GET, uri, &admin_token).await;
+                assert_eq!(after["code"], 0);
+                let rows = after["data"]["items"].as_array().unwrap();
+                assert!(!rows
+                    .iter()
+                    .any(|row| row["origin"] == "work_record" && row["id"] == id));
+                assert!(rows
+                    .iter()
+                    .any(|row| row["origin"] == "auxiliary_record" && row["id"] == 710101));
+                assert!(!rows
+                    .iter()
+                    .any(|row| row["origin"] == "auxiliary_record" && row["id"] == mirror));
+            }
+            let summary_after = request(&mut app, Method::GET, &report_uri, &admin_token).await;
+            assert_eq!(
+                summary_after["data"]["summary"]["auxiliary_workload"]
+                    .as_f64()
+                    .unwrap(),
+                summary_before["data"]["summary"]["auxiliary_workload"]
+                    .as_f64()
+                    .unwrap()
+                    - workload
+            );
+            let restore_uri = format!("/api/records/restore/{id}");
+            assert_eq!(
+                request(&mut app, Method::POST, &restore_uri, &admin_token).await["code"],
+                0
+            );
+            let restored = request(&mut app, Method::GET, &auxiliary_uri, &admin_token).await;
+            assert!(restored["data"]["items"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|row| row["origin"] == "work_record" && row["id"] == id));
+            let summary_restored = request(&mut app, Method::GET, &report_uri, &admin_token).await;
+            assert_eq!(
+                summary_restored["data"]["summary"]["auxiliary_workload"],
+                summary_before["data"]["summary"]["auxiliary_workload"]
+            );
+            let facts_after: String = conn.query_row(
+                "SELECT (to_jsonb(wr)-'deleted_at'-'updated_at')::text FROM work_records wr WHERE id=?1",
+                [id], |row| row.get(0),
+            ).unwrap();
+            assert_eq!(
+                facts_after, facts_before,
+                "history and coefficient snapshots stay intact"
+            );
+        }
+        assert_eq!(
+            conn.query_row("SELECT jsonb_agg(to_jsonb(ll) ORDER BY source_record_id)::text FROM legacy_auxiliary_links ll", [], |row| row.get::<_,String>(0)).unwrap(),
+            links_before
+        );
+        assert_eq!(
+            conn.query_row(
+                "SELECT to_jsonb(ar)::text FROM auxiliary_work_records ar WHERE id=?1",
+                [mirror],
+                |row| row.get::<_, String>(0)
+            )
+            .unwrap(),
+            mirror_before
+        );
+        assert_eq!(
+            conn.query_row(
+                "SELECT to_jsonb(ar)::text FROM auxiliary_work_records ar WHERE id=710101",
+                [],
+                |row| row.get::<_, String>(0)
+            )
+            .unwrap(),
+            independent_before
+        );
+        assert_eq!(
+            conn.query_row("SELECT COUNT(*) FROM audit_log WHERE table_name='work_records' AND action='delete' AND (record_id BETWEEN 710101 AND 710104 OR record_id=?1) AND before_json IS NOT NULL AND after_json IS NOT NULL", [main], |row| row.get::<_,i64>(0)).unwrap(),
+            5
+        );
+    }
+
+    #[tokio::test]
+    async fn person_auxiliary_delete_routes_keep_permissions_statistics_and_record_ids_aligned() {
+        use axum::body::Body;
+        use axum::http::{Method, Request, StatusCode};
+        use tower::Service;
+
+        async fn call(
+            app: &mut Router,
+            method: Method,
+            uri: &str,
+            token: &str,
+            body: serde_json::Value,
+        ) -> serde_json::Value {
+            let request = Request::builder()
+                .method(method)
+                .uri(uri)
+                .header("authorization", format!("Bearer {token}"))
+                .header("content-type", "application/json")
+                .body(Body::from(body.to_string()))
+                .unwrap();
+            let response = app.call(request).await.unwrap();
+            assert_eq!(response.status(), StatusCode::OK);
+            let bytes = axum::body::to_bytes(response.into_body(), 32 * 1024 * 1024)
+                .await
+                .unwrap();
+            serde_json::from_slice(&bytes).unwrap()
+        }
+
+        let (pool, a, _, alice, _, _) = fixture();
+        let conn = pool.get().unwrap();
+        conn.execute("INSERT INTO work_records(id,project_id,user_name,subject_user_id,quantity,coefficient_snapshot,recorded_at,detection_division_id,business_no) SELECT 900000,project_id,'stale-name',?1,5,2,'2091-01-31T12:00:00',?2,'aux246-id-collision' FROM work_records WHERE source_type='rd_sample'",postgres_compat::params![alice,a]).unwrap();
+        conn.execute("INSERT INTO auxiliary_work_records(id,user_id,user_name_snapshot,auxiliary_work_name_snapshot,quantity,coefficient_snapshot,recorded_at,detection_division_id,created_by) VALUES(900000,?1,'stale-name','aux246-delete',3,2,'2091-01-31T12:00:00+08:00',?2,?1)",postgres_compat::params![alice,a]).unwrap();
+        let role: i64 = conn
+            .query_row(
+                "INSERT INTO roles(name) VALUES('aux246-statistics-reader') RETURNING id",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        for permission in ["stats:portal:workload", "stats:workload:user-log"] {
+            conn.execute(
+                "INSERT INTO role_permissions(role_id,permission_key) VALUES(?1,?2)",
+                postgres_compat::params![role, permission],
+            )
+            .unwrap();
+        }
+        conn.execute(
+            "INSERT INTO role_work_division_scopes(role_id,division_id) VALUES(?1,?2)",
+            postgres_compat::params![role, a],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO user_roles(user_id,role_id) VALUES(?1,?2)",
+            postgres_compat::params![alice, role],
+        )
+        .unwrap();
+        let token_for = |user| {
+            crate::service::auth_service::create_login_response(&pool, user, false, None, None)
+                .unwrap()
+                .token
+        };
+        let admin_token = token_for(
+            user_repo::find_by_username(&pool, "admin")
+                .unwrap()
+                .unwrap(),
+        );
+        let read_only_token = token_for(user_repo::find_by_id(&pool, alice).unwrap().unwrap());
+        let mut app =
+            router(pool.clone()).merge(super::super::auxiliary_handler::router(pool.clone()));
+        let query = format!("start=2091-01-31&end=2091-01-31&view=scope&subject_user_id={alice}");
+        let person_uri = format!("/api/stats/person-records?{query}");
+        let report_uri = format!("/api/stats/workload-report?{query}");
+        let before = call(
+            &mut app,
+            Method::GET,
+            &person_uri,
+            &admin_token,
+            serde_json::Value::Null,
+        )
+        .await;
+        assert_eq!(before["code"], 0);
+        let rows = before["data"]["items"].as_array().unwrap();
+        let native = rows
+            .iter()
+            .find(|row| row["id"] == 900000 && row["origin"] == "auxiliary_record")
+            .unwrap();
+        assert_eq!(native["auxiliary_maintenance"]["can_delete"], true);
+        let revision = native["auxiliary_maintenance"]["updated_at"]
+            .as_str()
+            .unwrap();
+        let original = rows
+            .iter()
+            .find(|row| row["id"] == 900000 && row["origin"] == "work_record")
+            .unwrap();
+        assert!(original["auxiliary_maintenance"].is_null());
+        assert!(original["maintenance_target"].is_null());
+        assert_eq!(original["normal_record"]["id"], 900000);
+        let before_report = call(
+            &mut app,
+            Method::GET,
+            &report_uri,
+            &admin_token,
+            serde_json::Value::Null,
+        )
+        .await;
+        assert_eq!(before_report["code"], 0);
+        let read_only = call(
+            &mut app,
+            Method::GET,
+            &person_uri,
+            &read_only_token,
+            serde_json::Value::Null,
+        )
+        .await;
+        assert_eq!(read_only["code"], 0);
+        assert!(read_only["data"]["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|row| row["auxiliary_maintenance"].is_null()));
+        let delete_uri = "/api/auxiliary/records/900000";
+        let delete_body =
+            serde_json::json!({"reason": "incorrect entry", "expected_updated_at": revision});
+        let denied = call(
+            &mut app,
+            Method::DELETE,
+            delete_uri,
+            &read_only_token,
+            delete_body.clone(),
+        )
+        .await;
+        assert_eq!(denied["code"], 1003);
+        let blank = call(
+            &mut app,
+            Method::DELETE,
+            delete_uri,
+            &admin_token,
+            serde_json::json!({"reason": " ", "expected_updated_at": revision}),
+        )
+        .await;
+        assert_eq!(blank["code"], 1001);
+        let stale = call(
+            &mut app,
+            Method::DELETE,
+            delete_uri,
+            &admin_token,
+            serde_json::json!({"reason": "incorrect entry", "expected_updated_at": "stale"}),
+        )
+        .await;
+        assert_eq!(stale["code"], 1001);
+        let deleted = call(
+            &mut app,
+            Method::DELETE,
+            delete_uri,
+            &admin_token,
+            delete_body,
+        )
+        .await;
+        assert_eq!(deleted["code"], 0);
+        assert_eq!(deleted["data"]["status"], "作废");
+        let after = call(
+            &mut app,
+            Method::GET,
+            &person_uri,
+            &admin_token,
+            serde_json::Value::Null,
+        )
+        .await;
+        assert_eq!(after["code"], 0);
+        assert_eq!(
+            after["data"]["total"].as_i64().unwrap(),
+            before["data"]["total"].as_i64().unwrap() - 1
+        );
+        assert!(!after["data"]["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|row| row["id"] == 900000 && row["origin"] == "auxiliary_record"));
+        assert!(after["data"]["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|row| row["id"] == 900000 && row["origin"] == "work_record"));
+        let after_report = call(
+            &mut app,
+            Method::GET,
+            &report_uri,
+            &admin_token,
+            serde_json::Value::Null,
+        )
+        .await;
+        assert_eq!(after_report["code"], 0);
+        assert_eq!(
+            after_report["data"]["summary"]["auxiliary_workload"]
+                .as_f64()
+                .unwrap(),
+            before_report["data"]["summary"]["auxiliary_workload"]
+                .as_f64()
+                .unwrap()
+                - 6.0
+        );
+        let normal_deleted: Option<String> = conn
+            .query_row(
+                "SELECT deleted_at FROM work_records WHERE id=900000",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert!(normal_deleted.is_none());
+        let deleted_audits: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM audit_log WHERE table_name='auxiliary_work_records' AND record_id=900000 AND action='delete' AND before_json IS NOT NULL AND after_json IS NOT NULL",
+            [], |row| row.get(0),
+        ).unwrap();
+        assert_eq!(deleted_audits, 1);
+    }
+
+    #[tokio::test]
+    async fn person_record_endpoint_requires_statistic_read_permission_and_no_write_grant() {
+        let (pool, a, _, alice, _, _) = fixture();
+        let conn = pool.get().unwrap();
+        conn.execute(
+            "INSERT INTO roles(name) VALUES('person-record-endpoint-reader')",
+            [],
+        )
+        .unwrap();
+        let role = conn.last_insert_rowid();
+        conn.execute("INSERT INTO role_permissions(role_id,permission_key) VALUES(?1,'stats:portal:workload')",[role]).unwrap();
+        conn.execute(
+            "INSERT INTO role_work_division_scopes(role_id,division_id) VALUES(?1,?2)",
+            postgres_compat::params![role, a],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO user_roles(user_id,role_id) VALUES(?1,?2)",
+            postgres_compat::params![alice, role],
+        )
+        .unwrap();
+        let user = user_repo::find_by_id(&pool, alice).unwrap().unwrap();
+        let token =
+            crate::service::auth_service::create_login_response(&pool, user, false, None, None)
+                .unwrap()
+                .token;
+        let mut h = HeaderMap::new();
+        h.insert("authorization", format!("Bearer {token}").parse().unwrap());
+        assert!(matches!(
+            person_records(State(pool.clone()), h.clone(), Query(query())).await,
+            Err(AppError::Forbidden(_))
+        ));
+        conn.execute("INSERT INTO role_permissions(role_id,permission_key) VALUES(?1,'stats:workload:user-log')",[role]).unwrap();
+        let records = person_records(State(pool.clone()), h.clone(), Query(query()))
+            .await
+            .unwrap()
+            .0
+            .data
+            .unwrap();
+        assert_eq!(records.total, 4);
+        let user = user_repo::find_by_id(&pool, alice).unwrap().unwrap();
+        assert!(!user
+            .permissions
+            .iter()
+            .any(|permission| permission == "entry:workload" || permission == "entry:auxiliary"));
+        assert!(matches!(
+            person_records(State(pool), HeaderMap::new(), Query(query())).await,
+            Err(AppError::Forbidden(_))
+        ));
+    }
+
+    #[test]
+    fn independent_auxiliary_origin_zero_and_void_status_are_consistent() {
+        let (pool, a, _, alice, _, _) = fixture();
+        let conn = pool.get().unwrap();
+        conn.execute("INSERT INTO work_records(id,project_id,user_name,subject_user_id,quantity,coefficient_snapshot,recorded_at,detection_division_id,instrument_type_snapshot,business_no) SELECT 900000,project_id,'old_name',?1,1,0,'2091-01-31T12:00:00',?2,'辅助工作','origin68_zero' FROM work_records WHERE source_type='rd_sample'",postgres_compat::params![alice,a]).unwrap();
+        conn.execute("INSERT INTO auxiliary_work_records(id,user_id,user_name_snapshot,auxiliary_work_name_snapshot,quantity,coefficient_snapshot,recorded_at,detection_division_id) VALUES(900000,?1,'old_name','zero',2,0,'2091-01-31T12:00:00',?2)",postgres_compat::params![alice,a]).unwrap();
+        let result = query_report(
+            &conn,
+            &query(),
+            report_scope(Some(vec![a]), Some(alice)),
+            alice,
+        )
+        .unwrap();
+        let collision = result
+            .details
+            .items
+            .iter()
+            .filter(|row| row.id == 900000)
+            .collect::<Vec<_>>();
+        assert_eq!(collision.len(), 2);
+        assert_ne!(collision[0].origin, collision[1].origin);
+        assert!(collision
+            .iter()
+            .all(|row| row.workload == 0.0 && row.kind == "auxiliary"));
+        assert_eq!(result.summary.total_workload, 27.0);
+        conn.execute("UPDATE auxiliary_work_records SET status='作废' WHERE user_id=?1 AND auxiliary_work_name_snapshot='report_aux' AND detection_division_id=?2",postgres_compat::params![alice,a]).unwrap();
+        let void = query_report(
+            &conn,
+            &query(),
+            report_scope(Some(vec![a]), Some(alice)),
+            alice,
+        )
+        .unwrap();
+        assert_eq!(void.summary.total_workload, 21.0);
+        conn.execute("UPDATE auxiliary_work_records SET status='历史状态' WHERE user_id=?1 AND auxiliary_work_name_snapshot='report_aux' AND detection_division_id=?2",postgres_compat::params![alice,a]).unwrap();
+        let retained = query_report(
+            &conn,
+            &query(),
+            report_scope(Some(vec![a]), Some(alice)),
+            alice,
+        )
+        .unwrap();
+        assert_eq!(retained.summary.total_workload, 27.0);
+        let exported = export_data::query_person_type_workload_data(
+            &conn,
+            "2091-01-31",
+            "2091-01-31",
+            Some(alice),
+            Some(&[a]),
+        )
+        .unwrap();
+        assert!(exported.iter().all(|row| row.user_id == Some(alice)));
+    }
+
+    #[test]
+    fn auxiliary_area_statistics_use_snapshots_without_detection_allocation() {
+        let (pool, a, _, alice, _, _) = fixture();
+        let conn = pool.get().unwrap();
+        conn.execute(
+            "INSERT INTO auxiliary_work_areas(name) VALUES('当前液相区域')",
+            [],
+        )
+        .unwrap();
+        let area = conn.last_insert_rowid();
+        conn.execute("UPDATE auxiliary_work_records SET area_type_id=?1,area_name_snapshot='历史液相区域',auxiliary_type_snapshot='前处理' WHERE user_id=?2 AND auxiliary_work_name_snapshot='linked'", postgres_compat::params![area,alice]).unwrap();
+        conn.execute("INSERT INTO auxiliary_work_records(user_id,user_name_snapshot,auxiliary_work_name_snapshot,quantity,coefficient_snapshot,recorded_at,detection_division_id,area_type_id,area_name_snapshot,auxiliary_type_snapshot) VALUES(?1,'旧姓名','零系数事项',2,0,'2091-01-31T13:00:00',?2,?3,'历史液相区域','前处理'),(?1,'旧姓名','独立事项',3,4,'2091-01-31T13:00:00',?2,?3,'当前液相区域','维护')", postgres_compat::params![alice,a,area]).unwrap();
+        conn.execute(
+            "UPDATE auxiliary_work_areas SET name='重新命名区域' WHERE id=?1",
+            [area],
+        )
+        .unwrap();
+        let mut q = query();
+        q.auxiliary_area = Some("历史液相区域".into());
+        q.auxiliary_category = Some("前处理".into());
+        q.page_size = Some(1);
+        let report =
+            query_report(&conn, &q, report_scope(Some(vec![a]), Some(alice)), alice).unwrap();
+        assert_eq!(report.summary.detection_quantity, 0);
+        assert_eq!(report.summary.detection_workload, 0.0);
+        assert_eq!(report.summary.auxiliary_quantity, 6);
+        assert_eq!(report.summary.auxiliary_workload, 12.0);
+        assert_eq!(report.details.total, 2);
+        assert_eq!(report.details.items.len(), 1);
+        assert_eq!(report.details.items[0].auxiliary_area, "历史液相区域");
+        assert_eq!(report.breakdowns["type"][0].name, "辅助工作");
+        assert_eq!(report.breakdowns["auxiliary_area"][0].name, "历史液相区域");
+        assert!(report.breakdowns["method"].is_empty());
+        let exported = export_data::query_auxiliary_work_details(
+            &conn,
+            "2091-01-31",
+            "2091-01-31",
+            Some(alice),
+            Some(&[a]),
+        )
+        .unwrap();
+        assert_eq!(
+            exported
+                .iter()
+                .filter(|row| row.area_name == "历史液相区域")
+                .map(|row| row.workload)
+                .sum::<f64>(),
+            12.0
+        );
+        assert!(exported
+            .iter()
+            .any(|row| row.area_name == "历史液相区域" && row.coefficient == 0.0));
+        q.auxiliary_area = Some("当前液相区域".into());
+        let unmatched =
+            query_report(&conn, &q, report_scope(Some(vec![a]), Some(alice)), alice).unwrap();
+        assert_eq!(unmatched.summary.record_count, 0);
+        q.auxiliary_category = None;
+        q.auxiliary_area = Some("未分区".into());
+        let legacy =
+            query_report(&conn, &q, report_scope(Some(vec![a]), Some(alice)), alice).unwrap();
+        assert_eq!(legacy.summary.auxiliary_quantity, 3);
+        assert_eq!(legacy.summary.detection_quantity, 0);
+    }
+
+    #[test]
+    fn report_isolated_departments_person_id_snapshots_and_month_boundary() {
+        let (pool, a, _, alice, bob, lab) = fixture();
+        let conn = pool.get().unwrap();
+        let mut q = query();
+        q.page_size = Some(1);
+        q.include_zero_users = Some(true);
+        let r = query_report(&conn, &q, report_scope(Some(vec![a]), None), alice).unwrap();
+        assert_eq!(r.summary.detection_quantity, 3);
+        assert_eq!(r.summary.detection_workload, 6.0);
+        assert_eq!(r.summary.auxiliary_quantity, 7);
+        assert_eq!(r.summary.auxiliary_workload, 21.0);
+        assert_eq!(r.summary.total_workload, 27.0);
+        assert_eq!(r.details.total, 4);
+        assert_eq!(r.details.items.len(), 1);
+        assert!(r
+            .people
+            .iter()
+            .any(|p| p.user_name == "report_zero" && p.metrics.record_count == 0));
+        assert!(!r.people.iter().any(|p| p.user_id == Some(bob)));
+        assert_eq!(
+            r.breakdowns["lab"]
+                .iter()
+                .map(|r| r.metrics.total_workload)
+                .sum::<f64>(),
+            6.0
+        );
+        assert_eq!(
+            r.matrix
+                .iter()
+                .map(|r| r.metrics.total_workload)
+                .sum::<f64>(),
+            27.0
+        );
+        let empty = query_report(&conn, &q, report_scope(Some(vec![]), None), alice).unwrap();
+        assert_eq!(empty.summary.total_workload, 3.0);
+        assert_eq!(empty.summary.detection_quantity, 0);
+        q.include_pending_ownership = Some(true);
+        let pending =
+            query_report(&conn, &q, report_scope(Some(vec![a]), Some(alice)), alice).unwrap();
+        assert_eq!(pending.summary.detection_quantity, 14);
+        q.group_id = Some(lab + 999);
+        q.include_pending_ownership = Some(false);
+        let other_lab =
+            query_report(&conn, &q, report_scope(Some(vec![a]), Some(alice)), alice).unwrap();
+        assert_eq!(other_lab.summary.detection_workload, 0.0);
+        assert_eq!(other_lab.summary.auxiliary_workload, 21.0);
+        let global = query_report(&conn, &query(), report_scope(None, None), alice).unwrap();
+        assert_eq!(global.summary.detection_quantity, 10);
+        assert_eq!(global.summary.total_workload, 107.0);
+        let mut person = user_repo::find_by_id(&pool, alice).unwrap().unwrap();
+        person.permissions.clear();
+        let ctx = AuthContext {
+            role_names: vec![],
+            user: person,
+        };
+        assert!(scoped_subject(&ctx, Some(bob), false).is_err());
+        assert_eq!(scoped_subject(&ctx, None, false).unwrap(), Some(alice));
+        conn.execute("UPDATE work_records SET deleted_at='2091-02-01' WHERE subject_user_id=?1 AND source_type='rd_sample'",[alice]).unwrap();
+        let deleted = query_report(
+            &conn,
+            &query(),
+            report_scope(Some(vec![a]), Some(alice)),
+            alice,
+        )
+        .unwrap();
+        assert_eq!(deleted.summary.detection_workload, 0.0);
+        conn.execute("UPDATE work_records SET deleted_at=NULL WHERE subject_user_id=?1 AND source_type='rd_sample'",[alice]).unwrap();
+        assert_eq!(
+            query_report(
+                &conn,
+                &query(),
+                report_scope(Some(vec![a]), Some(alice)),
+                alice
+            )
+            .unwrap()
+            .summary
+            .total_workload,
+            27.0
+        );
+        conn.execute("INSERT INTO work_records(project_id,user_name,quantity,recorded_at,coefficient_snapshot,detection_division_id,business_no) SELECT project_id,'report_alice',9,'2091-01-31T15:00:00',2,detection_division_id,'history_test' FROM work_records WHERE subject_user_id=?1 AND source_type='rd_sample'",[alice]).unwrap();
+        let own = query_report(
+            &conn,
+            &query(),
+            report_scope(Some(vec![a]), Some(alice)),
+            alice,
+        )
+        .unwrap();
+        assert_eq!(own.summary.total_workload, 27.0);
+        let manager =
+            query_report(&conn, &query(), report_scope(Some(vec![a]), None), alice).unwrap();
+        assert!(manager
+            .people
+            .iter()
+            .any(|p| p.user_id.is_none() && p.user_name == "历史未绑定：report_alice"));
+        conn.execute("UPDATE work_records SET source_record_id=88 WHERE subject_user_id=?1 AND source_type='rd_sample'",[alice]).unwrap();
+        conn.execute("INSERT INTO work_records(project_id,user_name,subject_user_id,quantity,recorded_at,coefficient_snapshot,detection_division_id,source_type,source_record_id,business_no) SELECT project_id,user_name,subject_user_id,1,recorded_at,coefficient_snapshot,detection_division_id,source_type,source_record_id,'partial_test' FROM work_records WHERE subject_user_id=?1 AND source_type='rd_sample'",[alice]).unwrap();
+        let partial = query_report(
+            &conn,
+            &query(),
+            report_scope(Some(vec![a]), Some(alice)),
+            alice,
+        )
+        .unwrap();
+        assert_eq!(partial.summary.detection_quantity, 4);
+    }
+
+    #[test]
+    fn type_drilldown_preserves_ids_snapshots_permissions_and_full_totals() {
+        let (pool, a, b, alice, _, _) = fixture();
+        let conn = pool.get().unwrap();
+        let mut method_ids = Vec::new();
+        for _ in 0..2 {
+            conn.execute("INSERT INTO methods(name) VALUES('same_method')", [])
+                .unwrap();
+            method_ids.push(conn.last_insert_rowid());
+        }
+        let mut instrument_ids = Vec::new();
+        for code in ["report_LC_A", "report_LC_B"] {
+            conn.execute(
+                "INSERT INTO instruments(code,name,instrument_type) VALUES(?1,?1,'液相')",
+                [code],
+            )
+            .unwrap();
+            instrument_ids.push(conn.last_insert_rowid());
+        }
+        conn.execute("UPDATE work_records SET method_id=?1,method_name_snapshot='same_method',instrument_id_snapshot=?2,detection_type_snapshot='液相' WHERE source_type='rd_sample'", postgres_compat::params![method_ids[0],instrument_ids[0]]).unwrap();
+        for (method, instrument, quantity) in [
+            (Some(method_ids[0]), Some(instrument_ids[1]), 4),
+            (Some(method_ids[1]), Some(instrument_ids[0]), 5),
+            (None, None, 6),
+        ] {
+            conn.execute("INSERT INTO work_records(project_id,user_name,subject_user_id,quantity,coefficient_snapshot,recorded_at,detection_division_id,method_id,method_name_snapshot,instrument_id_snapshot,instrument_code_snapshot,detection_type_snapshot,business_no) SELECT project_id,'old_name',?1,?2,2,'2091-01-31T15:00:00',?3,?4,CASE WHEN ?4 IS NULL THEN '历史方法' ELSE 'same_method' END,?5,CASE WHEN ?5 IS NULL THEN '历史仪器' ELSE '' END,'液相',?6 FROM work_records WHERE source_type='rd_sample'", postgres_compat::params![alice,quantity,a,method,instrument,format!("type_{}",uuid::Uuid::new_v4())]).unwrap();
+        }
+        conn.execute(
+            "UPDATE work_records SET detection_type_snapshot='液相' WHERE detection_division_id=?1",
+            [b],
+        )
+        .unwrap();
+        let mut q = query();
+        q.kind = Some("detection".into());
+        q.type_name = Some("液相".into());
+        q.page_size = Some(1);
+        q.compact_type_summary = Some(true);
+        let r = query_report(&conn, &q, report_scope(Some(vec![a]), None), alice).unwrap();
+        assert_eq!(r.summary.detection_quantity, 18);
+        assert_eq!(r.summary.total_workload, 36.0);
+        assert_eq!(r.summary.auxiliary_workload, 0.0);
+        assert_eq!(r.details.total, 4);
+        assert_eq!(r.details.items.len(), 1);
+        assert!(r.people.is_empty() && r.matrix.is_empty() && r.trend.is_empty());
+        q.include_people = Some(true);
+        let candidates = query_report(&conn, &q, report_scope(Some(vec![a]), None), alice).unwrap();
+        assert_eq!(candidates.people.len(), 1);
+        assert_eq!(candidates.people[0].user_id, Some(alice));
+        assert!(candidates.matrix.is_empty() && candidates.trend.is_empty());
+        q.include_people = Some(false);
+        assert_eq!(r.breakdowns["method"].len(), 3);
+        assert_eq!(
+            r.breakdowns["method"]
+                .iter()
+                .filter(|r| r.name == "same_method")
+                .count(),
+            2
+        );
+        q.method_key = Some(method_ids[0].to_string());
+        let method = query_report(&conn, &q, report_scope(Some(vec![a]), None), alice).unwrap();
+        assert_eq!(method.summary.detection_quantity, 7);
+        assert_eq!(method.breakdowns["instrument"].len(), 2);
+        q.instrument_key = Some(instrument_ids[0].to_string());
+        let instrument = query_report(&conn, &q, report_scope(Some(vec![a]), None), alice).unwrap();
+        assert_eq!(instrument.summary.detection_quantity, 3);
+        q.method_key = Some("legacy:历史方法".into());
+        q.instrument_key = Some("legacy:历史仪器".into());
+        let legacy = query_report(&conn, &q, report_scope(Some(vec![a]), None), alice).unwrap();
+        assert_eq!(legacy.summary.detection_quantity, 6);
+        q.method_key = None;
+        q.instrument_key = None;
+        q.detection_division_ids = Some(format!("{a},{b}"));
+        let authorized = query_report(&conn, &q, report_scope(Some(vec![a]), None), alice).unwrap();
+        assert_eq!(authorized.summary.detection_quantity, 18);
+        q.detection_division_ids = Some(b.to_string());
+        let forbidden = query_report(&conn, &q, report_scope(Some(vec![a]), None), alice).unwrap();
+        assert_eq!(forbidden.summary.record_count, 0);
+        for invalid in ["0", "-1", "1,bad", ",,,"] {
+            q.detection_division_ids = Some(invalid.into());
+            assert!(query_report(&conn, &q, report_scope(None, None), alice).is_err());
+        }
+        q.detection_division_ids = None;
+        conn.execute(
+            "INSERT INTO method_types(name) VALUES('辅助工作') ON CONFLICT(name) DO NOTHING",
+            [],
+        )
+        .unwrap();
+        conn.execute("INSERT INTO method_type_links(method_id,method_type_id) SELECT ?1,id FROM method_types WHERE name='辅助工作' ON CONFLICT DO NOTHING", [method_ids[0]]).unwrap();
+        let unchanged = query_report(&conn, &q, report_scope(Some(vec![a]), None), alice).unwrap();
+        assert_eq!(unchanged.summary.detection_quantity, 18);
+        let people = export_data::query_person_type_workload_data(
+            &conn,
+            "2091-01-31",
+            "2091-01-31",
+            Some(alice),
+            Some(&[a]),
+        )
+        .unwrap();
+        assert_eq!(
+            people
+                .iter()
+                .filter(|r| r.method_type == "液相")
+                .map(|r| r.quantity)
+                .sum::<i64>(),
+            18
+        );
+        let methods = export_data::query_sheet6_data(
+            &conn,
+            "2091-01-31",
+            "2091-01-31",
+            Some(alice),
+            Some(&[a]),
+        )
+        .unwrap();
+        assert_eq!(
+            methods
+                .iter()
+                .filter(|r| r.method_type == "液相")
+                .map(|r| r.quantity)
+                .sum::<i64>(),
+            18
+        );
+    }
+
+    #[test]
+    fn mapped_auxiliary_identity_is_shared_without_repricing_or_reclassifying_on_revoke() {
+        let (pool, a, b, alice, bob, _) = fixture();
+        let conn = pool.get().unwrap();
+        let item: i64 = conn.query_row(
+            "INSERT INTO auxiliary_work_items(name,coefficient) VALUES('mapped-report-item',999) RETURNING id",
+            [], |row| row.get(0),
+        ).unwrap();
+        let method: i64 = conn
+            .query_row(
+                "INSERT INTO methods(name) VALUES('retired-helper') RETURNING id",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        conn.execute(
+            "INSERT INTO method_types(name) VALUES('辅助工作') ON CONFLICT DO NOTHING",
+            [],
+        )
+        .unwrap();
+        conn.execute("INSERT INTO method_type_links(method_id,method_type_id) SELECT ?1,id FROM method_types WHERE name='辅助工作'", [method]).unwrap();
+        let original: i64 = conn.query_row("UPDATE work_records SET method_id=?1,method_name_snapshot='original-helper' WHERE source_type='rd_sample' RETURNING id", [method], |row| row.get(0)).unwrap();
+        let source: String = conn
+            .query_row(
+                "SELECT to_jsonb(wr)::text FROM work_records wr WHERE id=?1",
+                [original],
+                |row| row.get(0),
+            )
+            .unwrap();
+        conn.execute("UPDATE auxiliary_work_records SET auxiliary_work_item_id=?1 WHERE user_id=?2 AND auxiliary_work_name_snapshot='report_aux'", postgres_compat::params![item, alice]).unwrap();
+        let before = query_report(
+            &conn,
+            &query(),
+            report_scope(Some(vec![a]), Some(alice)),
+            alice,
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO legacy_auxiliary_batches(id,reason,request_fingerprint,created_by,created_by_name,record_count,total_quantity,total_workload)
+             VALUES('report-mapping-test','review','fingerprint',?1,'reviewer',1,3,6)",
+            [alice],
+        ).unwrap();
+        conn.execute(
+            "INSERT INTO legacy_auxiliary_links(source_record_id,auxiliary_work_item_id,area_name_snapshot,category_snapshot,batch_id,source_fingerprint,source_snapshot,created_by)
+             SELECT id,?2,'reviewed-area','reviewed-category','report-mapping-test','fingerprint',to_jsonb(wr),?3 FROM work_records wr WHERE id=?1",
+            postgres_compat::params![original, item, alice],
+        ).unwrap();
+        let after = query_report(
+            &conn,
+            &query(),
+            report_scope(Some(vec![a]), Some(alice)),
+            alice,
+        )
+        .unwrap();
+        assert_eq!(after.summary.total_workload, before.summary.total_workload);
+        assert_eq!(after.summary.record_count, before.summary.record_count);
+        let mut selected = query();
+        selected.auxiliary_key = Some(format!("item:{item}"));
+        let combined = query_report(
+            &conn,
+            &selected,
+            report_scope(Some(vec![a]), Some(alice)),
+            alice,
+        )
+        .unwrap();
+        assert_eq!(
+            (
+                combined.summary.auxiliary_quantity,
+                combined.summary.total_workload
+            ),
+            (6, 15.0)
+        );
+        assert_eq!(
+            combined.breakdowns["auxiliary_method"][0].name,
+            "mapped-report-item"
+        );
+        let legacy = combined
+            .details
+            .items
+            .iter()
+            .find(|row| row.origin == "work_record" && row.id == original)
+            .unwrap();
+        assert_eq!(
+            (
+                legacy.method.as_str(),
+                legacy.coefficient,
+                legacy.quantity,
+                legacy.auxiliary_area.as_str(),
+                legacy.auxiliary_category.as_str()
+            ),
+            (
+                "original-helper",
+                2.0,
+                3,
+                "reviewed-area",
+                "reviewed-category"
+            )
+        );
+        assert!(legacy.lab.is_empty() && legacy.project.is_empty() && legacy.instrument.is_empty());
+        let foreign = query_report(
+            &conn,
+            &selected,
+            report_scope(Some(vec![b]), Some(bob)),
+            bob,
+        )
+        .unwrap();
+        assert_eq!(foreign.details.total, 0);
+        conn.execute("DELETE FROM method_type_links WHERE method_id=?1", [method])
+            .unwrap();
+        conn.execute(
+            "UPDATE legacy_auxiliary_links SET revoked_at=now() WHERE source_record_id=?1",
+            [original],
+        )
+        .unwrap();
+        let revoked = query_report(
+            &conn,
+            &query(),
+            report_scope(Some(vec![a]), Some(alice)),
+            alice,
+        )
+        .unwrap();
+        assert_eq!(
+            (
+                revoked.summary.total_workload,
+                revoked.summary.auxiliary_workload
+            ),
+            (
+                before.summary.total_workload,
+                before.summary.auxiliary_workload
+            )
+        );
+        let historical = revoked
+            .details
+            .items
+            .iter()
+            .find(|row| row.origin == "work_record" && row.id == original)
+            .unwrap();
+        assert_eq!(historical.kind, "auxiliary");
+        assert_eq!(historical.auxiliary_key, format!("method:{method}"));
+        assert_eq!(
+            conn.query_row(
+                "SELECT to_jsonb(wr)::text FROM work_records wr WHERE id=?1",
+                [original],
+                |row| row.get::<_, String>(0)
+            )
+            .unwrap(),
+            source
+        );
+    }
+
+    #[test]
+    fn auxiliary_drilldown_distinguishes_ids_legacy_names_and_explicit_links() {
+        let (pool, a, _, alice, _, lab) = fixture();
+        let conn = pool.get().unwrap();
+        conn.execute(
+            "INSERT INTO method_types(name) VALUES('辅助工作') ON CONFLICT(name) DO NOTHING",
+            [],
+        )
+        .unwrap();
+        let mut methods = Vec::new();
+        let mut items = Vec::new();
+        for i in 0..2 {
+            conn.execute("INSERT INTO methods(name) VALUES('same_auxiliary')", [])
+                .unwrap();
+            let method = conn.last_insert_rowid();
+            methods.push(method);
+            conn.execute("INSERT INTO method_type_links(method_id,method_type_id) SELECT ?1,id FROM method_types WHERE name='辅助工作'", [method]).unwrap();
+            conn.execute("INSERT INTO work_records(project_id,user_name,subject_user_id,quantity,coefficient_snapshot,recorded_at,detection_division_id,method_id,method_name_snapshot,auxiliary_type_snapshot,business_no) SELECT project_id,'old_name',?1,?2,2,'2091-01-31T15:00:00',?3,?4,'same_auxiliary',?5,?6 FROM work_records WHERE source_type='rd_sample'", postgres_compat::params![alice,i+2,a,method,if i==0 {"前处理"} else {""},format!("auxiliary_{}",uuid::Uuid::new_v4())]).unwrap();
+            conn.execute(
+                "INSERT INTO auxiliary_work_items(name,group_id) VALUES('same_auxiliary',?1)",
+                postgres_compat::params![if i == 0 { Some(lab) } else { None }],
+            )
+            .unwrap();
+            let item = conn.last_insert_rowid();
+            items.push(item);
+            conn.execute("INSERT INTO auxiliary_work_records(user_id,user_name_snapshot,auxiliary_work_name_snapshot,auxiliary_work_item_id,quantity,coefficient_snapshot,recorded_at,detection_division_id,auxiliary_type_snapshot) VALUES(?1,'old_name','same_auxiliary',?2,?3,2,'2091-01-31T15:00:00',?4,?5)", postgres_compat::params![alice,item,5+i*2,a,if i==0 {"前处理"} else {""}]).unwrap();
+        }
+        let categories = serde_json::json!({format!("method:{}",methods[0]):"改后分类",format!("method:{}",methods[1]):"维护",format!("item:{}",items[1]):"维护"});
+        conn.execute("INSERT INTO system_settings(key,value) VALUES('workload_auxiliary_categories',?1) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value", [categories.to_string()]).unwrap();
+        conn.execute("UPDATE auxiliary_work_records SET auxiliary_work_item_id=?1,auxiliary_type_snapshot='维护' WHERE auxiliary_work_name_snapshot='linked'", [items[0]]).unwrap();
+        let mut q = query();
+        q.kind = Some("auxiliary".into());
+        q.auxiliary_category = Some("前处理".into());
+        q.page_size = Some(1);
+        let r = query_report(&conn, &q, report_scope(Some(vec![a]), Some(alice)), alice).unwrap();
+        assert_eq!(r.summary.auxiliary_quantity, 7);
+        assert_eq!(r.summary.total_workload, 14.0);
+        assert_eq!(r.details.total, 2);
+        assert_eq!(r.breakdowns["auxiliary_method"].len(), 2);
+        assert_eq!(r.breakdowns["method"].len(), 0);
+        q.auxiliary_key = Some(format!("method:{}", methods[0]));
+        let method =
+            query_report(&conn, &q, report_scope(Some(vec![a]), Some(alice)), alice).unwrap();
+        assert_eq!(method.summary.auxiliary_quantity, 2);
+        assert_eq!(method.details.items[0].auxiliary_category, "前处理");
+        q.auxiliary_key = Some(format!("item:{}", items[0]));
+        let item =
+            query_report(&conn, &q, report_scope(Some(vec![a]), Some(alice)), alice).unwrap();
+        assert_eq!(item.summary.auxiliary_quantity, 5);
+        q.auxiliary_category = Some("维护".into());
+        q.auxiliary_key = None;
+        let maintenance =
+            query_report(&conn, &q, report_scope(Some(vec![a]), Some(alice)), alice).unwrap();
+        assert_eq!(maintenance.summary.auxiliary_quantity, 14);
+        assert_eq!(maintenance.breakdowns["auxiliary_method"].len(), 3);
+        q.auxiliary_key = Some(format!("item:{}", items[0]));
+        let linked =
+            query_report(&conn, &q, report_scope(Some(vec![a]), Some(alice)), alice).unwrap();
+        assert_eq!(linked.summary.auxiliary_quantity, 4);
+        assert_eq!(linked.details.total, 1);
+        assert_eq!(linked.details.items[0].method, "linked");
+        q.auxiliary_category = None;
+        q.auxiliary_key = Some("legacy:item:report_aux".into());
+        let history =
+            query_report(&conn, &q, report_scope(Some(vec![a]), Some(alice)), alice).unwrap();
+        assert_eq!(history.summary.auxiliary_quantity, 3);
+        assert_eq!(history.breakdowns["auxiliary_category"][0].name, "未分类");
+        conn.execute(
+            "UPDATE system_settings SET value='not-json' WHERE key='workload_auxiliary_categories'",
+            [],
+        )
+        .unwrap();
+        q.auxiliary_key = Some(format!("method:{}", methods[1]));
+        let invalid_config =
+            query_report(&conn, &q, report_scope(Some(vec![a]), Some(alice)), alice).unwrap();
+        assert_eq!(
+            invalid_config.breakdowns["auxiliary_category"][0].name,
+            "未分类"
+        );
+    }
+
+    #[tokio::test]
+    async fn report_excel_matches_page_and_contains_all_filtered_rows() {
+        let (pool, _, _, alice, bob, _) = fixture();
+        let admin = user_repo::find_by_username(&pool, "admin")
+            .unwrap()
+            .unwrap();
+        let token =
+            crate::service::auth_service::create_login_response(&pool, admin, false, None, None)
+                .unwrap()
+                .token;
+        let mut h = HeaderMap::new();
+        h.insert("authorization", format!("Bearer {token}").parse().unwrap());
+        let mut q = query();
+        q.subject_user_id = Some(alice);
+        q.page_size = Some(1);
+        let page = report(State(pool.clone()), h.clone(), Query(q))
+            .await
+            .unwrap()
+            .0
+            .data
+            .unwrap();
+        assert_eq!(page.summary.total_workload, 27.0);
+        let mut q = query();
+        q.subject_user_id = Some(alice);
+        q.page_size = Some(1);
+        let response = export_report(State(pool.clone()), h.clone(), Query(q))
+            .await
+            .unwrap();
+        let bytes = axum::body::to_bytes(response.into_body(), 32 * 1024 * 1024)
+            .await
+            .unwrap();
+        let mut wb: calamine::Xlsx<_> =
+            calamine::open_workbook_from_rs(std::io::Cursor::new(bytes.to_vec())).unwrap();
+        let total = wb.worksheet_range("工作量总览").unwrap();
+        assert_eq!(
+            total.get_value((1, 5)).unwrap().to_string(),
+            page.summary.total_workload.to_string()
+        );
+        let rows = wb.worksheet_range("当前筛选全部明细").unwrap();
+        assert_eq!(rows.height(), page.details.total as usize + 1);
+        let matrix = wb.worksheet_range("人员类型矩阵").unwrap();
+        assert!(matrix
+            .rows()
+            .flat_map(|r| r.iter())
+            .any(|v| v.to_string() == "列合计"));
+        assert!(wb.worksheet_range("辅助类型").is_ok());
+        assert!(wb.worksheet_range("辅助方法事项").is_ok());
+        assert!(wb.worksheet_range("辅助区域").is_ok());
+        let mut q = query();
+        q.subject_user_id = Some(alice);
+        q.kind = Some("auxiliary".into());
+        q.auxiliary_key = Some("legacy:item:report_aux".into());
+        q.compact_type_summary = Some(true);
+        q.page_size = Some(1);
+        let filtered = report(State(pool.clone()), h.clone(), Query(q))
+            .await
+            .unwrap()
+            .0
+            .data
+            .unwrap();
+        assert_eq!(filtered.summary.total_workload, 9.0);
+        let mut q = query();
+        q.subject_user_id = Some(alice);
+        q.kind = Some("auxiliary".into());
+        q.auxiliary_key = Some("legacy:item:report_aux".into());
+        q.compact_type_summary = Some(true);
+        q.page_size = Some(1);
+        let response = export_report(State(pool.clone()), h, Query(q))
+            .await
+            .unwrap();
+        let bytes = axum::body::to_bytes(response.into_body(), 32 * 1024 * 1024)
+            .await
+            .unwrap();
+        let mut wb: calamine::Xlsx<_> =
+            calamine::open_workbook_from_rs(std::io::Cursor::new(bytes.to_vec())).unwrap();
+        let total = wb.worksheet_range("工作量总览").unwrap();
+        assert_eq!(total.get_value((1, 5)).unwrap().to_string(), "9");
+        let rows = wb.worksheet_range("当前筛选全部明细").unwrap();
+        assert_eq!(rows.height(), 3);
+        assert_eq!(
+            rows.get_value((1, 17)).unwrap().to_string(),
+            "legacy:item:report_aux"
+        );
+        assert_eq!(rows.get_value((1, 18)).unwrap().to_string(), "未分类");
+        assert_eq!(rows.get_value((0, 20)).unwrap().to_string(), "辅助区域");
+        assert_eq!(rows.get_value((1, 20)).unwrap().to_string(), "未分区");
+        assert_eq!(
+            wb.worksheet_range("辅助方法事项")
+                .unwrap()
+                .get_value((1, 7))
+                .unwrap()
+                .to_string(),
+            "legacy:item:report_aux"
+        );
+        assert!(wb.worksheet_range("人员汇总").unwrap().height() > 1);
+
+        let conn = pool.get().unwrap();
+        conn.execute("INSERT INTO roles(name) VALUES('report_portal_only')", [])
+            .unwrap();
+        let role = conn.last_insert_rowid();
+        conn.execute("INSERT INTO role_permissions(role_id,permission_key) VALUES(?1,'stats:portal:workload')", [role]).unwrap();
+        conn.execute(
+            "INSERT INTO user_roles(user_id,role_id) VALUES(?1,?2)",
+            postgres_compat::params![alice, role],
+        )
+        .unwrap();
+        drop(conn);
+        let ordinary = user_repo::find_by_id(&pool, alice).unwrap().unwrap();
+        let token =
+            crate::service::auth_service::create_login_response(&pool, ordinary, false, None, None)
+                .unwrap()
+                .token;
+        let mut h = HeaderMap::new();
+        h.insert("authorization", format!("Bearer {token}").parse().unwrap());
+        let mut q = query();
+        q.view = Some("mine".into());
+        q.kind = Some("auxiliary".into());
+        let own = report(State(pool.clone()), h.clone(), Query(q))
+            .await
+            .unwrap()
+            .0
+            .data
+            .unwrap();
+        assert_eq!(own.summary.auxiliary_quantity, 1);
+        assert!(own.details.items.iter().all(|r| r.user_id == Some(alice)));
+        let mut q = query();
+        q.view = Some("mine".into());
+        q.subject_user_id = Some(bob);
+        assert!(report(State(pool.clone()), h.clone(), Query(q))
+            .await
+            .is_err());
+        assert!(report(State(pool.clone()), h.clone(), Query(query()))
+            .await
+            .is_err());
+        let mut q = query();
+        q.view = Some("mine".into());
+        assert!(export_report(State(pool), h, Query(q)).await.is_err());
+    }
+}
