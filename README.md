@@ -1,9 +1,7 @@
 # labflow
 
-当前正式应用版本：**v2.5.5**。当前业务源码：`source/LabFlow-PostgreSQL-v2.5.5/`。
-本版将人员变动通知记录移入下级页面，保留发起通知与汇总表、旧通知链接及原有权限。基于 v2.5.4，不包含 v2.5.0～v2.5.2 的 AI 功能。详情见 [本版安装包说明](source/LabFlow-PostgreSQL-v2.5.5/安装包说明.md)。
-
-开发候选 **v2.5.6** 在 `source/LabFlow-PostgreSQL-v2.5.6/`，新增多步骤工作量、数量分组及整单计费；正式发布状态以 Release 和交付记录为准。
+当前正式应用版本：**v2.5.6**。当前业务源码：`source/LabFlow-PostgreSQL-v2.5.6/`。
+本版增加多步骤工作量、数量分组和整单计费，支持多人分工及可额外计费的返工；历史数据和自定义配置保留。详见 [本版安装包说明](source/LabFlow-PostgreSQL-v2.5.6/安装包说明.md) 和 [实施核对](docs/多步骤工作量与计费实施核对.md)。
 
 ## 开始开发
 
@@ -17,7 +15,7 @@
 $projectRoot = Read-Host '输入实际项目目录'
 git clone --branch main --filter=blob:none --sparse https://github.com/HotLL233/labflow.git $projectRoot
 Set-Location -LiteralPath $projectRoot
-git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2.5.5
+git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2.5.6
 ```
 
 根 README、PROJECT_MEMORY、AGENTS 自动保留。版本目录以当时根 README 为准，不能把目录最大值当正式版。
@@ -25,7 +23,7 @@ git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2
 
 ```powershell
 git sparse-checkout add build-resources
-pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.5.5 -InstallDependencies
+pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.5.6 -InstallDependencies
 ```
 
 开发环境：Git、PowerShell 7、Node.js 24、Rust stable MSVC/C++ Build Tools；Windows本地出包需要 Inno Setup 6。
@@ -34,13 +32,13 @@ pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-
 
 ## 下载正式软件
 
-- [v2.5.5 Release 及校验文件](https://github.com/HotLL233/labflow/releases/tag/v2.5.5)
-- [已有完整服务器安装的热更新包](https://github.com/HotLL233/labflow/releases/download/v2.5.5/labflow-v2.5.5-hotupdate.exe)
-- [首次安装完整包](https://github.com/HotLL233/labflow/releases/download/v2.5.5/labflow-v2.5.5.exe)
+- [v2.5.6 Release 及校验文件](https://github.com/HotLL233/labflow/releases/tag/v2.5.6)
+- [已有完整服务器安装的热更新包](https://github.com/HotLL233/labflow/releases/download/v2.5.6/labflow-v2.5.6-hotupdate.exe)
+- [首次安装完整包](https://github.com/HotLL233/labflow/releases/download/v2.5.6/labflow-v2.5.6.exe)
 
-包版本为 2.5.5.0 / labflow / HotLL；升级前备份数据库、附件和配置。程序内名称及管理员品牌配置保留。
+包版本为 2.5.6.0 / labflow / HotLL；升级前备份数据库、附件和配置。程序内名称及管理员品牌配置保留。
 
-正式标签源码 `f3b4870d9aa6eeb5ab864ce70c56bc951923b779`。Windows 和 Docker 发布流水线通过，Release 两包已下载核对大小、SHA-256 和版本；GHCR `2.5.5` 与 `latest` 指向相同摘要 `sha256:7f100306950ea462b6d9723ac2376b7c624efaaa02853e0b4edf67e8a41be347`。本地前端 322 项、Build/All 和共享自动化通过。未执行本版数据库集成、正式安装包安装/卸载生命周期、现场升级、浏览器端到端或容器业务验收；审批差异预览尚未实现。
+正式源码 `c0f6f5794b5a56b6c57622fb56808f471e29d27e`；Windows 与 Docker 发布流水线通过。正式流水线归档及其中两包、三份清单已取回，大小和 SHA-256 与 Release 一致。GHCR `2.5.6` 与 `latest` 均为 `sha256:2f8e31cee78917ef4d5a5c09fbdd84183f8b1ff432051cfba4b46d131a69c786`。本地隔离 Integration、备份恢复、浏览器、Excel 和旧库升级测试通过；现场升级、正式安装/卸载生命周期和容器业务运行未验证。直接下载大文件曾超时，正式文件通过流水线归档取回校验。
 
 ## 仓库与发布约定
 
