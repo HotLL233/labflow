@@ -3,6 +3,8 @@
 当前正式应用版本：**v2.5.5**。当前业务源码：`source/LabFlow-PostgreSQL-v2.5.5/`。
 本版将人员变动通知记录移入下级页面，保留发起通知与汇总表、旧通知链接及原有权限。基于 v2.5.4，不包含 v2.5.0～v2.5.2 的 AI 功能。详情见 [本版安装包说明](source/LabFlow-PostgreSQL-v2.5.5/安装包说明.md)。
 
+开发候选 **v2.5.6** 在 `source/LabFlow-PostgreSQL-v2.5.6/`，新增多步骤工作量、数量分组及整单计费；正式发布状态以 Release 和交付记录为准。
+
 ## 开始开发
 
 先读 [PROJECT_MEMORY.md](PROJECT_MEMORY.md)。它是唯一现行共享记忆；
