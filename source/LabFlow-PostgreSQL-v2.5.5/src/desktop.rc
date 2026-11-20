@@ -1,0 +1,45 @@
+#pragma code_page(65001)
+#define DS_SETFONT 0x0040
+#define DS_MODALFRAME 0x0080
+#define WS_POPUP 0x80000000
+#define WS_CAPTION 0x00C00000
+#define WS_SYSMENU 0x00080000
+#define WS_TABSTOP 0x00010000
+#define ES_AUTOHSCROLL 0x0080
+#define ES_NUMBER 0x2000
+#define BS_AUTOCHECKBOX 0x0003
+#define IDOK 1
+#define IDCANCEL 2
+
+101 DIALOGEX 0, 0, 276, 194
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "labflow 设置"
+FONT 9, "Microsoft YaHei UI"
+BEGIN
+    ICON 1, -1, 14, 12, 20, 20
+    LTEXT "labflow", -1, 44, 12, 210, 12
+    LTEXT "正在检查后台服务…", 1006, 44, 27, 210, 12
+    LTEXT "服务端口", -1, 16, 58, 62, 12
+    EDITTEXT 1001, 86, 55, 156, 16, ES_NUMBER | ES_AUTOHSCROLL | WS_TABSTOP
+    LTEXT "端口改变后将自动重启后台服务。", 1004, 16, 80, 244, 18
+    CONTROL "登录 Windows 后自动启动 labflow", 1002, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 106, 244, 16
+    LTEXT "", 1003, 16, 136, 190, 22
+    PUSHBUTTON "关于…", 1008, 214, 134, 46, 18
+    PUSHBUTTON "打开网页", 1005, 16, 166, 64, 18
+    PUSHBUTTON "退出程序", 1007, 86, 166, 50, 18
+    DEFPUSHBUTTON "保存", IDOK, 142, 166, 54, 18
+    PUSHBUTTON "关闭", IDCANCEL, 202, 166, 58, 18
+END
+
+102 DIALOGEX 0, 0, 276, 148
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于 labflow"
+FONT 9, "Microsoft YaHei UI"
+BEGIN
+    ICON 1, -1, 16, 16, 20, 20
+    LTEXT "labflow", -1, 48, 16, 206, 14
+    LTEXT "", 1003, 48, 36, 206, 18
+    LTEXT "发布者：HotLL", -1, 16, 68, 244, 14
+    LTEXT "样品、检测与工作量管理", -1, 16, 88, 244, 14
+    DEFPUSHBUTTON "关闭", IDOK, 194, 120, 60, 18
+END
