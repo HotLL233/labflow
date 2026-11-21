@@ -112,5 +112,6 @@ v2.5.2,LabFlow-PostgreSQL-v2.5.2,True,True,published,AI本人通知已读与四�
 v2.5.3,LabFlow-PostgreSQL-v2.5.3,True,True,published,基于v2.4.14的双入口送样防重复修复；不含AI助手；Windows两包/Release/GHCR及正式文件取回核验完成
 v2.5.4,LabFlow-PostgreSQL-v2.5.4,True,True,published,分析公共账号来源工作量人员归属修复；Windows两包与GHCR已发布
 v2.5.5,LabFlow-PostgreSQL-v2.5.5,True,True,published,人员变动通知记录下级页；Windows两包与GHCR已发布并取回核验
-v2.5.6,LabFlow-PostgreSQL-v2.5.6,True,True,current-official,多步骤工作量和计费；Windows两包与GHCR已发布并取回核验
+v2.5.6,LabFlow-PostgreSQL-v2.5.6,True,True,published,多步骤工作量和计费；Windows两包与GHCR已发布并取回核验
+v2.5.7,LabFlow-PostgreSQL-v2.5.7,True,True,current-official,方法子步骤展示与主数据 Excel 配置；Windows 两包与 GHCR 已发布并取回核验
 archive/legacy-binaries-20261105,,True,True,historical-assets-archive,4份唯一历史字节及校验清单；非软件版本，不更新latest
