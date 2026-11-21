@@ -1,0 +1,139 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Box, Typography, Paper, Grid, useMediaQuery, useTheme, IconButton, Button, CircularProgress, Alert } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import ScienceIcon from '@mui/icons-material/Science';
+import ListAltIcon from '@mui/icons-material/ListAlt';
+import { getCurrentRoleDataScopes, getSampleInfoTypes } from '../api/client';
+import type { SampleInfoType } from '../types';
+import { useUser } from '../UserContext';
+import AnnouncementSlot from '../components/AnnouncementSlot';
+import { BUSINESS_COLORS } from '../constants/designTokens';
+
+
+const R = '2px';
+
+// 为不同检测类型分配一个合适的图标（通用科学图标）
+const pickIcon = () => <ScienceIcon sx={{ fontSize: 48 }} />;
+
+/** 合法的 6 位十六进制颜色，只有这种才能安全拼接透明后缀 */
+const HEX6 = /^#[0-9a-fA-F]{6}$/;
+
+/**
+ * v2.3.65：卡片配色取检测类型自身的 color。
+ * 管理端可自由填写色值；填写不合法或为空时回落到「样品信息登记」业务色，
+ * 避免拼出非法的 #RRGGBBAA 导致底色透明、看起来像“配色不生效”。
+ */
+const typeColor = (cat: SampleInfoType): string => {
+  const value = (cat.color || '').trim();
+  return HEX6.test(value) ? value : BUSINESS_COLORS.info.main;
+};
+
+const SampleInfoHome: React.FC = () => {
+  const n = useNavigate();
+  const { hasPermission } = useUser();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const [cats, setCats] = useState<SampleInfoType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    Promise.all([getSampleInfoTypes(), getCurrentRoleDataScopes()])
+      .then(([types, scopes]) => {
+        if (!active || types.code !== 0 || !types.data) return;
+        const visible = scopes.code === 0 && scopes.data?.has_sample_info_type_scope
+          ? types.data.filter((item) => scopes.data!.sample_info_type_keys.includes(item.type_key))
+          : types.data;
+        setCats(visible);
+      })
+      .catch((e: any) => { if (active) setError(e.message || '加载检测类型失败'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  return (
+    <Box sx={{ maxWidth: 900, mx: 'auto', mt: { xs: 1, md: 3 }, px: { xs: 1, md: 2 } }}>
+      <AnnouncementSlot position="sample_registration" mode="modal" />
+      {/* 顶部标题栏 */}
+    
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 1 }}>
+        <IconButton className="labflow-back-button" aria-label="返回首页" onClick={() => n('/')} size="small"><ArrowBackIcon /></IconButton>
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h5" fontWeight={700} sx={{ color: BUSINESS_COLORS.info.main }}>样品信息登记</Typography>
+          <Typography variant="body2" color="text.secondary">ICP、热分析、质谱等原样品基础信息填写</Typography>
+        </Box>
+        {hasPermission('stats:portal:sample-info') && <Button variant="outlined" startIcon={<BarChartIcon />} onClick={() => n('/sample-info/stats')}
+          sx={{ borderRadius: R, borderColor: BUSINESS_COLORS.info.main, color: BUSINESS_COLORS.info.main, '&:hover': { borderColor: BUSINESS_COLORS.info.main, bgcolor: BUSINESS_COLORS.info.soft } }}>
+          查看统计
+        </Button>}
+      </Box>
+    
+    
+      {loading ? (
+        <Box sx={{ textAlign: 'center', py: 8 }}><CircularProgress size={36} /></Box>
+      ) : error ? (
+        <Alert severity="error" sx={{ borderRadius: R }}>{error}</Alert>
+      ) : cats.length === 0 ? (
+        <Alert severity="info" sx={{ borderRadius: R }}>
+          暂无检测类型，请在「管理 → 样品信息登记管理」中添加检测类型。
+        </Alert>
+      ) : (
+        <>
+          {/* 大类卡片（从数据库读取） */}
+    
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            {cats.map((cat) => {
+              const accent = typeColor(cat);
+              return (
+              <Grid item xs={12} sm={6} key={cat.type_key}>
+                <Paper
+                  elevation={0}
+                  onClick={() => n(`/sample-info/entry?type=${encodeURIComponent(cat.type_key)}`)}
+                  sx={{
+                    p: { xs: 3, md: 4 }, borderRadius: R, cursor: 'pointer',
+                    background: `linear-gradient(145deg, #ffffff, ${accent}1a)`,
+                    border: `2px solid ${accent}`,
+                    boxShadow: `0 8px 32px ${accent}1a`,
+                    transition: 'all 0.2s',
+                    '&:hover': { transform: 'translateY(-4px)', boxShadow: `0 12px 40px ${accent}33` },
+                    textAlign: 'center',
+                  }}
+                >
+                  <Box sx={{ mb: 1.5, color: accent }}>{pickIcon()}</Box>
+                  <Typography variant="h6" fontWeight={700} sx={{ color: accent }} gutterBottom>{cat.label}</Typography>
+                  <Typography variant="body2" color="text.secondary">{cat.description || cat.type_key}</Typography>
+                </Paper>
+              </Grid>
+              );
+            })}
+          </Grid>
+    
+        </>
+      )}
+    
+      {/* 底部链接 */}
+      <Box sx={{ textAlign: 'center' }}>
+        <Paper
+          elevation={0}
+          onClick={() => n('/sample-info/entry')}
+          sx={{
+            display: 'inline-flex', alignItems: 'center', gap: 1, px: 3, py: 1.5, borderRadius: R, cursor: 'pointer',
+            border: `1px solid ${BUSINESS_COLORS.info.main}`, color: BUSINESS_COLORS.info.main,
+            transition: 'all 0.2s',
+            '&:hover': { bgcolor: BUSINESS_COLORS.info.soft },
+          }}
+        >
+          <ListAltIcon sx={{ fontSize: 22 }} />
+          <Typography variant="body2" fontWeight={600}>查看全部登记记录</Typography>
+        </Paper>
+      </Box>
+    </Box>
+  );
+
+};
+export default SampleInfoHome;
