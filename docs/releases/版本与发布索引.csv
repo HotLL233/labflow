@@ -115,3 +115,4 @@ v2.5.5,LabFlow-PostgreSQL-v2.5.5,True,True,published,人员变动通知记录下
 v2.5.6,LabFlow-PostgreSQL-v2.5.6,True,True,published,多步骤工作量和计费；Windows两包与GHCR已发布并取回核验
 v2.5.7,LabFlow-PostgreSQL-v2.5.7,True,True,current-official,方法子步骤展示与主数据 Excel 配置；Windows 两包与 GHCR 已发布并取回核验
 archive/legacy-binaries-20261105,,True,True,historical-assets-archive,4份唯一历史字节及校验清单；非软件版本，不更新latest
+v2.5.8,LabFlow-PostgreSQL-v2.5.8,False,False,local-verified,子步骤多选和管理布局；正式发布待完成
