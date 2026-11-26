@@ -1,9 +1,7 @@
 # labflow
 
-当前正式应用版本：**v2.5.9**。当前业务源码：`source/LabFlow-PostgreSQL-v2.5.9/`。
-本版修复多步骤检测实际数量重复统计，并恢复冻结单价对应的预计金额显示；步骤工作量和整单计费口径保留。详见 [本版安装包说明](source/LabFlow-PostgreSQL-v2.5.9/安装包说明.md) 和 [实施核对](docs/多步骤工作量与计费实施核对.md)。
-
-开发版 **v2.5.10** 在 `source/LabFlow-PostgreSQL-v2.5.10/`，新增[工作量 API 接入](source/LabFlow-PostgreSQL-v2.5.10/docs/工作量API接入.md)；不替代上述正式版本。
+当前正式应用版本：**v2.5.10**。当前业务源码：`source/LabFlow-PostgreSQL-v2.5.10/`。
+本版新增只读工作量 API，系统管理员可按检测部门、业务月份和工作类别配置接入范围。实际检测数量、检测工作量和辅助工作量分列，不输出应收金额、样品内容或附件。详见 [本版安装包说明](source/LabFlow-PostgreSQL-v2.5.10/安装包说明.md) 和 [工作量 API 接入](source/LabFlow-PostgreSQL-v2.5.10/docs/工作量API接入.md)。衡析接收端仍需适配，不能直接粘贴地址接入。
 
 ## 开始开发
 
@@ -17,7 +15,7 @@
 $projectRoot = Read-Host '输入实际项目目录'
 git clone --branch main --filter=blob:none --sparse https://github.com/HotLL233/labflow.git $projectRoot
 Set-Location -LiteralPath $projectRoot
-git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2.5.9
+git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2.5.10
 ```
 
 根 README、PROJECT_MEMORY、AGENTS 自动保留。版本目录以当时根 README 为准，不能把目录最大值当正式版。
@@ -25,7 +23,7 @@ git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2
 
 ```powershell
 git sparse-checkout add build-resources
-pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.5.9 -InstallDependencies
+pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.5.10 -InstallDependencies
 ```
 
 开发环境：Git、PowerShell 7、Node.js 24、Rust stable MSVC/C++ Build Tools；Windows本地出包需要 Inno Setup 6。
@@ -34,13 +32,13 @@ pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-
 
 ## 下载正式软件
 
-- [v2.5.9 Release 及校验文件](https://github.com/HotLL233/labflow/releases/tag/v2.5.9)
-- [已有完整服务器安装的热更新包](https://github.com/HotLL233/labflow/releases/download/v2.5.9/labflow-v2.5.9-hotupdate.exe)
-- [首次安装完整包](https://github.com/HotLL233/labflow/releases/download/v2.5.9/labflow-v2.5.9.exe)
+- [v2.5.10 Release 及校验文件](https://github.com/HotLL233/labflow/releases/tag/v2.5.10)
+- [已有完整服务器安装的热更新包](https://github.com/HotLL233/labflow/releases/download/v2.5.10/labflow-v2.5.10-hotupdate.exe)
+- [首次安装完整包](https://github.com/HotLL233/labflow/releases/download/v2.5.10/labflow-v2.5.10.exe)
 
-包版本为 2.5.9.0 / labflow / HotLL；升级前备份数据库、附件和配置。程序内名称及管理员品牌配置保留。
+包版本为 2.5.10.0 / labflow / HotLL；升级前备份数据库、附件和配置。程序内名称及管理员品牌配置保留，升级不会自动开启 API 接入。
 
-正式源码 `b3218a5a9320e09d0af71faec05c903c5ac3edd5`；Windows 和 GHCR 发布流水线通过，Release 两包及三份清单已取回并核对大小和 SHA-256。GHCR `2.5.9` 与 `latest` 均为 `sha256:87ef95fc4b4e1e09ffb93747da3f425aa6127a156eb6aa1bdceec1d9a77f0750`。隔离 Integration 前端 326 项、后端 424 项通过、4 项忽略；本版隔离程序导出三步骤 6 个样品，原生 Excel 重算的检测数量和项目总量均为 6。现场升级、安装/卸载生命周期及容器业务运行未验证。
+正式源码 `2f098128cfacc90908d6bb2ae09731475a8bca2c`；Windows 和 GHCR 发布流水线通过，Release 两包及三份交付文件已从正式 CI 归档取回并与 Release 核对大小和 SHA-256。GHCR `2.5.10` 与 `latest` 均为 `sha256:a9a331972f3bf4d3afc209cb156529b5ae73f07e7fcfa5eed62c8c243455c8fc`。本地前端 326 项、隔离 PostgreSQL 后端 426 项通过、4 项忽略。未执行现场升级、安装/卸载生命周期、容器业务运行或与衡析的真实数据联调。
 
 ## 仓库与发布约定
 
