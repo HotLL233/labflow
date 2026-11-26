@@ -3,6 +3,8 @@
 当前正式应用版本：**v2.5.9**。当前业务源码：`source/LabFlow-PostgreSQL-v2.5.9/`。
 本版修复多步骤检测实际数量重复统计，并恢复冻结单价对应的预计金额显示；步骤工作量和整单计费口径保留。详见 [本版安装包说明](source/LabFlow-PostgreSQL-v2.5.9/安装包说明.md) 和 [实施核对](docs/多步骤工作量与计费实施核对.md)。
 
+开发版 **v2.5.10** 在 `source/LabFlow-PostgreSQL-v2.5.10/`，新增[工作量 API 接入](source/LabFlow-PostgreSQL-v2.5.10/docs/工作量API接入.md)；不替代上述正式版本。
+
 ## 开始开发
 
 先读 [PROJECT_MEMORY.md](PROJECT_MEMORY.md)。它是唯一现行共享记忆；
