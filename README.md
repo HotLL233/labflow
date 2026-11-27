@@ -5,6 +5,8 @@
 
 开发版 **v2.5.11** 新增[工作量 API 接入永久删除](source/LabFlow-PostgreSQL-v2.5.11/更新说明.md)。本地验证与 Windows 两种安装包已完成，未正式发布或升级现网。
 
+隔离试点开发版 **v2.5.12** 基于 v2.5.11，新增 [LabFlow OIDC 登录和原人员绑定](source/LabFlow-PostgreSQL-v2.5.12/docs/统一登录试点.md)，默认关闭，未发布或接入现场。
+
 ## 开始开发
 
 先读 [PROJECT_MEMORY.md](PROJECT_MEMORY.md)。它是唯一现行共享记忆；
