@@ -1,9 +1,9 @@
 # labflow
 
-当前正式应用版本：**v2.5.12**。当前业务源码：`source/LabFlow-PostgreSQL-v2.5.12/`。
-本版加入 [Keycloak 统一登录试点](source/LabFlow-PostgreSQL-v2.5.12/docs/统一登录试点.md)，默认关闭，绑定原人员且不改业务权限和历史归属；同时纳入 v2.5.11 的工作量 API 接入永久删除。现有只读工作量 API 使用独立令牌，衡析接收端仍需适配。详见[本版安装包说明](source/LabFlow-PostgreSQL-v2.5.12/安装包说明.md)和[工作量 API 接入](source/LabFlow-PostgreSQL-v2.5.12/docs/工作量API接入.md)。
+当前正式应用版本：**v2.5.13**。当前业务源码：`source/LabFlow-PostgreSQL-v2.5.13/`。
+本版修复人员反馈提交、审批（含驳回）、撤回和删除已保存却报错的问题。操作结果与通知投递状态分别显示，不补发历史通知。详见[更新说明](source/LabFlow-PostgreSQL-v2.5.13/更新说明.md)和[安装包说明](source/LabFlow-PostgreSQL-v2.5.13/安装包说明.md)。
 
-未发布的 [v2.5.13](source/LabFlow-PostgreSQL-v2.5.13/更新说明.md) 修复人员反馈操作已保存、因投递状态查询或恢复日志清理失败而误报的问题，覆盖提交、审批、撤回和删除。
+保留默认关闭的 [Keycloak 统一登录试点](source/LabFlow-PostgreSQL-v2.5.13/docs/统一登录试点.md)和可限定范围的[只读工作量 API](source/LabFlow-PostgreSQL-v2.5.13/docs/工作量API接入.md)。衡析接收端仍需适配。
 
 ## 开始开发
 
@@ -17,7 +17,7 @@
 $projectRoot = Read-Host '输入实际项目目录'
 git clone --branch main --filter=blob:none --sparse https://github.com/HotLL233/labflow.git $projectRoot
 Set-Location -LiteralPath $projectRoot
-git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2.5.12
+git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2.5.13
 ```
 
 根 README、PROJECT_MEMORY、AGENTS 自动保留。版本目录以当时根 README 为准，不能把目录最大值当正式版。
@@ -25,7 +25,7 @@ git sparse-checkout set .github scripts skills docs source/LabFlow-PostgreSQL-v2
 
 ```powershell
 git sparse-checkout add build-resources
-pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.5.12 -InstallDependencies
+pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-PostgreSQL-v2.5.13 -InstallDependencies
 ```
 
 开发环境：Git、PowerShell 7、Node.js 24、Rust stable MSVC/C++ Build Tools；Windows本地出包需要 Inno Setup 6。
@@ -34,13 +34,14 @@ pwsh -NoProfile -File scripts/prepare-local-build.ps1 -SourceDir source/LabFlow-
 
 ## 下载正式软件
 
-- [v2.5.12 Release 及校验文件](https://github.com/HotLL233/labflow/releases/tag/v2.5.12)
-- [已有完整服务器安装的热更新包](https://github.com/HotLL233/labflow/releases/download/v2.5.12/labflow-v2.5.12-hotupdate.exe)
-- [首次安装完整包](https://github.com/HotLL233/labflow/releases/download/v2.5.12/labflow-v2.5.12.exe)
+- [v2.5.13 Release 及校验文件](https://github.com/HotLL233/labflow/releases/tag/v2.5.13)
+- [已有完整服务器安装的热更新包](https://github.com/HotLL233/labflow/releases/download/v2.5.13/labflow-v2.5.13-hotupdate.exe)
+- [首次安装完整包](https://github.com/HotLL233/labflow/releases/download/v2.5.13/labflow-v2.5.13.exe)
+- Docker：`ghcr.io/hotll233/labflow:2.5.13`（`linux/amd64`）
 
-包版本为 2.5.12.0 / labflow / HotLL；升级前备份数据库、附件和配置。程序内名称及管理员品牌配置保留，升级不会自动开启统一登录或迁移人员。
+包版本为 2.5.13.0 / labflow / HotLL；升级前备份数据库、附件和配置。本次修复不新增数据库迁移，不改变统一登录开关、工作量 API 令牌或通知规则。
 
-正式源码 `487000930b51e0395ae6f711a3b36ac5deb985ad`；Windows 两包及三份交付文件均已取回，并与 GitHub Release 核对大小和 SHA-256。GHCR `2.5.12` 与 `latest` 均为 `sha256:47db6cbf290efa0919c1bcc0a3b4f38204101e3d25aae7b74903531d28a5c753`。本地前端 326 项、隔离 PostgreSQL 后端 428 项通过、4 项既有测试忽略。未执行现场升级、安装/卸载生命周期、容器业务运行或与衡析的真实数据联调。
+正式源码 `978018068f12f2febd3519acf870026032b8f2c7`；Windows 两包及三份交付文件已从同标签 CI 归档取回，并与 Release 核对大小和 SHA-256。GHCR `2.5.13` 与 `latest` 均为 `sha256:6ef434ad2001618ee4a65123a22d69d41fd37a033d406e7eb87ad19ce30650f3`。本地前端 327 项、隔离 PostgreSQL 后端 430 项通过，另 4 项既有测试忽略；人员反馈隔离 HTTP 回归通过。未部署现网，未执行安装/卸载生命周期、容器业务运行、真实群发送或衡析联调。
 
 ## 仓库与发布约定
 
