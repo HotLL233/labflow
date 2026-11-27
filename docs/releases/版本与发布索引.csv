@@ -117,4 +117,6 @@ v2.5.7,LabFlow-PostgreSQL-v2.5.7,True,True,published,方法子步骤展示与主
 archive/legacy-binaries-20261105,,True,True,historical-assets-archive,4份唯一历史字节及校验清单；非软件版本，不更新latest
 v2.5.8,LabFlow-PostgreSQL-v2.5.8,True,True,published,子步骤多选和管理布局；Windows 两包及 GHCR 已发布并取回核验
 v2.5.9,LabFlow-PostgreSQL-v2.5.9,True,True,published,多步骤检测数量及金额预览修复；Windows 两包及 GHCR 已发布并取回核验
-v2.5.10,LabFlow-PostgreSQL-v2.5.10,True,True,current-official,可限定范围的只读工作量 API；Windows 两包及 GHCR 已发布并核验；衡析接收端未适配
+v2.5.10,LabFlow-PostgreSQL-v2.5.10,True,True,published,可限定范围的只读工作量 API；Windows 两包及 GHCR 已发布并核验；衡析接收端未适配
+v2.5.11,LabFlow-PostgreSQL-v2.5.11,False,False,source-only,工作量 API 接入永久删除；已纳入 v2.5.12
+v2.5.12,LabFlow-PostgreSQL-v2.5.12,True,True,current-official,Keycloak 统一登录试点默认关闭；保留工作量 API 接入删除；Windows 两包及 GHCR 已发布并核验
