@@ -3,6 +3,8 @@
 当前正式应用版本：**v2.5.12**。当前业务源码：`source/LabFlow-PostgreSQL-v2.5.12/`。
 本版加入 [Keycloak 统一登录试点](source/LabFlow-PostgreSQL-v2.5.12/docs/统一登录试点.md)，默认关闭，绑定原人员且不改业务权限和历史归属；同时纳入 v2.5.11 的工作量 API 接入永久删除。现有只读工作量 API 使用独立令牌，衡析接收端仍需适配。详见[本版安装包说明](source/LabFlow-PostgreSQL-v2.5.12/安装包说明.md)和[工作量 API 接入](source/LabFlow-PostgreSQL-v2.5.12/docs/工作量API接入.md)。
 
+未发布的 [v2.5.13](source/LabFlow-PostgreSQL-v2.5.13/更新说明.md) 修复人员反馈操作已保存、因投递状态查询或恢复日志清理失败而误报的问题，覆盖提交、审批、撤回和删除。
+
 ## 开始开发
 
 先读 [PROJECT_MEMORY.md](PROJECT_MEMORY.md)。它是唯一现行共享记忆；
