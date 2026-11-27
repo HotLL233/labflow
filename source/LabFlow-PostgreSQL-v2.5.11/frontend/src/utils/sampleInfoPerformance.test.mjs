@@ -1,0 +1,972 @@
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { test } from 'node:test';
+import ts from 'typescript';
+
+const require = createRequire(import.meta.url);
+const src = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const ok = data => ({ code: 0, data });
+const deferred = () => {
+  let resolve, reject;
+  const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
+};
+const columns = [
+  { id: 1, field_key: 'status', label: '状态', data_type: 'text', is_predefined: true, is_active: true, show_in_list: true, show_in_form: false },
+  { id: 2, field_key: 'batch_no', label: '批号', data_type: 'text', is_predefined: true, is_active: true, show_in_list: true, show_in_form: true },
+  { id: 3, field_key: 'action_collect', label: '取样', data_type: 'action', is_active: true, show_in_list: true, show_in_form: false, width: 80 },
+];
+const record = (id, status = '待取样') => ({
+  id, status, type_key: 'alpha', seq_no: id, batch_no: 'batch-' + id, quantity: 5,
+  submitted_at: '2026-10-13T10:00:00', sampled_at: null, sampled_by: '', recorded_quantity: 0,
+  workload_recorded: false, extra_fields: {},
+});
+
+// Run the real TSX function bodies with deterministic hooks and controllable API promises.
+// This verifies request ordering/state behavior; it does not emulate browser layout or React DOM.
+function harness() {
+  const h = { active: null, cardLayout: false, search: new URLSearchParams('type=alpha'), timers: [], events: new Map(), cache: new Map() };
+  const storage = new Map();
+  globalThis.localStorage = globalThis.sessionStorage = { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) };
+  globalThis.window = {
+    setInterval: (callback, ms) => { h.timers.push({ callback, ms }); return h.timers.length; }, clearInterval() {},
+    setTimeout: (callback, ms) => { h.timers.push({ callback, ms }); return h.timers.length; },
+    clearTimeout: id => { if (h.timers[id - 1]) h.timers[id - 1].cancelled = true; },
+    addEventListener: (name, callback) => h.events.set(name, callback), removeEventListener: name => h.events.delete(name),
+    requestAnimationFrame: callback => { callback(); return 1; }, scrollTo() {}, scrollY: 0, prompt: () => '', confirm: () => true,
+  };
+  const same = (a, b) => a && b && a.length === b.length && a.every((value, index) => Object.is(value, b[index]));
+  const react = {
+    createElement: (type, props, ...children) => ({ type, props: { ...props, children } }), Fragment: 'Fragment', memo: component => component,
+    useState(initial) {
+      const owner = h.active, index = owner.cursor++;
+      if (!owner.hooks[index]) {
+        const state = { value: typeof initial === 'function' ? initial() : initial };
+        state.set = next => {
+          const value = typeof next === 'function' ? next(state.value) : next;
+          if (!Object.is(value, state.value)) { state.value = value; owner.dirty = true; }
+        };
+        owner.hooks[index] = state;
+      }
+      return [owner.hooks[index].value, owner.hooks[index].set];
+    },
+    useMemo(factory, deps) {
+      const owner = h.active, index = owner.cursor++, previous = owner.hooks[index];
+      if (!previous || !same(previous.deps, deps)) owner.hooks[index] = { deps, value: factory() };
+      return owner.hooks[index].value;
+    },
+    useCallback(callback, deps) { return react.useMemo(() => callback, deps); },
+    useRef(initial) { return react.useMemo(() => ({ current: initial }), []); },
+    useEffect(callback, deps) {
+      const owner = h.active, index = owner.cursor++, previous = owner.hooks[index];
+      if (!previous || !same(previous.deps, deps)) {
+        owner.hooks[index] = { deps, cleanup: previous?.cleanup };
+        owner.effects.push(() => {
+          owner.hooks[index].cleanup?.();
+          owner.hooks[index].cleanup = callback();
+        });
+      }
+    },
+  };
+  h.user = { user: { id: 7, username: 'operator', is_admin: true }, hasPermission: () => true };
+  h.api = {
+    getRdRecordColumns: async () => ok([]), getRdRecords: async () => ok({ items: [], total: 0 }),
+    getSampleInfoTypes: async () => ok([{ type_key: 'alpha', label: 'Alpha' }]),
+    getCurrentRoleDataScopes: async () => ok({}), getDivisions: async () => ok([]), getGroups: async () => ok([]), getProjects: async () => ok([]),
+    getActiveSampleInfoColumns: async () => ok(columns), getSampleInfoDrafts: async () => ok([]),
+    getSampleInfoRecords: async () => ok({ items: [record(1)], total: 1 }), batchGetSampleInfoAttachments: async () => ok({}),
+    getSampleInfoFilterOptions: async ({ field }) => ok({ field, options: [], total: 0, truncated: false }),
+    getSampleInfoAttachments: async () => ok([]), uploadSampleInfoAttachment: async () => ok({}), deleteSampleInfoAttachment: async () => ok(null),
+    getServerTime: async () => ok({ unix_ms: Date.now() }),
+    requireApiSuccess: (response, message) => {
+      if (response.code !== 0) throw Object.assign(new Error(response.message || message), { name: 'ApiBusinessError', code: response.code });
+      return response.data;
+    },
+  };
+  h.client = { get: async () => ({ data: ok({ step_work: null }) }) };
+  const stableRef = () => {};
+  const material = new Proxy({}, { get: (_, key) => key });
+  function load(file) {
+    if (h.cache.has(file)) return h.cache.get(file);
+    const module = { exports: {} };
+    h.cache.set(file, module.exports);
+    const compiled = ts.transpileModule(readFileSync(file, 'utf8'), {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React, esModuleInterop: true, target: ts.ScriptTarget.ES2020 },
+    }).outputText;
+    const resolve = name => {
+      if (name === 'react') return react;
+      if (name === '@mui/material') return material;
+      if (name.startsWith('@mui/icons-material/')) return { default: name, __esModule: true };
+      if (name === 'react-router-dom') return { useSearchParams: () => {
+        const owner = h.active;
+        return [h.search, next => { h.search = new URLSearchParams(next); owner.dirty = true; }];
+      }, useNavigate: () => stableRef };
+      if (name.endsWith('/UserContext')) return { useUser: () => h.user };
+      if (name.endsWith('/UiDisplayContext')) return { useUiDisplay: () => ({ showBusinessNo: true }) };
+      if (name.endsWith('/api/client') || name.endsWith('/api/admin') || name.endsWith('/api/workload') || name.endsWith('/api/system')) return h.api;
+      if (name.endsWith('/http')) return { client: h.client, requireApiSuccess: h.api.requireApiSuccess, downloadFile() {} };
+      if (name.endsWith('/useTableConfig')) return { useTableConfig: () => h.tableConfig };
+      if (name.endsWith('/useRecordTableStyle')) return { useRecordTableStyle: () => h.styleApi };
+      if (name.endsWith('/useCardLayout')) return { useCardLayout: () => h.cardLayout };
+      if (name.endsWith('/RecordActionSettings')) return { useRecordActionLayout: () => ({ config: h.actionConfig }) };
+      if (name.endsWith('/columnLayoutHooks')) return { useContainerWidth: () => ({ ref: stableRef, width: 1200 }), ColumnResizeHandle: 'ColumnResizeHandle' };
+      if (name.endsWith('/SampleInfoRecordList')) return { default: 'SampleInfoRecordList', __esModule: true };
+      if (name.includes('/components/') && !name.endsWith('/RecordTableTools') && !name.endsWith('/mobileCardStyles')) return { default: name.split('/').at(-1), __esModule: true };
+      if (!name.startsWith('.')) return require(name);
+      const base = path.resolve(path.dirname(file), name);
+      const target = ['.ts', '.tsx', '.js'].map(ext => base + ext).find(existsSync);
+      assert.ok(target, 'missing import ' + name);
+      return load(target);
+    };
+    new Function('require', 'module', 'exports', 'React', compiled)(resolve, module, module.exports, react);
+    h.cache.set(file, module.exports);
+    return module.exports;
+  }
+  h.load = relative => load(path.join(src, relative));
+  const styles = h.load('utils/recordTableStyle.ts');
+  h.styleApi = { spec: styles.DEFAULT_RECORD_TABLE_STYLE, resolver: styles.createStyleResolver(styles.DEFAULT_RECORD_TABLE_STYLE, {}), tableSx: {}, setColumnWidth() {} };
+  h.actionConfig = h.load('utils/recordActionLayout.ts').normalizeActionLayout(null);
+  h.tableConfig = { row_height: 48, seq_column_width: 54, checkbox_column_width: 44 };
+  h.mount = (component, props) => {
+    const owner = { hooks: [], effects: [], dirty: true, cursor: 0, tree: null, props };
+    owner.render = () => {
+      owner.cursor = 0; owner.dirty = false; h.active = owner;
+      const rendered = component(owner.props);
+      if (typeof rendered?.type === 'function' && rendered.props?.key !== undefined) {
+        if (owner.componentKey !== rendered.props.key) {
+          for (const hook of owner.hooks) hook?.cleanup?.();
+          owner.hooks = []; owner.effects = []; owner.cursor = 0;
+          owner.componentKey = rendered.props.key;
+        }
+        owner.tree = rendered.type(rendered.props);
+      } else owner.tree = rendered;
+      h.active = null;
+      for (const effect of owner.effects.splice(0)) effect();
+    };
+    owner.flush = async () => {
+      for (let pass = 0; pass < 30; pass++) {
+        if (owner.dirty) owner.render();
+        await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+        if (!owner.dirty) return;
+      }
+      throw Error('render did not settle');
+    };
+    return owner;
+  };
+  return h;
+}
+
+function nodes(tree, predicate, found = []) {
+  if (!tree || typeof tree !== 'object') return found;
+  if (Array.isArray(tree)) { tree.forEach(child => nodes(child, predicate, found)); return found; }
+  if (predicate(tree)) found.push(tree);
+  nodes(tree.props?.children, predicate, found);
+  return found;
+}
+const listProps = owner => nodes(owner.tree, node => node.type === 'SampleInfoRecordList')[0].props;
+
+test('source workload requires an authorized public subject and sends it separately from the operator', async () => {
+  for (const independent of [false, true]) {
+    const h = harness(), calls = [];
+    const people = [{ id: 11, username: '分析甲', role_names: [], division_id: 1, division_name: '分析组' }];
+    h.api.getAnalysisPublicAccountScope = async () => ok({ accounts: people });
+    const target = { project_id: 2, group_id: 3, division_id: 1, project_name: '项目', laboratory: '实验室', department: '部门', coefficient: 1 };
+    const preview = { source_record_id: 5, operator_username: '公共账号', department: '部门', laboratory: '实验室', project: '项目', quantity: 3, recorded: false, method_id: 1,
+      instruments: [{ method_id: 1, instrument_id: 1, instrument: '仪器', method_name: '方法', multiplier: 1, coefficient: 1 }],
+      ...(independent ? { source_summary: { quantity: 3 }, targets: [target], selected_project_id: 2, selected_group_id: 3 } : {}) };
+    const owner = h.mount(h.load('components/SampleWorkloadDialog.tsx').default, { preview, draftOwnerId: 7, isAnalysisPublicAccount: true, onClose() {}, onConfirm: async data => calls.push(data) });
+    await owner.flush();
+    const submit = () => nodes(owner.tree, node => node.type === 'Button' && node.props.children.includes('确认录入'))[0];
+    assert.equal(submit().props.disabled, true);
+    const selector = nodes(owner.tree, node => node.type === 'Autocomplete' && node.props.options === people)[0];
+    assert.ok(selector); selector.props.onChange(null, people[0]); await owner.flush();
+    assert.equal(submit().props.disabled, false);
+    await submit().props.onClick(); await owner.flush();
+    assert.equal(calls[0].subject_user_id, 11);
+  }
+});
+
+test('step configuration preserves local input while checking a conflicting server version', async () => {
+  const h = harness(), original = { revision: 1, ordered: false, steps: [{ id: 5, name: '原步骤', coefficient: 1, enabled: true }] };
+  const latest = { revision: 2, ordered: true, steps: [{ id: 5, name: '服务器步骤', coefficient: 2, enabled: true }] };
+  let reads = 0;
+  h.client = { get: async () => ({ data: ok(++reads === 1 ? original : latest) }), put: async () => { throw new Error('配置已变化'); } };
+  const owner = h.mount(h.load('components/MethodSteps.tsx').default, { methodId: 9, onDirtyChange() {} });
+  await owner.flush();
+  const field = () => nodes(owner.tree, node => node.type === 'TextField' && node.props.label === '步骤 1')[0];
+  const button = text => nodes(owner.tree, node => node.type === 'Button' && node.props.children.includes(text))[0];
+  field().props.onChange({ target: { value: '本地修改' } }); await owner.flush();
+  await button('保存步骤').props.onClick(); await owner.flush();
+  const errorAlert = nodes(owner.tree, node => node.type === 'Alert' && node.props.severity === 'error')[0];
+  await errorAlert.props.action.props.onClick(); await owner.flush();
+  assert.equal(field().props.value, '本地修改');
+  assert.ok(button('使用服务器配置'));
+  window.confirm = () => false;
+  button('使用服务器配置').props.onClick(); await owner.flush();
+  assert.equal(field().props.value, '本地修改');
+  window.confirm = () => true;
+  button('使用服务器配置').props.onClick(); await owner.flush();
+  assert.equal(field().props.value, '服务器步骤');
+});
+
+test('source step dialog selects all steps and submits an explicitly selected group', async () => {
+  const h = harness(), calls = [];
+  h.client = { get: async () => ({ data: ok({ step_work: { started: false, method_id: 1, ordered: true, steps: [{ id: 17, name: '前处理', coefficient: 2 }, { id: 18, name: '检测', coefficient: 3 }], groups: [] } }) }) };
+  const preview = { source_record_id: 5, operator_username: '操作人', department: '部门', laboratory: '实验室', project: '项目', quantity: 10, recorded: false, method_id: 1,
+    instruments: [{ method_id: 1, instrument_id: 1, instrument: '仪器', method_name: '方法', multiplier: 1, coefficient: 1 }] };
+  const owner = h.mount(h.load('components/SampleWorkloadDialog.tsx').default, { preview, draftOwnerId: 7, onClose() {}, onConfirm: async data => calls.push(data) });
+  await owner.flush();
+  const byLabel = label => nodes(owner.tree, node => node.type === 'TextField' && node.props.label === label);
+  const button = text => nodes(owner.tree, node => node.type === 'Button' && node.props.children.includes(text))[0];
+  assert.equal(button('确认录入').props.disabled, true);
+  button('添加数量分组').props.onClick(); await owner.flush();
+  button('添加数量分组').props.onClick(); await owner.flush();
+  byLabel('数量')[0].props.onChange({ target: { value: '5' } }); await owner.flush();
+  byLabel('数量')[1].props.onChange({ target: { value: '5' } }); await owner.flush();
+  byLabel('处理分组')[0].props.onChange({ target: { value: '0' } }); await owner.flush();
+  nodes(owner.tree, node => node.type === 'FormControlLabel' && node.props.label === '全选')[0].props.control.props.onChange({ target: { checked: true } }); await owner.flush();
+  byLabel('本次录入数量')[0].props.onChange({ target: { value: '5' } }); await owner.flush();
+  assert.equal(button('确认录入').props.disabled, false);
+  await button('确认录入').props.onClick(); await owner.flush();
+  assert.deepEqual(calls[0].step_work, { template_id: 17, template_ids: [17, 18], groups: [{ name: '第 1 组', quantity: 5 }, { name: '第 2 组', quantity: 5 }], group_index: 0, rework: false, extra_charge: false });
+});
+
+test('started step detection previews its frozen whole-order price', async () => {
+  const h = harness();
+  h.client = { get: async () => ({ data: ok({ step_work: { started: true, method_id: 1, quantity: 6, unit_price: 20, multiplier: 1.5, ordered: false, steps: [{ id: 17, name: '检测', coefficient: 2 }], groups: [{ id: 3, name: '全部', quantity: 6, progress: [] }] } }) }) };
+  const preview = { source_record_id: 5, operator_username: '操作人', department: '部门', laboratory: '实验室', project: '项目', quantity: 6, recorded: false, method_id: 1,
+    instruments: [{ method_id: 1, instrument_id: 1, instrument: '仪器', method_name: '方法', multiplier: 2, coefficient: 1, amount: 99 }] };
+  const owner = h.mount(h.load('components/SampleWorkloadDialog.tsx').default, { preview, draftOwnerId: 7, onClose() {}, onConfirm: async () => {} });
+  await owner.flush();
+  const amount = nodes(owner.tree, node => node.props?.['aria-label'] === '本次金额')[0];
+  assert.deepEqual(amount.props.children, ['180.00']);
+});
+
+test('RD route selects only an authorized subject, ordinary accounts keep the existing identity behavior, and drafts isolate subjects', async () => {
+  const h = harness(), calls = [];
+  const people = [{ id: 11, username: '分析甲', role_names: [], division_id: 1, division_name: '分析组' }];
+  h.api.getAnalysisPublicAccountScope = async () => ok({ accounts: people });
+  const preview = { source_record_id: 5, operator_username: '公共账号', department: '部门', laboratory: '实验室', project: '项目', quantity: 3, recorded: false, method_id: 1,
+    instruments: [{ method_id: 1, instrument_id: 1, instrument: '仪器', method_name: '方法', multiplier: 1, coefficient: 1 }] };
+  const component = h.load('components/SampleWorkloadDialog.tsx').default;
+  const publicOwner = h.mount(component, { preview, draftOwnerId: 7, isAnalysisPublicAccount: true, initialSubjectUserId: 11, onClose() {}, onConfirm: async data => calls.push(data) });
+  await publicOwner.flush();
+  let button = nodes(publicOwner.tree, node => node.type === 'Button' && node.props.children.includes('确认录入'))[0];
+  assert.equal(button.props.disabled, false); await button.props.onClick(); assert.equal(calls[0].subject_user_id, 11);
+  const invalidOwner = h.mount(component, { preview, draftOwnerId: 7, isAnalysisPublicAccount: true, initialSubjectUserId: 999, onClose() {}, onConfirm: async data => calls.push(data) });
+  await invalidOwner.flush();
+  button = nodes(invalidOwner.tree, node => node.type === 'Button' && node.props.children.includes('确认录入'))[0];
+  assert.equal(button.props.disabled, true);
+  const ordinaryOwner = h.mount(component, { preview, draftOwnerId: 7, onClose() {}, onConfirm: async data => calls.push(data) });
+  await ordinaryOwner.flush();
+  button = nodes(ordinaryOwner.tree, node => node.type === 'Button' && node.props.children.includes('确认录入'))[0];
+  assert.equal(button.props.disabled, false); await button.props.onClick(); assert.equal(calls.at(-1).subject_user_id, undefined);
+  const key = h.load('utils/sampleWorkload.ts').sampleWorkloadDraftKey;
+  assert.notEqual(key(7, 5, 'rd', 11), key(7, 5, 'rd', 12));
+  assert.notEqual(key(7, 5, 'sample_info', 11), key(7, 5, 'rd', 11));
+  assert.notEqual(key(7, 5, 'rd', 11), key(7, 5, 'rd'));
+});
+
+test('sample-info page forwards the chosen subject through its actual confirm callback', async () => {
+  const h = harness(), calls = [];
+  h.user.user.is_analysis_public_account = true;
+  h.api.getSampleInfoWorkloadPreview = async id => ok({ source_record_id: id, quantity: 3, recorded: false });
+  h.api.createSampleInfoWorkload = async (id, data) => { calls.push({ id, data }); return ok({}); };
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+  await listProps(owner).onRecordWorkload(1); await owner.flush();
+  const dialog = nodes(owner.tree, node => node.type === 'SampleWorkloadDialog')[0];
+  assert.equal(dialog.props.isAnalysisPublicAccount, true);
+  await dialog.props.onConfirm({ subject_user_id: 11, method_id: 3, quantity: 1, multiplier: 1, recorded_at: '2026-11-19T10:00:00' });
+  assert.equal(calls.length, 1); assert.equal(calls[0].id, 1); assert.equal(calls[0].data.subject_user_id, 11);
+});
+
+test('RD records passes its portal-selected public subject into the source workload dialog', async () => {
+  const h = harness();
+  h.user.user.is_analysis_public_account = true;
+  h.search = new URLSearchParams('subject_user_id=11');
+  const owner = h.mount(h.load('pages/RdRecordsPage.tsx').default); await owner.flush();
+  const dialog = nodes(owner.tree, node => node.type === 'SampleWorkloadDialog')[0];
+  assert.equal(dialog.props.isAnalysisPublicAccount, true);
+  assert.equal(dialog.props.initialSubjectUserId, 11);
+});
+
+test('initial sample query uses Beijing thirty-day range; all/custom use server paging', async () => {
+  const h = harness(), calls = [];
+  h.api.getSampleInfoRecords = async params => { calls.push(params); return ok({ items: [], total: 0 }); };
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default);
+  await owner.flush();
+  const dates = h.load('utils/recordDateRange.ts');
+  assert.deepEqual({ start: calls[0].start, end: calls[0].end }, dates.recordDatePreset('recent-30', dates.beijingRecordToday()));
+  listProps(owner).onStartChange(''); listProps(owner).onEndChange('');
+  await owner.flush();
+  assert.equal(calls.at(-1).start, undefined); assert.equal(calls.at(-1).end, undefined);
+  listProps(owner).onStartChange('2025-01-01'); listProps(owner).onEndChange('2025-01-31');
+  await owner.flush();
+  assert.equal(calls.at(-1).start, '2025-01-01'); assert.equal(calls.at(-1).page_size, 20);
+});
+
+test('legacy sample notification URLs fetch one record without time/type filters and load its actual column type', async () => {
+  const h = harness(), calls = [], columnTypes = [];
+  h.search = new URLSearchParams('record_id=91');
+  h.api.getSampleInfoRecords = async params => { calls.push(params); return ok({ items: [{ ...record(91), type_key: 'beta', submitted_at: '2020-01-01' }], total: 1 }); };
+  h.api.getActiveSampleInfoColumns = async type => { columnTypes.push(type); return ok(type === 'beta' ? [{ ...columns[0], id: 99, label: 'Beta 状态' }] : columns); };
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+  assert.deepEqual(calls, [{ record_id: 91, page: 1, page_size: 1 }]);
+  assert.ok(columnTypes.includes('beta')); assert.equal(listProps(owner).columns[0].id, 99);
+  assert.equal(listProps(owner).notificationRecordId, 91); assert.equal(listProps(owner).records[0].id, 91);
+  assert.equal(nodes(owner.tree, node => node.type?.name === 'SampleSubmissionClock').length, 0);
+  const notice = nodes(owner.tree, node => node.type === 'Alert' && node.props.severity === 'info')[0];
+  notice.props.action.props.onClick(); await owner.flush();
+  assert.equal(h.search.has('record_id'), false); assert.equal(h.search.get('type'), 'beta');
+  assert.equal(listProps(owner).notificationRecordId, undefined);
+  assert.equal(calls.at(-1).type_key, 'beta'); assert.ok(calls.at(-1).start);
+});
+
+test('invalid, deleted and forbidden sample notification targets fail closed without showing stale records', async () => {
+  for (const [query, response, message, expectedCalls] of [
+    ['record_id=', ok({ items: [], total: 0 }), /编号无效/, 0],
+    ['record_id=91', ok({ items: [], total: 0 }), /已删除或当前账号无权查看/, 1],
+    ['record_id=91', ok({ items: [record(90)], total: 1 }), /已删除或当前账号无权查看/, 1],
+    ['record_id=91', { code: 2001, message: '无权查看', data: null }, /无权查看/, 1],
+  ]) {
+    const h = harness(); let calls = 0;
+    h.search = new URLSearchParams(query);
+    h.api.getSampleInfoRecords = async () => { calls++; return response; };
+    const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+    assert.equal(calls, expectedCalls);
+    assert.equal(nodes(owner.tree, node => node.type === 'SampleInfoRecordList').length, 0);
+    const alert = nodes(owner.tree, node => node.type === 'Alert' && node.props.severity === 'error')[0];
+    assert.match(alert.props.children.join(''), message);
+  }
+});
+
+test('out-of-order page responses cannot overwrite the newest records or clear its loading', async () => {
+  const h = harness(), calls = [];
+  h.api.getSampleInfoRecords = (params, signal) => { const pending = deferred(); calls.push({ params, signal, ...pending }); return pending.promise; };
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default);
+  await owner.flush();
+  listProps(owner).onPageChange(1); await owner.flush();
+  assert.equal(calls[0].signal.aborted, true);
+  calls[0].resolve(ok({ items: [record(1)], total: 50 })); await owner.flush();
+  assert.equal(listProps(owner).loading, true); assert.deepEqual(listProps(owner).records, []);
+  calls[1].resolve(ok({ items: [record(2)], total: 50 })); await owner.flush();
+  assert.equal(listProps(owner).records[0].id, 2); assert.equal(listProps(owner).total, 50); assert.equal(listProps(owner).loading, false);
+});
+
+test('sampling is locked per row, patches the confirmed server row and does not refetch unchanged attachment IDs', async () => {
+  const h = harness(), sample = deferred(), correction = deferred();
+  let lists = 0, samples = 0, batches = 0;
+  h.api.getSampleInfoRecords = () => ++lists === 1 ? Promise.resolve(ok({ items: [record(1)], total: 1 })) : correction.promise;
+  h.api.sampleSampleInfo = () => { samples++; return sample.promise; };
+  h.api.batchGetSampleInfoAttachments = async () => { batches++; return ok({ 1: [] }); };
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default);
+  await owner.flush();
+  const first = listProps(owner).onStatusFlow(1, '待取样');
+  await listProps(owner).onStatusFlow(1, '待取样'); await owner.flush();
+  assert.equal(samples, 1); assert.equal(listProps(owner).pendingRecordIds.has(1), true);
+  sample.resolve(ok({ ...record(1, '待检测'), sampled_by: 'server-operator', sampled_at: '2026-10-13T10:01:00' }));
+  await owner.flush();
+  assert.equal(listProps(owner).records[0].sampled_by, 'server-operator');
+  assert.equal(listProps(owner).records[0].status, '待检测'); assert.equal(listProps(owner).loading, true); assert.equal(batches, 1);
+  correction.resolve(ok({ items: [record(1, '待检测')], total: 1 })); await first; await owner.flush();
+  assert.equal(listProps(owner).pendingRecordIds.size, 0); assert.equal(batches, 1);
+});
+
+test('attachment page races are ignored and upload/delete explicitly invalidate the current batch', async () => {
+  const h = harness(), batches = []; let lists = 0;
+  h.api.getSampleInfoRecords = async params => { lists++; return ok({ items: [record(params.page)], total: 50 }); };
+  h.api.batchGetSampleInfoAttachments = ids => { const pending = deferred(); batches.push({ ids, ...pending }); return pending.promise; };
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default);
+  await owner.flush();
+  listProps(owner).onPageChange(1); await owner.flush();
+  batches[1].resolve(ok({ 2: [{ id: 20, file_name: 'new.pdf' }] })); await owner.flush();
+  batches[0].resolve(ok({ 1: [{ id: 10, file_name: 'old.pdf' }] })); await owner.flush();
+  assert.equal(listProps(owner).attachmentsByRow[2][0].file_name, 'new.pdf');
+  await listProps(owner).onUploadAttachment(2, {}); await owner.flush();
+  assert.equal(batches.length, 3);
+  await listProps(owner).onDeleteAttachment(20, 2); await owner.flush();
+  assert.equal(batches.length, 4);
+  assert.equal(lists, 2, 'without attachment conditions, uploads and deletes refresh caches without reloading the record list');
+});
+
+test('attachment uploads and deletes refresh server-filtered membership and totals only while an attachment condition is active', async () => {
+  const h = harness(), queries = []; let hasAttachment = false;
+  h.api.getActiveSampleInfoColumns = async () => ok([...columns, { ...columns[1], id: 9, field_key: 'photos', label: '图片附件', data_type: 'attachment' }]);
+  h.api.getSampleInfoRecords = async params => {
+    queries.push(params);
+    const chosen = JSON.parse(params.column_filters || '{}').photos;
+    const matches = !chosen?.length || chosen.includes(hasAttachment ? '有附件' : '无附件');
+    return ok({ items: matches ? [record(1)] : [], total: matches ? 1 : 0 });
+  };
+  h.api.uploadSampleInfoAttachment = async () => { hasAttachment = true; return ok({}); };
+  h.api.deleteSampleInfoAttachment = async () => { hasAttachment = false; return ok(null); };
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+  listProps(owner).onColumnFilterChange('photos', ['无附件']); await owner.flush();
+  const beforeUpload = queries.length;
+  await listProps(owner).onUploadAttachment(1, {}); await owner.flush();
+  assert.equal(queries.length, beforeUpload + 1); assert.equal(listProps(owner).total, 0); assert.deepEqual(listProps(owner).records, []);
+  listProps(owner).onColumnFilterChange('photos', ['有附件']); await owner.flush();
+  assert.equal(listProps(owner).total, 1);
+  const beforeDelete = queries.length;
+  await listProps(owner).onDeleteAttachment(20, 1); await owner.flush();
+  assert.equal(queries.length, beforeDelete + 1); assert.equal(listProps(owner).total, 0); assert.deepEqual(listProps(owner).records, []);
+  listProps(owner).onColumnFilterChange('photos', ['无附件']); await owner.flush();
+  const pending = deferred(); h.api.uploadSampleInfoAttachment = () => pending.promise;
+  const uploading = listProps(owner).onUploadAttachment(1, {});
+  listProps(owner).onColumnFilterChange('photos', []); await owner.flush();
+  const afterClearing = queries.length;
+  pending.resolve(ok({})); await uploading; await owner.flush();
+  assert.equal(queries.length, afterClearing, 'the condition at completion time controls reloading; a stale upload callback must not restore cleared filters');
+});
+
+test('failed sampling preserves the record and unlocks the row without pretending success', async () => {
+  const h = harness(); let lists = 0;
+  h.api.getSampleInfoRecords = async () => { lists++; return ok({ items: [record(1)], total: 1 }); };
+  h.api.sampleSampleInfo = async () => ({ code: 2001, message: '没有取样权限', data: null });
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+  await listProps(owner).onStatusFlow(1, '待取样'); await owner.flush();
+  assert.equal(listProps(owner).records[0].status, '待取样'); assert.equal(listProps(owner).pendingRecordIds.size, 0);
+  assert.equal(lists, 1);
+  assert.ok(nodes(owner.tree, node => node.type === 'Alert' && node.props.severity === 'error').length > 0);
+});
+
+test('background correction fixes an out-of-range page and page-size changes never request the obsolete page', async () => {
+  const h = harness(), calls = []; let shrinking = false;
+  h.api.getSampleInfoRecords = async params => {
+    calls.push(params);
+    const total = shrinking ? 21 : 50;
+    return ok({ items: params.page > Math.ceil(total / params.page_size) ? [] : [record(params.page)], total });
+  };
+  h.api.sampleSampleInfo = async id => { shrinking = true; return ok(record(id, '待检测')); };
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+  listProps(owner).onPageChange(2); await owner.flush();
+  await listProps(owner).onStatusFlow(3, '待取样'); await owner.flush();
+  assert.equal(listProps(owner).page, 1); assert.equal(listProps(owner).total, 21); assert.equal(listProps(owner).records[0].id, 2);
+  assert.deepEqual(calls.map(call => call.page), [1, 3, 3, 2]);
+  const before = calls.length;
+  h.styleApi.spec = { ...h.styleApi.spec, paging: { size: 100 } }; owner.dirty = true; await owner.flush();
+  assert.deepEqual(calls.slice(before).map(call => [call.page, call.page_size]), [[1, 100]]);
+});
+
+test('column type changes reject late old form/list configurations', async () => {
+  const h = harness(), calls = [];
+  h.api.getActiveSampleInfoColumns = type => { const pending = deferred(); calls.push({ type, ...pending }); return pending.promise; };
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default);
+  await owner.flush();
+  h.search.set('type', 'beta'); owner.dirty = true; await owner.flush();
+  const beta = [{ ...columns[0], id: 99, label: 'Beta 状态' }];
+  calls.filter(call => call.type === 'beta').forEach(call => call.resolve(ok(beta))); await owner.flush();
+  calls.filter(call => call.type === 'alpha').forEach(call => call.resolve(ok(columns))); await owner.flush();
+  assert.equal(listProps(owner).columns[0].id, 99);
+});
+
+test('same-record account changes immediately discard old sample rows and scoped column requests', async () => {
+  const h = harness(), nextRecords = deferred(), oldColumns = deferred(), nextColumns = [];
+  h.search = new URLSearchParams('record_id=91&type=alpha');
+  h.user.token = 'token-a';
+  h.api.getSampleInfoRecords = () => h.user.user.id === 7 ? Promise.resolve(ok({ items: [record(91)], total: 1 })) : nextRecords.promise;
+  let pendingColumns = false;
+  h.api.getActiveSampleInfoColumns = () => {
+    if (!pendingColumns) return Promise.resolve(ok(columns));
+    if (h.user.user.id === 7) return oldColumns.promise;
+    const task = deferred(); nextColumns.push(task); return task.promise;
+  };
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+  assert.equal(listProps(owner).records[0].id, 91); assert.equal(listProps(owner).columns[0].id, 1);
+  pendingColumns = true; h.events.get('focus')();
+  h.user = { ...h.user, user: { ...h.user.user, id: 8 }, token: 'token-b' };
+  owner.render();
+  assert.deepEqual(listProps(owner).records, []); assert.deepEqual(listProps(owner).columns, []);
+  oldColumns.resolve(ok([{ ...columns[0], id: 88, label: 'old private column' }])); await owner.flush();
+  assert.deepEqual(listProps(owner).columns, []); assert.deepEqual(listProps(owner).records, []);
+  nextColumns.forEach(task => task.resolve(ok([{ ...columns[0], id: 99 }])));
+  nextRecords.resolve(ok({ items: [{ ...record(91), user_name: 'new account' }], total: 1 })); await owner.flush();
+  assert.equal(listProps(owner).records[0].user_name, 'new account'); assert.equal(listProps(owner).columns[0].id, 99);
+});
+
+test('RD targets hide unrelated old rows during loading and session keys discard old scope callbacks', async () => {
+  const h = harness(), targetRecords = deferred(), oldColumns = deferred(), nextColumns = deferred(), newRecords = deferred();
+  h.search = new URLSearchParams(); h.user.token = 'token-a';
+  let targeted = false, switched = false;
+  h.api.getRdRecords = () => switched ? newRecords.promise : targeted ? targetRecords.promise : Promise.resolve(ok({ items: [{ ...record(1), sequence_no: 1 }], total: 1 }));
+  h.api.getRdRecordColumns = () => switched ? nextColumns.promise : oldColumns.promise;
+  const owner = h.mount(h.load('pages/RdRecordsPage.tsx').default); await owner.flush();
+  const summary = () => nodes(owner.tree, node => node.type === 'TableStyleBar')[0].props;
+  assert.equal(summary().rows.length, 1);
+  targeted = true; h.search.set('record_id', '91'); owner.render();
+  assert.deepEqual(summary().rows, []);
+  targetRecords.resolve(ok({ items: [{ ...record(91), sequence_no: 91 }], total: 1 })); await owner.flush();
+  assert.equal(summary().rows[0].key, '91');
+  switched = true; h.user = { ...h.user, user: { ...h.user.user, id: 8 }, token: 'token-b' }; owner.render();
+  assert.deepEqual(summary().rows, []);
+  oldColumns.resolve(ok([{ id: 88, name: 'private_field', label: 'old private column', is_active: true, show_in_list: true, data_type: 'text' }])); await owner.flush();
+  assert.equal(summary().columns.some(column => column.key === 'private_field'), false);
+  nextColumns.resolve(ok([])); newRecords.resolve(ok({ items: [{ ...record(91), sequence_no: 91 }], total: 1 })); await owner.flush();
+  assert.equal(summary().rows[0].key, '91');
+});
+
+test('one-second clock ticks belong to the clock component, not the form/list owner', async () => {
+  const h = harness(), owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default);
+  await owner.flush(); assert.equal(h.timers.length, 0);
+  const clock = nodes(owner.tree, node => node.type?.name === 'SampleSubmissionClock')[0];
+  assert.ok(clock);
+  const clockOwner = h.mount(clock.type); await clockOwner.flush();
+  assert.deepEqual(h.timers.map(timer => timer.ms), [1000, 60000]);
+  const previousNow = Date.now; const now = previousNow();
+  try { Date.now = () => now + 5000; h.timers[0].callback(); } finally { Date.now = previousNow; }
+  assert.equal(clockOwner.dirty, true); assert.equal(owner.dirty, false);
+});
+
+test('active-column concurrent reads share only within an auth/type key and are not persistently cached', async () => {
+  const h = harness(), calls = [];
+  h.client = { get: (url, options) => { const pending = deferred(); calls.push({ url, options, ...pending }); return pending.promise; } };
+  const api = h.load('api/sampleInfo.ts');
+  localStorage.setItem('workload_token', 'account-a');
+  const a = api.getActiveSampleInfoColumns('alpha'), duplicate = api.getActiveSampleInfoColumns('alpha');
+  assert.equal(a, duplicate); assert.equal(calls.length, 1);
+  const otherType = api.getActiveSampleInfoColumns('beta');
+  localStorage.setItem('workload_token', 'account-b'); const otherUser = api.getActiveSampleInfoColumns('alpha');
+  assert.equal(calls.length, 3); assert.notEqual(a, otherUser);
+  calls.forEach(call => call.resolve({ data: ok(columns) })); await Promise.all([a, otherType, otherUser]);
+  const fresh = api.getActiveSampleInfoColumns('alpha'); assert.equal(calls.length, 4);
+  calls[3].resolve({ data: ok(columns) }); await fresh;
+  const failed = api.getActiveSampleInfoColumns('alpha'); calls[4].reject(Error('offline')); await assert.rejects(failed, /offline/);
+  const retried = api.getActiveSampleInfoColumns('alpha'); assert.equal(calls.length, 6);
+  calls[5].resolve({ data: ok(columns) }); await retried;
+});
+
+test('only current layout is mounted; mobile detail mounts on first expansion and survives refresh/collapse', async () => {
+  const h = harness(); let reads = 0;
+  const owner = h.mount(h.load('components/SampleInfoRecordList.tsx').default, {
+    records: [record(1)], total: 1, page: 0, pageSize: 20, loading: false, statusFilter: '全部', statusOptions: ['全部'],
+    typeFilter: 'alpha', typeOptions: [], startDate: '', endDate: '', columns, editColumns: [], columnWidths: {},
+    attachmentsByRow: {}, attachments: {}, attachmentLoading: {}, editingId: null, editForm: {}, divisionOptions: [],
+    getRecordValue: (row, field) => { reads++; return row[field]; }, formatDate: value => value, hasPermission: () => true,
+    columnFilters: {}, keyword: '', onColumnFilterChange() {}, onKeywordChange() {}, loadFilterOptions: async field => ({ field, options: [], total: 0, truncated: false }),
+  });
+  await owner.flush();
+  assert.equal(nodes(owner.tree, node => node.type === 'TableContainer').length, 1);
+  assert.equal(nodes(owner.tree, node => node.type === 'Card').length, 0);
+  const previousReads = reads; owner.dirty = true; await owner.flush();
+  assert.equal(reads - previousReads, 1, 'only the displayed batch cell is read; cached filter/style maps should not rescan');
+  h.cardLayout = true; owner.dirty = true; await owner.flush();
+  assert.equal(nodes(owner.tree, node => node.type === 'TableContainer').length, 0);
+  const detail = () => nodes(owner.tree, node => node.props?.component === 'details')[0];
+  assert.equal(detail().props.children[1], false);
+  detail().props.onToggle({ currentTarget: { open: true } }); await owner.flush();
+  assert.equal(detail().props.open, true); assert.ok(detail().props.children[1]);
+  owner.props = { ...owner.props, loading: true, pendingRecordIds: new Set([1]) }; owner.dirty = true; await owner.flush();
+  assert.equal(nodes(owner.tree, node => node.type === 'Card').length, 1); assert.equal(detail().props.open, true);
+  assert.ok(nodes(owner.tree, node => node.type === 'Button' && node.props.disabled === true).length > 0);
+  detail().props.onToggle({ currentTarget: { open: false } }); await owner.flush();
+  assert.equal(detail().props.open, false); assert.ok(detail().props.children[1], 'visited content remains mounted to preserve field scroll');
+  h.cardLayout = false; owner.dirty = true; await owner.flush();
+  const filter = nodes(owner.tree, node => node.type === 'Button' && node.props['aria-label'] === '筛选 批号')[0];
+  assert.ok(filter); filter.props.onClick(); await owner.flush();
+  nodes(owner.tree, node => node.type?.name === 'SampleInfoFilterDialog')[0].props.onApply('batch_no', ['another-batch']); await owner.flush();
+  h.cardLayout = true; owner.dirty = true; await owner.flush();
+  assert.equal(nodes(owner.tree, node => node.type === 'Card').length, 1, 'server-supplied rows are never filtered a second time in the view');
+  owner.props = { ...owner.props, notificationRecordId: 1 }; owner.dirty = true; await owner.flush();
+  assert.equal(nodes(owner.tree, node => node.type === 'Card').length, 1, 'notification lookup bypasses stale local column filters');
+  assert.equal(nodes(owner.tree, node => node.type === 'Button' && node.props['aria-label']?.startsWith('筛选 ')).length, 0);
+  assert.equal(nodes(owner.tree, node => node.type?.name === 'SampleInfoFilterDialog').length, 0);
+  assert.equal(nodes(owner.tree, node => node.type === 'TablePagination').length, 0);
+});
+
+const sampleListFixture = overrides => ({
+  records: [record(1)], total: 80, page: 0, pageSize: 20, loading: false,
+  statusFilter: '全部', statusOptions: ['全部', '待取样', '待检测'], typeFilter: '', typeOptions: [],
+  startDate: '', endDate: '', columns, editColumns: [], columnWidths: {},
+  attachmentsByRow: {}, attachments: {}, attachmentLoading: {}, editingId: null, editForm: {}, divisionOptions: [],
+  getRecordValue: (row, field) => row[field], formatDate: value => value, hasPermission: () => true,
+  columnFilters: {}, keyword: '', onColumnFilterChange() {}, onKeywordChange() {},
+  loadFilterOptions: async field => ({ field, options: [], total: 0, truncated: false }),
+  onStartChange() {}, onEndChange() {}, onResetFilters() {}, ...overrides,
+});
+const sampleFilterDialog = owner => nodes(owner.tree, node => node.type?.name === 'SampleInfoFilterDialog')[0].props;
+const button = (owner, label) => nodes(owner.tree, node => node.type === 'Button' && node.props.children.includes(label))[0];
+
+function entrySubmissionHarness() {
+  const h = harness();
+  h.server = { draft: null, attachments: new Map(), nextAttachment: 1, events: [], posts: [] };
+  h.api.getActiveSampleInfoColumns = async () => ok([...columns,
+    { id: 9, field_key: 'attachment', label: '附件', data_type: 'attachment', is_active: true, show_in_form: true },
+  ]);
+  h.api.getSampleInfoDrafts = async () => ok(h.server.draft ? [structuredClone(h.server.draft)] : []);
+  h.api.createSampleInfoDraft = async data => {
+    h.server.events.push('create-draft');
+    h.server.draft = { id: 99, ...structuredClone(data) }; return ok(h.server.draft);
+  };
+  h.api.updateSampleInfoDraft = async (id, data) => {
+    h.server.events.push('publish-draft'); h.server.draft = { id, ...structuredClone(data) }; return ok(h.server.draft);
+  };
+  h.api.getSampleInfoDraftAttachments = async () => ok([...h.server.attachments.values()].map(({ file, ...metadata }) => metadata));
+  h.api.uploadSampleInfoDraftAttachment = async (_id, row_index, file) => {
+    h.server.events.push('upload-file'); const id = h.server.nextAttachment++;
+    const metadata = { id, row_index, file_name: file.name, file_type: file.type, file };
+    h.server.attachments.set(id, metadata); return ok(metadata);
+  };
+  h.api.downloadSampleInfoDraftAttachment = async id => h.server.attachments.get(id).file;
+  h.api.deleteSampleInfoDraftAttachment = async id => { h.server.attachments.delete(id); return ok(null); };
+  h.api.deleteSampleInfoDraft = async () => { h.server.draft = null; return ok(null); };
+  h.api.createSampleInfoWithAttachments = async (body, files, key) => {
+    h.server.events.push('business-post'); h.server.posts.push({ body: structuredClone(body), files: [...files], key });
+    return h.server.response ? h.server.response(body, files, key) : ok({ id: 91 });
+  };
+  return h;
+}
+const submitEntryButton = owner => nodes(owner.tree, node => node.type === 'Button'
+  && node.props.children.some(child => typeof child === 'string' && /^(提交登记|提交中)/.test(child)))[0];
+const batchEntry = owner => nodes(owner.tree, node => node.type === 'TextField' && node.props.placeholder === '批号');
+const entryFiles = owner => nodes(owner.tree, node => node.type === 'input' && node.props.type === 'file');
+const settleEntry = async owner => { await new Promise(resolve => setImmediate(resolve)); await owner.flush(); };
+
+test('sample same-frame and pending submits lock draft, fields, rows and attachments before the first await', async () => {
+  const h = entrySubmissionHarness(), pending = deferred(); h.server.response = () => pending.promise;
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+  batchEntry(owner)[0].props.onChange({ target: { value: 'B-original' } }); await owner.flush();
+  const file = new File(['%PDF fixture'], '样品.pdf', { type: 'application/pdf' });
+  entryFiles(owner)[0].props.onChange({ target: { files: [file], value: 'file' } }); await owner.flush();
+  const submit = submitEntryButton(owner).props.onClick;
+  const edit = batchEntry(owner)[0].props.onChange, files = entryFiles(owner)[0].props.onChange;
+  const add = button(owner, '添加行').props.onClick, reset = button(owner, '重置').props.onClick;
+  const save = button(owner, '保存草稿').props.onClick;
+  const first = submit(); await submit(); edit({ target: { value: 'must not change' } }); add(); reset(); save();
+  files({ target: { files: [new File(['bad'], 'bad.pdf')], value: 'file' } });
+  await settleEntry(owner);
+  assert.equal(h.server.posts.length, 1); assert.equal(batchEntry(owner).length, 1);
+  assert.equal(batchEntry(owner)[0].props.value, 'B-original'); assert.equal(h.server.posts[0].files.length, 1);
+  assert.equal(h.server.draft.payload.rows[0]._submissionId, h.server.posts[0].key);
+  assert.ok(h.server.events.indexOf('publish-draft') < h.server.events.indexOf('business-post'));
+  assert.equal(h.server.events.filter(event => event === 'create-draft').length, 1);
+  pending.resolve(ok({ id: 91 })); await first; await owner.flush();
+  assert.equal(h.server.draft, null); assert.equal(submitEntryButton(owner).props.disabled, false);
+});
+
+test('sample draft create, attachment or publish failure and malformed save success cause zero business POSTs', async () => {
+  for (const operation of ['createSampleInfoDraft', 'uploadSampleInfoDraftAttachment', 'updateSampleInfoDraft', 'malformed-save']) {
+    const h = entrySubmissionHarness();
+    if (operation === 'malformed-save') h.api.updateSampleInfoDraft = async () => ok(null);
+    else h.api[operation] = async () => ({ code: 1001, message: '草稿拒绝' });
+    const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+    entryFiles(owner)[0].props.onChange({ target: { files: [new File(['%PDF fixture'], 'a.pdf')], value: 'file' } }); await owner.flush();
+    await submitEntryButton(owner).props.onClick(); await owner.flush();
+    assert.equal(h.server.posts.length, 0, operation); assert.match(JSON.stringify(owner.tree), /未发起业务提交/);
+    assert.equal(submitEntryButton(owner).props.disabled, false);
+  }
+});
+
+test('sample uncertain HTTP, database and internal results retain the exact payload, row key and files for retry', async () => {
+  for (const failure of [new Error('response lost'), { code: 2001, message: 'database response lost' }, { code: 5000, message: 'commit result lost' }]) {
+    const h = entrySubmissionHarness();
+    h.server.response = () => { if (failure instanceof Error) throw failure; return failure; };
+    const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+    batchEntry(owner)[0].props.onChange({ target: { value: 'B-frozen' } });
+    entryFiles(owner)[0].props.onChange({ target: { files: [new File(['%PDF original bytes'], '中文附件.pdf')], value: 'file' } }); await owner.flush();
+    await submitEntryButton(owner).props.onClick(); await owner.flush();
+    const first = h.server.posts[0];
+    assert.equal(h.server.draft.payload.rows[0]._submissionUncertain, true);
+    batchEntry(owner)[0].props.onChange({ target: { value: 'changed' } });
+    entryFiles(owner)[0].props.onChange({ target: { files: [new File(['wrong'], 'wrong.pdf')], value: 'file' } }); await owner.flush();
+    assert.equal(batchEntry(owner)[0].props.value, 'B-frozen');
+    h.server.response = () => ok({ id: 91 });
+    await submitEntryButton(owner).props.onClick(); await owner.flush();
+    const retried = h.server.posts[1];
+    assert.equal(retried.key, first.key);
+    assert.deepEqual(JSON.parse(JSON.stringify(retried.body)), JSON.parse(JSON.stringify(first.body)));
+    assert.equal(retried.files.length, 1); assert.equal(retried.files[0].name, first.files[0].name);
+    assert.equal(await retried.files[0].text(), await first.files[0].text());
+  }
+});
+
+test('sample partial success keeps the rejected row identity and reindexes its remaining draft attachments', async () => {
+  const h = entrySubmissionHarness();
+  h.server.response = body => body.batch_no === 'B-2' ? { code: 1001, message: '请修正' } : ok({ id: 91 });
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+  button(owner, '添加行').props.onClick(); await owner.flush();
+  batchEntry(owner).forEach((node, index) => node.props.onChange({ target: { value: `B-${index + 1}` } }));
+  entryFiles(owner).forEach((node, index) => node.props.onChange({ target: { files: [new File([`%PDF ${index}`], `${index}.pdf`)], value: 'file' } })); await owner.flush();
+  await submitEntryButton(owner).props.onClick(); await owner.flush();
+  assert.equal(batchEntry(owner).length, 1); assert.equal(batchEntry(owner)[0].props.value, 'B-2');
+  assert.equal(h.server.draft.payload.rows[0]._submissionId, h.server.posts[1].key);
+  assert.equal(h.server.draft.payload.rows[0]._submissionPayload, undefined);
+  const attachment = h.server.attachments.get(h.server.draft.payload.attachment_ids[0]);
+  assert.equal(attachment.row_index, 0); assert.equal(attachment.file_name, '1.pdf');
+  batchEntry(owner)[0].props.onChange({ target: { value: 'B-fixed' } }); await owner.flush();
+  assert.equal(batchEntry(owner)[0].props.value, 'B-fixed');
+});
+
+test('legacy sample draft gains a persisted identity before POST; cleanup failure keeps visible recovery and a new next-batch key', async () => {
+  const h = entrySubmissionHarness();
+  h.server.draft = { id: 99, type_key: 'alpha', payload: { rows: [{ batch_no: 'legacy', user_name: 'operator', quantity: 1, _extra: {} }] } };
+  h.api.deleteSampleInfoDraft = async () => ({ code: 1001, message: '清理失败' });
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+  const restore = nodes(owner.tree, node => node.type === 'Button' && node.props.children.includes('恢复草稿 '))[0];
+  restore.props.onClick(); await settleEntry(owner);
+  assert.equal(batchEntry(owner)[0].props.value, 'legacy');
+  await submitEntryButton(owner).props.onClick(); await owner.flush();
+  const original = h.server.posts[0];
+  assert.equal(h.server.draft.payload.rows[0]._submissionId, original.key);
+  assert.match(JSON.stringify(owner.tree), /旧草稿清理失败/);
+  batchEntry(owner)[0].props.onChange({ target: { value: 'next batch' } }); await owner.flush();
+  await submitEntryButton(owner).props.onClick(); await owner.flush();
+  assert.notEqual(h.server.posts[1].key, original.key);
+});
+
+test('sample column headers keep full-width text filters in a separate row, including empty and operation columns', async () => {
+  const h = harness(), owner = h.mount(h.load('components/SampleInfoRecordList.tsx').default, sampleListFixture({
+    records: [], columns: [...columns, { ...columns[1], id: 9, field_key: 'notes', label: '注意事项' }],
+    columnWidths: { notes: { mobile: 36, desktop: '36px' } },
+  }));
+  await owner.flush();
+  const filter = nodes(owner.tree, node => node.type === 'Button' && node.props['aria-label'] === '筛选 注意事项')[0];
+  assert.ok(filter, 'empty candidates must not hide the filter');
+  assert.equal(filter.props.sx.width, '100%'); assert.equal(filter.props.sx.minWidth, 0);
+  const header = nodes(owner.tree, node => node.type === 'TableCell' && node.props.title === '注意事项')[0];
+  const stack = nodes(header, node => node.type === 'Box' && node.props.sx?.flexDirection === 'column')[0];
+  assert.equal(stack.props.children.at(-1), filter);
+  assert.equal(header.props.sx.width, '36px');
+  filter.props.onClick(); await owner.flush(); assert.equal(sampleFilterDialog(owner).field, 'notes');
+  assert.equal(typeof sampleFilterDialog(owner).loadOptions, 'function');
+  const action = nodes(owner.tree, node => node.type === 'Button' && node.props['aria-label'] === '筛选 操作进度')[0];
+  action.props.onClick(); await owner.flush(); assert.equal(sampleFilterDialog(owner).field, '_action');
+  button(owner, '按列筛选').props.onClick(); await owner.flush();
+  assert.ok(sampleFilterDialog(owner).columns.some(column => column.key === 'submitted_at'), 'time remains accessible when its column is hidden');
+});
+
+test('sample view delegates all column conditions and reset to its server-query owner', async () => {
+  const h = harness(), reset = [], statuses = [], filters = [];
+  const owner = h.mount(h.load('components/SampleInfoRecordList.tsx').default, sampleListFixture({
+    onResetFilters: () => reset.push(true), onStatusChange: value => statuses.push(value),
+    onColumnFilterChange: (field, values) => filters.push([field, values]),
+  }));
+  await owner.flush();
+  const chips = () => nodes(owner.tree, node => node.type?.name === 'ActiveFilterChips')[0].props;
+  assert.deepEqual(chips().items, []);
+  sampleFilterDialog(owner).onApply('batch_no', ['another-batch']); await owner.flush();
+  assert.deepEqual(filters, [['batch_no', ['another-batch']]]);
+  assert.equal(chips().matched, 80); assert.equal(chips().scopeHint, '全部筛选结果');
+  button(owner, '重置').props.onClick(); await owner.flush();
+  assert.equal(reset.length, 1); assert.equal(chips().matched, 80);
+  assert.deepEqual(sampleFilterDialog(owner).filters, {});
+  owner.props = { ...owner.props, statusFilter: '待检测' }; owner.dirty = true; await owner.flush();
+  assert.equal(chips().items[0].label, '状态：待检测');
+  chips().onRemove('server:status'); assert.deepEqual(statuses, ['全部']);
+  sampleFilterDialog(owner).onApply('batch_no', ['another-batch']); await owner.flush();
+  chips().onClearAll(); await owner.flush(); assert.equal(reset.length, 2); assert.equal(chips().matched, 80);
+});
+
+test('sample toolbar date presets and shared header/global date entry pass date-only server ranges', async () => {
+  const h = harness(), ranges = [], dates = h.load('utils/recordDateRange.ts');
+  const owner = h.mount(h.load('components/SampleInfoRecordList.tsx').default, sampleListFixture({
+    columns: [...columns, { ...columns[1], id: 9, field_key: 'submitted_at', label: '送样时间', data_type: 'date' }],
+    onStartChange: value => ranges.push(['start', value]), onEndChange: value => ranges.push(['end', value]),
+  }));
+  await owner.flush();
+  for (const [label, preset] of [['近30天', 'recent-30'], ['本周', 'this-week'], ['上周', 'last-week'], ['近7天', 'recent'], ['全部历史', 'all']]) {
+    button(owner, label).props.onClick(); await owner.flush();
+    const expected = dates.recordDatePreset(preset, dates.beijingRecordToday());
+    assert.deepEqual(ranges.splice(0), [['start', expected.start], ['end', expected.end]]);
+  }
+  button(owner, '自定义时间').props.onClick(); await owner.flush(); assert.equal(sampleFilterDialog(owner).field, 'submitted_at');
+  sampleFilterDialog(owner).onApplyTime('2025-01-01', '2025-01-31');
+  assert.deepEqual(ranges.splice(0), [['start', '2025-01-01'], ['end', '2025-01-31']]);
+  sampleFilterDialog(owner).onClose(); await owner.flush();
+  nodes(owner.tree, node => node.type === 'Button' && node.props['aria-label'] === '筛选 送样时间')[0].props.onClick(); await owner.flush();
+  assert.equal(sampleFilterDialog(owner).field, 'submitted_at');
+});
+
+test('mobile and desktop share server-query operation conditions without a page-local subset', async () => {
+  const h = harness(); h.cardLayout = true;
+  const rows = [record(1), { ...record(2, '待检测'), sampled_at: '2026-10-13T11:00:00' },
+    { ...record(3, '待检测'), recorded_quantity: 2 }, { ...record(4, '已检测'), workload_recorded: true },
+    record(5, '已退回'), record(6, '已检测')];
+  const applied = [];
+  const owner = h.mount(h.load('components/SampleInfoRecordList.tsx').default, sampleListFixture({ records: rows, onColumnFilterChange: (field, values) => applied.push([field, values]) }));
+  await owner.flush();
+  button(owner, '按列筛选').props.onClick(); await owner.flush();
+  assert.equal(sampleFilterDialog(owner).field, '_action');
+  assert.equal(sampleFilterDialog(owner).loadOptions, owner.props.loadFilterOptions);
+  const detail = nodes(owner.tree, node => node.props?.component === 'details')[0];
+  detail.props.onToggle({ currentTarget: { open: true } }); await owner.flush();
+  assert.ok(nodes(owner.tree, node => node.type === 'Button' && node.props['aria-label'] === '筛选 批号').length);
+  assert.ok(nodes(owner.tree, node => node.type === 'Button' && node.props['aria-label'] === '筛选 操作进度').length);
+  sampleFilterDialog(owner).onApply('_action', ['已录入工作量']); await owner.flush();
+  assert.deepEqual(applied, [['_action', ['已录入工作量']]]);
+  assert.equal(nodes(owner.tree, node => node.type === 'Card').length, 6, 'the current server page is not re-filtered locally');
+  owner.props = { ...owner.props, records: [rows[3]], total: 1, columnFilters: { _action: ['已录入工作量'] } }; owner.dirty = true; await owner.flush();
+  assert.equal(nodes(owner.tree, node => node.type === 'Card').length, 1);
+  assert.equal(nodes(owner.tree, node => node.type?.name === 'ActiveFilterChips')[0].props.matched, 1);
+  owner.props = { ...owner.props, notificationRecordId: 1, records: [rows[0]] }; owner.dirty = true; await owner.flush();
+  assert.equal(nodes(owner.tree, node => node.type === 'Card').length, 1);
+  assert.equal(nodes(owner.tree, node => node.type?.name === 'SampleInfoFilterDialog').length, 0);
+  assert.equal(button(owner, '按列筛选'), undefined);
+});
+
+test('sample filter dialog validates date-only drafts, applies on confirmation and can clear an empty column', async () => {
+  const h = harness(), applied = [], closed = [];
+  const owner = h.mount(h.load('components/recordTable/SampleInfoFilterDialog.tsx').default, {
+    field: 'submitted_at', columns: [{ key: 'submitted_at', label: '送样时间' }, { key: 'notes', label: '注意事项' }],
+    filters: {}, labels: {}, loadOptions: async field => ({ field, options: [], total: 0, truncated: false }), rememberOptions() {}, start: '2026-10-01', end: '2026-10-15', fontSize: 12,
+    onFieldChange() {}, onClose: () => closed.push(true), onApply: (field, values) => applied.push([field, values]),
+    onApplyTime: (start, end) => applied.push([start, end]),
+  });
+  await owner.flush();
+  const inputs = () => nodes(owner.tree, node => node.type === 'TextField' && node.props.type === 'date');
+  assert.equal(inputs().length, 2);
+  inputs()[0].props.onChange({ target: { value: '2026-10-20' } }); await owner.flush();
+  button(owner, '应用筛选').props.onClick(); await owner.flush();
+  assert.equal(applied.length, 0); assert.equal(closed.length, 0);
+  assert.ok(nodes(owner.tree, node => node.type === 'Alert' && node.props.children.includes('开始日期不能晚于结束日期')).length);
+  inputs()[0].props.onChange({ target: { value: '2026-10-02' } }); await owner.flush();
+  button(owner, '应用筛选').props.onClick(); assert.deepEqual(applied, [['2026-10-02', '2026-10-15']]); assert.equal(closed.length, 1);
+  button(owner, '清除此列').props.onClick(); assert.deepEqual(applied.at(-1), ['', '']);
+  owner.props = { ...owner.props, field: 'notes', filters: { notes: ['旧条件'] } }; owner.dirty = true; await owner.flush();
+  assert.ok(nodes(owner.tree, node => node.type === 'Chip' && node.props.label === '旧条件').length);
+  button(owner, '清除此列').props.onClick(); assert.deepEqual(applied.at(-1), ['notes', []]);
+});
+
+test('sample column and keyword conditions are sent before pagination and retained on every page and candidate request', async () => {
+  const h = harness(), queries = [], candidates = [];
+  h.api.getSampleInfoRecords = async params => { queries.push(params); return ok({ items: [record(params.page)], total: 100 }); };
+  h.api.getSampleInfoFilterOptions = async params => {
+    candidates.push(params);
+    return ok({ field: params.field, options: [{ value: '', label: '未填写', count: 8 }, { value: '历史页批次', label: '历史页批次', count: 3 }], total: 2, truncated: false });
+  };
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+  listProps(owner).onPageChange(3); await owner.flush();
+  assert.equal(queries.at(-1).page, 4);
+  listProps(owner).onColumnFilterChange('status', ['待检测', '已检测']); await owner.flush();
+  assert.equal(queries.at(-1).page, 1);
+  assert.deepEqual(JSON.parse(queries.at(-1).column_filters), { status: ['待检测', '已检测'] });
+  listProps(owner).onKeywordChange('  冷藏  '); await owner.flush();
+  assert.equal(queries.at(-1).keyword, '冷藏');
+  listProps(owner).onPageChange(2); await owner.flush();
+  assert.equal(queries.at(-1).page, 3);
+  assert.equal(queries.at(-1).keyword, '冷藏');
+  const response = await listProps(owner).loadFilterOptions('batch_no', '历史');
+  assert.equal(candidates.at(-1).field, 'batch_no'); assert.equal(candidates.at(-1).search, '历史');
+  assert.equal(candidates.at(-1).page, undefined); assert.equal(candidates.at(-1).page_size, undefined);
+  assert.equal(candidates.at(-1).keyword, '冷藏'); assert.equal(candidates.at(-1).type_key, 'alpha');
+  assert.deepEqual(JSON.parse(candidates.at(-1).column_filters), { status: ['待检测', '已检测'] });
+  assert.equal(response.options[1].value, '历史页批次', 'options come from the authorized full query, not the displayed page');
+  listProps(owner).onResetFilters(); await owner.flush();
+  assert.equal(queries.at(-1).page, 1); assert.equal(queries.at(-1).column_filters, undefined); assert.equal(queries.at(-1).keyword, undefined);
+  assert.ok(queries.at(-1).start); assert.ok(queries.at(-1).end);
+});
+
+test('sample type changes remove obsolete field conditions while preserving common fields before the new query', async () => {
+  const h = harness(), queries = [], betaColumns = deferred();
+  const alpha = [...columns, { ...columns[1], id: 9, field_key: 'alpha_only', label: 'A专属字段' }];
+  h.api.getActiveSampleInfoColumns = type => type === 'beta' ? betaColumns.promise : Promise.resolve(ok(alpha));
+  h.api.getSampleInfoRecords = async params => { queries.push(params); return ok({ items: [record(1)], total: 100 }); };
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+  listProps(owner).onColumnFilterChange('alpha_only', ['高']);
+  listProps(owner).onColumnFilterChange('status', ['待检测']); await owner.flush();
+  const before = queries.length;
+  listProps(owner).onTypeChange('beta'); await owner.flush();
+  assert.equal(queries.length, before, 'do not issue a new-type query with stale field conditions while columns are loading');
+  betaColumns.resolve(ok(columns)); await owner.flush();
+  assert.equal(queries.at(-1).type_key, 'beta');
+  assert.deepEqual(JSON.parse(queries.at(-1).column_filters), { status: ['待检测'] });
+  assert.deepEqual(listProps(owner).columnFilters, { status: ['待检测'] });
+  assert.equal(queries.at(-1).page, 1);
+});
+
+test('sample notification lookup ignores ordinary column and keyword conditions and does not load candidates', async () => {
+  const h = harness(), queries = [];
+  h.search = new URLSearchParams('record_id=91');
+  h.api.getSampleInfoRecords = async params => { queries.push(params); return ok({ items: [record(91)], total: 1 }); };
+  const owner = h.mount(h.load('pages/SampleInfoEntry.tsx').default); await owner.flush();
+  listProps(owner).onColumnFilterChange('status', ['已退回']); listProps(owner).onKeywordChange('不应匹配'); await owner.flush();
+  assert.ok(queries.every(query => JSON.stringify(query) === JSON.stringify({ record_id: 91, page: 1, page_size: 1 })));
+  await assert.rejects(listProps(owner).loadFilterOptions('notes', ''), /通知定位模式/);
+});
+
+test('sample candidate dialog ignores late responses, keeps selected values through searches and supports empty values', async () => {
+  const h = harness(), calls = [], applied = [], remembered = [];
+  const owner = h.mount(h.load('components/recordTable/SampleInfoFilterDialog.tsx').default, {
+    field: 'notes', columns: [{ key: 'notes', label: '注意事项' }], filters: { notes: ['已选但未在候选内'] }, labels: {},
+    start: '', end: '', fontSize: 12,
+    loadOptions: (field, search) => { const pending = deferred(); calls.push({ field, search, ...pending }); return pending.promise; },
+    rememberOptions: (field, options) => remembered.push([field, options]), onFieldChange() {}, onClose() {},
+    onApply: (field, values) => applied.push([field, values]), onApplyTime() {},
+  });
+  await owner.flush();
+  const old = h.timers.at(-1).callback();
+  nodes(owner.tree, node => node.type === 'TextField' && node.props.label === '搜索可选值')[0].props.onChange({ target: { value: '  冷藏  ' } });
+  await owner.flush(); const fresh = h.timers.at(-1).callback();
+  assert.deepEqual(calls.map(call => [call.field, call.search]), [['notes', ''], ['notes', '冷藏']]);
+  calls[1].resolve({ field: 'notes', options: [{ value: '', label: '未填写', count: 2 }], total: 201, truncated: true });
+  await fresh; await owner.flush();
+  calls[0].resolve({ field: 'notes', options: [{ value: '旧响应', label: '旧响应', count: 9 }], total: 1, truncated: false });
+  await old; await owner.flush();
+  assert.equal(nodes(owner.tree, node => node.type === 'FormControlLabel' && node.props.label.includes('旧响应')).length, 0);
+  assert.equal(remembered.length, 1);
+  assert.ok(nodes(owner.tree, node => node.type === 'Chip' && node.props.label === '已选但未在候选内').length);
+  assert.ok(nodes(owner.tree, node => node.type === 'Alert' && JSON.stringify(node.props.children).includes('候选较多')).length);
+  const empty = nodes(owner.tree, node => node.type === 'FormControlLabel' && node.props.label === '未填写（2）')[0];
+  assert.ok(empty); empty.props.control.props.onChange(); await owner.flush();
+  button(owner, '应用筛选').props.onClick();
+  assert.deepEqual(applied, [['notes', ['已选但未在候选内', '']]]);
+  owner.props = { ...owner.props, field: null }; owner.dirty = true; await owner.flush();
+  assert.equal(owner.tree.props.open, false);
+});
+
+test('sample filter options API forwards the full filter scope and abort signal', async () => {
+  const h = harness(), calls = [], controller = new AbortController();
+  h.client = { get: async (url, options) => { calls.push({ url, options }); return { data: ok({ field: 'notes', options: [], total: 0, truncated: false }) }; } };
+  const params = { field: 'notes', search: '冷藏', keyword: '项目A', column_filters: JSON.stringify({ status: ['待检测'] }), start: '2026-10-01', end: '2026-10-26' };
+  await h.load('api/sampleInfo.ts').getSampleInfoFilterOptions(params, controller.signal);
+  assert.equal(calls[0].url, '/sample-info/filter-options'); assert.equal(calls[0].options.params, params); assert.equal(calls[0].options.signal, controller.signal);
+});
+
+test('sample management export and summary keep the same filters; statistics explicitly sends the pending-ownership false value', async () => {
+  const evaluate = (relative, name, bindings) => {
+    const source = ts.createSourceFile(relative, readFileSync(path.join(src, relative), 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    let initializer;
+    const visit = node => {
+      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === name) initializer = node.initializer;
+      ts.forEachChild(node, visit);
+    };
+    visit(source); assert.ok(initializer, 'missing variable ' + name);
+    const js = ts.transpileModule('const result = ' + initializer.getText(source), { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText;
+    return new Function(...Object.keys(bindings), js + '\nreturn result;')(...Object.values(bindings));
+  };
+  const filters = { start: '', end: '2026-10-26', type_key: 'alpha', status: '已退回', user_name: '张三', lab_name: '实验室A', project_name: '项目P' };
+  const exported = [], summaries = [];
+  const common = { siFilters: filters, showMessage() {}, setSiStats() {}, useCallback: callback => callback };
+  await evaluate('pages/ManagePage.tsx', 'doExportSi', { ...common, exportSampleInfo: async params => exported.push(params) })();
+  await evaluate('pages/ManagePage.tsx', 'loadSiStats', { ...common, getSampleInfoStats: async params => { summaries.push(params); return ok({ total: 1 }); } })();
+  const expected = { ...filters, start: undefined };
+  assert.deepEqual(exported, [expected]); assert.deepEqual(summaries, [expected]);
+  assert.equal(evaluate('pages/SampleInfoStatsPage.tsx', 'ownershipParams', { ownershipBasis: 'submitted', divisionFilter: 0, includePendingOwnership: false }).include_pending_ownership, false);
+  assert.equal(evaluate('pages/SampleInfoStatsPage.tsx', 'si', { dayjs: require('dayjs'), s: '2026-10-01' }), '2026-10-01');
+  assert.equal(evaluate('pages/SampleInfoStatsPage.tsx', 'ei', { dayjs: require('dayjs'), e: '2026-10-26' }), '2026-10-26', 'date-only statistics ranges let the backend include the final fractional second of the day');
+});
+
+test('group change requires a preview before confirmation and applies the same proposal', async () => {
+  const h = harness(), calls = [], updated = [];
+  const view = { detection_id: 8, revision: 4, steps: [{ id: 2, name: '步骤', coefficient: 1 }], groups: [{ id: 3, name: '原组', quantity: 10, progress: [{ step_id: 2, quantity: 5 }] }] };
+  const after = { ...view, revision: 5, groups: [{ ...view.groups[0], quantity: 5 }, { id: 4, name: '新组', quantity: 5, progress: [{ step_id: 2, quantity: 0 }] }] };
+  h.client = { post: async (url, body) => { calls.push({ url, body }); return { data: ok({ before: view, after, charge_before: 0, charge_after: 0, preview_token: 'token' }) }; } };
+  const owner = h.mount(h.load('components/StepGroupChange.tsx').default, { view, onChanged: value => updated.push(value) });
+  await owner.flush();
+  const button = text => nodes(owner.tree, node => node.type === 'Button' && node.props.children.includes(text))[0];
+  const field = label => nodes(owner.tree, node => node.type === 'TextField' && node.props.label === label)[0];
+  button('调整数量分组').props.onClick(); await owner.flush();
+  field('原分组').props.onChange({ target: { value: '3' } }); await owner.flush();
+  field('新分组名称').props.onChange({ target: { value: '新组' } }); await owner.flush();
+  field('拆出数量').props.onChange({ target: { value: '5' } }); await owner.flush();
+  assert.equal(button('确认调整'), undefined);
+  await button('预览调整').props.onClick(); await owner.flush();
+  await button('确认调整').props.onClick(); await owner.flush();
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0].body.preview_token, null);
+  assert.equal(calls[1].body.preview_token, 'token');
+  assert.equal(calls[1].body.revision, 4);
+  assert.equal(updated[0].revision, 5);
+});

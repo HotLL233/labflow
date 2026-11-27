@@ -3,6 +3,8 @@
 当前正式应用版本：**v2.5.10**。当前业务源码：`source/LabFlow-PostgreSQL-v2.5.10/`。
 本版新增只读工作量 API，系统管理员可按检测部门、业务月份和工作类别配置接入范围。实际检测数量、检测工作量和辅助工作量分列，不输出应收金额、样品内容或附件。详见 [本版安装包说明](source/LabFlow-PostgreSQL-v2.5.10/安装包说明.md) 和 [工作量 API 接入](source/LabFlow-PostgreSQL-v2.5.10/docs/工作量API接入.md)。衡析接收端仍需适配，不能直接粘贴地址接入。
 
+开发版 **v2.5.11** 新增[工作量 API 接入永久删除](source/LabFlow-PostgreSQL-v2.5.11/更新说明.md)。本地验证与 Windows 两种安装包已完成，未正式发布或升级现网。
+
 ## 开始开发
 
 先读 [PROJECT_MEMORY.md](PROJECT_MEMORY.md)。它是唯一现行共享记忆；
