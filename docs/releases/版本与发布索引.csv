@@ -120,4 +120,5 @@ v2.5.9,LabFlow-PostgreSQL-v2.5.9,True,True,published,多步骤检测数量及金
 v2.5.10,LabFlow-PostgreSQL-v2.5.10,True,True,published,可限定范围的只读工作量 API；Windows 两包及 GHCR 已发布并核验；衡析接收端未适配
 v2.5.11,LabFlow-PostgreSQL-v2.5.11,False,False,source-only,工作量 API 接入永久删除；已纳入 v2.5.12
 v2.5.12,LabFlow-PostgreSQL-v2.5.12,True,True,published,Keycloak 统一登录试点默认关闭；保留工作量 API 接入删除；Windows 两包及 GHCR 已发布并核验
-v2.5.13,LabFlow-PostgreSQL-v2.5.13,True,True,current-official,修复人员反馈操作已保存却报错；Windows 两包及 GHCR 已发布并核验；未部署现网
+v2.5.13,LabFlow-PostgreSQL-v2.5.13,True,True,published,修复人员反馈操作已保存却报错；Windows 两包及 GHCR 已发布并核验；未部署现网
+v2.5.14,LabFlow-PostgreSQL-v2.5.14,True,True,current-official,修复批量删除计费及研发汇总；Windows 两包和 GHCR 已核验；合成备份试升级通过；未部署现网
