@@ -5,6 +5,8 @@
 
 保留默认关闭的 [Keycloak 统一登录试点](source/LabFlow-PostgreSQL-v2.5.13/docs/统一登录试点.md)和可限定范围的[只读工作量 API](source/LabFlow-PostgreSQL-v2.5.13/docs/工作量API接入.md)。衡析接收端仍需适配。
 
+开发中：**v2.5.14** [工作量与计费对账修复](source/LabFlow-PostgreSQL-v2.5.14/更新说明.md)，尚未发布。
+
 ## 开始开发
 
 先读 [PROJECT_MEMORY.md](PROJECT_MEMORY.md)。它是唯一现行共享记忆；
